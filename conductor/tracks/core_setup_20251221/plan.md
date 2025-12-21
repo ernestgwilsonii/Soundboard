@@ -19,10 +19,10 @@
 - [x] Task: Execute the initialization script and verify database creation. 6357977
 - [x] Task: Conductor - User Manual Verification 'Database Initialization' (Protocol in workflow.md) c5763b8
 
-## Phase 4: Basic Routing and Logging
+## Phase 4: Basic Routing and Logging [checkpoint: 6427915]
 - [x] Task: Create a `main` blueprint in `app/main/` with a simple route (`/`) rendering a template. 5a97c22
 - [x] Task: Create a base template (`base.html`) and an index template (`index.html`). 5a97c22
 - [x] Task: Configure Python's `logging` in `app/__init__.py`. 859761d
 - [ ] Task: Register the `main` blueprint in the application factory.
 - [x] Task: Run the application and verify the landing page loads. f9f25bc
-- [ ] Task: Conductor - User Manual Verification 'Basic Routing and Logging' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Basic Routing and Logging' (Protocol in workflow.md) 6427915
