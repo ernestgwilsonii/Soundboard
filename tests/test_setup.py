@@ -38,3 +38,10 @@ def test_config_loading():
     assert hasattr(config.Config, 'SECRET_KEY')
     assert hasattr(config.Config, 'DEBUG')
     assert config.Config.SECRET_KEY is not None
+
+def test_app_factory():
+    from app import create_app
+    from flask import Flask
+    app = create_app()
+    assert isinstance(app, Flask)
+    assert app.config['SECRET_KEY'] is not None
