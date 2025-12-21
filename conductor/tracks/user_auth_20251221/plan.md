@@ -10,8 +10,8 @@
 ## Phase 2: Registration and Forms
 - [x] Task: Create `app/auth/forms.py` with `RegistrationForm` and `LoginForm` using `Flask-WTF`. fbb535f
 - [x] Task: Create the `auth` blueprint and register it in `app/__init__.py`. 999f386
-- [ ] Task: Implement the registration route and `signup.html` template.
-- [ ] Task: Verify that a new user can be created in the `accounts.sqlite3` database.
+- [x] Task: Implement the registration route and `signup.html` template. f4dab8d
+- [x] Task: Verify that a new user can be created in the `accounts.sqlite3` database. f4dab8d
 - [ ] Task: Conductor - User Manual Verification 'Registration and Forms' (Protocol in workflow.md)
 
 ## Phase 3: Login and Session Management
