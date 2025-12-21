@@ -36,3 +36,22 @@ def test_soundboards_schema():
     assert 'name' in columns
     assert 'user_id' in columns
     assert 'icon' in columns
+
+def test_init_db():
+    from init_db import init_db
+    # Use temporary database paths for testing
+    test_accounts_db = 'test_accounts.sqlite3'
+    test_soundboards_db = 'test_soundboards.sqlite3'
+    
+    # Ensure they don't exist
+    if os.path.exists(test_accounts_db): os.remove(test_accounts_db)
+    if os.path.exists(test_soundboards_db): os.remove(test_soundboards_db)
+    
+    init_db(test_accounts_db, test_soundboards_db)
+    
+    assert os.path.exists(test_accounts_db)
+    assert os.path.exists(test_soundboards_db)
+    
+    # Cleanup
+    os.remove(test_accounts_db)
+    os.remove(test_soundboards_db)
