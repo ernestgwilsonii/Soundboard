@@ -37,3 +37,11 @@ def test_soundboard_form(app):
         # Invalid form (missing name)
         form = SoundboardForm(name='', icon='fas fa-music')
         assert not form.validate()
+
+def test_sound_form(app):
+    from app.soundboard.forms import SoundForm
+    with app.app_context():
+        # Note: Testing file fields usually requires mock file objects
+        form = SoundForm(name='Explosion', icon='fas fa-bomb')
+        # We don't provide a file here, so it might fail depending on if it's required
+        assert not form.validate() # Should fail because file is required
