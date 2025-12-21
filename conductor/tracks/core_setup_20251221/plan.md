@@ -3,7 +3,7 @@
 ## Phase 1: Environment and Dependencies
 - [x] Task: Create a virtual environment and activate it. d3a1f1b
 - [x] Task: Create a `requirements.txt` file with initial dependencies (Flask, Flask-WTF, python-dotenv, werkzeug). dae3217
-- [ ] Task: Install dependencies and freeze the requirements.
+- [x] Task: Install dependencies and freeze the requirements. 3163099
 - [ ] Task: Conductor - User Manual Verification 'Environment and Dependencies' (Protocol in workflow.md)
 
 ## Phase 2: Project Structure and Configuration
