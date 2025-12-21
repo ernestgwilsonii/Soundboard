@@ -26,3 +26,14 @@ def test_login_form(app):
     with app.app_context():
         form = LoginForm(username='test', password='cat')
         assert form.validate()
+
+def test_soundboard_form(app):
+    from app.soundboard.forms import SoundboardForm
+    with app.app_context():
+        # Valid form
+        form = SoundboardForm(name='New Board', icon='fas fa-music')
+        assert form.validate()
+        
+        # Invalid form (missing name)
+        form = SoundboardForm(name='', icon='fas fa-music')
+        assert not form.validate()
