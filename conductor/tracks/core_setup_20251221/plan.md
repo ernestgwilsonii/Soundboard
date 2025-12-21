@@ -22,7 +22,7 @@
 ## Phase 4: Basic Routing and Logging
 - [x] Task: Create a `main` blueprint in `app/main/` with a simple route (`/`) rendering a template. 5a97c22
 - [x] Task: Create a base template (`base.html`) and an index template (`index.html`). 5a97c22
-- [ ] Task: Configure Python's `logging` in `app/__init__.py`.
+- [x] Task: Configure Python's `logging` in `app/__init__.py`. 859761d
 - [ ] Task: Register the `main` blueprint in the application factory.
 - [ ] Task: Run the application and verify the landing page loads.
 - [ ] Task: Conductor - User Manual Verification 'Basic Routing and Logging' (Protocol in workflow.md)
