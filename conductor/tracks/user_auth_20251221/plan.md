@@ -16,9 +16,9 @@
 
 ## Phase 3: Login and Session Management
 - [x] Task: Implement the login route and `login.html` template. 6104639
-- [ ] Task: Implement the logout route.
-- [ ] Task: Update the base template to show "Login" or "Logout/Profile" based on authentication status.
-- [ ] Task: Verify that a user can log in and out successfully.
+- [x] Task: Implement the logout route. 2a3c910
+- [x] Task: Update the base template to show "Login" or "Logout/Profile" based on authentication status. 2a3c910
+- [x] Task: Verify that a user can log in and out successfully. 2a3c910
 - [ ] Task: Conductor - User Manual Verification 'Login and Session Management' (Protocol in workflow.md)
 
 ## Phase 4: Profile and Protection
