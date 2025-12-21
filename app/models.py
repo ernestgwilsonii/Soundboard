@@ -92,14 +92,12 @@ class Soundboard:
             db.commit()
 
     @staticmethod
-    def get_by_id(soundboard_id):
+    def get_by_user_id(user_id):
         db = get_soundboards_db()
         cur = db.cursor()
-        cur.execute("SELECT * FROM soundboards WHERE id = ?", (soundboard_id,))
-        row = cur.fetchone()
-        if row:
-            return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], icon=row['icon'])
-        return None
+        cur.execute("SELECT * FROM soundboards WHERE user_id = ? ORDER BY name ASC", (user_id,))
+        rows = cur.fetchall()
+        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], icon=row['icon']) for row in rows]
 
     def __repr__(self):
         return f'<Soundboard {self.name}>'

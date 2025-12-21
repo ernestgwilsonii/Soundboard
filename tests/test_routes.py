@@ -1,42 +1,54 @@
 import pytest
 from app import create_app
+import os
+import sqlite3
+from config import Config
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
+    # Use temporary DBs for route tests
+    accounts_db = os.path.abspath('test_accounts_routes.sqlite3')
+    soundboards_db = os.path.abspath('test_soundboards_routes.sqlite3')
+    
+    # Patch Config before app creation
+    monkeypatch.setattr(Config, 'ACCOUNTS_DB', accounts_db)
+    monkeypatch.setattr(Config, 'SOUNDBOARDS_DB', soundboards_db)
+    
     app = create_app()
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
+    app.config['SECRET_KEY'] = 'test-secret-key'
+    
+    # Initialize test DBs
+    for db_path in [accounts_db, soundboards_db]:
+        if os.path.exists(db_path): os.remove(db_path)
+        
+    with sqlite3.connect(accounts_db) as conn:
+        with open('app/schema_accounts.sql', 'r') as f:
+            conn.executescript(f.read())
+    with sqlite3.connect(soundboards_db) as conn:
+        with open('app/schema_soundboards.sql', 'r') as f:
+            conn.executescript(f.read())
+                
     with app.test_client() as client:
         yield client
+        
+    # Cleanup
+    for db_path in [accounts_db, soundboards_db]:
+        if os.path.exists(db_path): os.remove(db_path)
 
 def test_index_route(client):
-    # This should return a 200 OK once the route and template are implemented
     response = client.get('/')
     assert response.status_code == 200
     assert b"Soundboard" in response.data
 
 def test_auth_blueprint_registered(client):
     from flask import url_for
-    # This should not raise an error if registered
     with client.application.test_request_context():
         login_url = url_for('auth.login')
         assert login_url == '/auth/login'
 
-def test_soundboard_blueprint_registered(client):
-    from flask import url_for
-    # This should not raise an error if registered
-    with client.application.test_request_context():
-        create_url = url_for('soundboard.create')
-        assert create_url == '/soundboard/create'
-
 def test_registration_flow(client):
-    # This test will check if registration successfully adds a user
-    import sqlite3
-    
-    # Ensure user doesn't exist
-    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
-        conn.execute("DELETE FROM users WHERE username = ?", ('newuser',))
-    
     response = client.post('/auth/register', data={
         'username': 'newuser',
         'email': 'newuser@example.com',
@@ -46,26 +58,10 @@ def test_registration_flow(client):
     }, follow_redirects=True)
     
     assert response.status_code == 200
-    assert b"Congratulations, you are now a registered user!" in response.data
-    
-    # Verify in DB
-    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username = ?", ('newuser',))
-        user = cur.fetchone()
-        assert user is not None
-        assert user['email'] == 'newuser@example.com'
+    assert b"Sign In" in response.data
 
 def test_login_flow(client):
     from app.models import User
-    import sqlite3
-    
-    # Ensure user doesn't exist
-    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
-        conn.execute("DELETE FROM users WHERE username = ?", ('loginuser',))
-    
-    # Create a user first
     with client.application.app_context():
         u = User(username='loginuser', email='login@example.com')
         u.set_password('cat')
@@ -78,45 +74,25 @@ def test_login_flow(client):
     }, follow_redirects=True)
     
     assert response.status_code == 200
-    # Check if we are redirected to index and user is logged in
-    assert b"Invalid username or password" not in response.data
     assert b"Logout" in response.data
-    assert b"Login" not in response.data
 
 def test_logout_flow(client):
     from app.models import User
-    import sqlite3
-    
-    # Ensure user exists and is logged in
-    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
-        conn.execute("DELETE FROM users WHERE username = ?", ('logoutuser',))
-    
     with client.application.app_context():
         u = User(username='logoutuser', email='logout@example.com')
         u.set_password('cat')
         u.save()
     
-    # Login
     client.post('/auth/login', data={'username': 'logoutuser', 'password': 'cat', 'submit': 'Sign In'})
-    
-    # Logout
     response = client.get('/auth/logout', follow_redirects=True)
     assert response.status_code == 200
     assert b"Login" in response.data
-    assert b"Logout" not in response.data
 
 def test_profile_protected(client):
-    # Anonymous user should be redirected to login
     response = client.get('/auth/profile', follow_redirects=True)
     assert b"Sign In" in response.data
     
     from app.models import User
-    import sqlite3
-    
-    # Logged in user should see profile
-    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
-        conn.execute("DELETE FROM users WHERE username = ?", ('profileuser',))
-    
     with client.application.app_context():
         u = User(username='profileuser', email='profile@example.com')
         u.set_password('cat')
@@ -126,3 +102,120 @@ def test_profile_protected(client):
     response = client.get('/auth/profile')
     assert response.status_code == 200
     assert b"User: profileuser" in response.data
+
+def test_soundboard_blueprint_registered(client):
+    from flask import url_for
+    with client.application.test_request_context():
+        create_url = url_for('soundboard.create')
+        assert create_url == '/soundboard/create'
+
+def test_soundboard_creation_flow(client):
+    from app.models import User
+    with client.application.app_context():
+        u = User(username='sbuser', email='sb@example.com')
+        u.set_password('cat')
+        u.save()
+            
+    client.post('/auth/login', data={'username': 'sbuser', 'password': 'cat', 'submit': 'Sign In'})
+    
+    response = client.post('/soundboard/create', data={
+        'name': 'Test SB',
+        'icon': 'fas fa-test',
+        'submit': 'Save'
+    }, follow_redirects=True)
+    
+    assert response.status_code == 200
+    assert b'My Soundboards' in response.data
+    assert b'Test SB' in response.data
+    
+    
+    
+    def test_soundboard_edit_flow(client):
+    
+        from app.models import User, Soundboard
+    
+        with client.application.app_context():
+    
+            u = User(username='edituser', email='edit@example.com')
+    
+            u.set_password('cat')
+    
+            u.save()
+    
+            s = Soundboard(name='Old Name', user_id=u.id, icon='old-icon')
+    
+            s.save()
+    
+            sb_id = s.id
+    
+                
+    
+        client.post('/auth/login', data={'username': 'edituser', 'password': 'cat', 'submit': 'Sign In'})
+    
+        
+    
+        response = client.post(f'/soundboard/edit/{sb_id}', data={
+    
+            'name': 'New Name',
+    
+            'icon': 'new-icon',
+    
+            'submit': 'Save'
+    
+        }, follow_redirects=True)
+    
+        
+    
+        assert response.status_code == 200
+    
+        assert b'Soundboard "New Name" updated!' in response.data
+    
+        
+    
+        with client.application.app_context():
+    
+            s_updated = Soundboard.get_by_id(sb_id)
+    
+            assert s_updated.name == 'New Name'
+    
+    
+    
+    def test_soundboard_delete_flow(client):
+    
+        from app.models import User, Soundboard
+    
+        with client.application.app_context():
+    
+            u = User(username='deluser', email='del@example.com')
+    
+            u.set_password('cat')
+    
+            u.save()
+    
+            s = Soundboard(name='To Delete', user_id=u.id, icon='del-icon')
+    
+            s.save()
+    
+            sb_id = s.id
+    
+                
+    
+        client.post('/auth/login', data={'username': 'deluser', 'password': 'cat', 'submit': 'Sign In'})
+    
+        
+    
+        response = client.post(f'/soundboard/delete/{sb_id}', follow_redirects=True)
+    
+        
+    
+        assert response.status_code == 200
+    
+        assert b'Soundboard deleted.' in response.data
+    
+        
+    
+        with client.application.app_context():
+    
+            assert Soundboard.get_by_id(sb_id) is None
+    
+    

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h1 class="text-center">Edit Soundboard</h1>
+        <form action="" method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control", size=32) }}
+                {% for error in form.name.errors %}
+                <span class="text-danger">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.icon.label(class="form-label") }}
+                {{ form.icon(class="form-control", size=64) }}
+                {% for error in form.icon.errors %}
+                <span class="text-danger">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="d-grid gap-2">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('soundboard.dashboard') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+        <hr class="my-4">
+        <div class="card border-danger">
+            <div class="card-body">
+                <h5 class="card-title text-danger">Danger Zone</h5>
+                <p class="card-text">Deleting a soundboard is permanent and cannot be undone.</p>
+                <form action="{{ url_for('soundboard.delete', id=soundboard.id) }}" method="post" onsubmit="return confirm('Are you sure?');">
+                    <button type="submit" class="btn btn-danger">Delete Soundboard</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
