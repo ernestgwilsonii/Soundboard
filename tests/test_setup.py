@@ -58,3 +58,8 @@ def test_logging_configuration():
     app = create_app(config_class=TestConfig)
     # Check if a file handler is added for production (not DEBUG)
     assert len(app.logger.handlers) > 0
+
+def test_login_manager_initialized():
+    from app import create_app
+    app = create_app()
+    assert hasattr(app, 'login_manager')

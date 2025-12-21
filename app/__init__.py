@@ -3,12 +3,22 @@ from logging.handlers import RotatingFileHandler
 import os
 from flask import Flask
 from config import Config
+from flask_login import LoginManager
+
+login = LoginManager()
+login.login_view = 'auth.login'
+
+@login.user_loader
+def load_user(id):
+    from app.models import User
+    return User.get_by_id(int(id))
 
 def create_app(config_class=Config):
     app = Flask(__name__, template_folder='../templates')
     app.config.from_object(config_class)
 
     # Initialize Flask extensions here (if any)
+    login.init_app(app)
 
     # Register blueprints here
     from app.main import bp as main_bp

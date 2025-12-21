@@ -17,5 +17,19 @@ class User(UserMixin):
             return False
         return check_password_hash(self.password_hash, password)
 
+    @staticmethod
+    def get_by_id(user_id):
+        import sqlite3
+        from config import Config
+        with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+            row = cur.fetchone()
+            if row:
+                return User(id=row['id'], username=row['username'], email=row['email'], 
+                            password_hash=row['password_hash'], role=row['role'])
+        return None
+
     def __repr__(self):
         return f'<User {self.username}>'
