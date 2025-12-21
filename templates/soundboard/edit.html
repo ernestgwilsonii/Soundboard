@@ -50,7 +50,7 @@
                     {% endif %}
                     {{ sound.name }}
                 </div>
-                <form action="#" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
+                <form action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
                     <button type="submit" class="btn btn-outline-danger btn-sm">
                         <i class="fas fa-trash"></i>
                     </button>

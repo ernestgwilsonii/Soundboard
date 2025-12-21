@@ -208,3 +208,13 @@ def test_sound_upload_flow(client):
         assert len(sounds) == 1
         assert sounds[0].name == 'Test Sound'
         assert sounds[0].file_path.endswith('test.mp3')
+        sound_id = sounds[0].id
+        
+    # Delete sound
+    response = client.post(f'/soundboard/sound/{sound_id}/delete', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Sound deleted.' in response.data
+    
+    with client.application.app_context():
+        assert Sound.get_by_id(sound_id) is None
+        

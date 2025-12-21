@@ -92,12 +92,30 @@ class Soundboard:
             db.commit()
 
     @staticmethod
+    def get_by_id(soundboard_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM soundboards WHERE id = ?", (soundboard_id,))
+        row = cur.fetchone()
+        if row:
+            return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], icon=row['icon'])
+        return None
+
+    @staticmethod
     def get_by_user_id(user_id):
         db = get_soundboards_db()
         cur = db.cursor()
         cur.execute("SELECT * FROM soundboards WHERE user_id = ? ORDER BY name ASC", (user_id,))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], icon=row['icon']) for row in rows]
+
+    def get_sounds(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM sounds WHERE soundboard_id = ? ORDER BY name ASC", (self.id,))
+        rows = cur.fetchall()
+        return [Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
+                      file_path=row['file_path'], icon=row['icon']) for row in rows]
 
     def __repr__(self):
         return f'<Soundboard {self.name}>'
@@ -128,8 +146,23 @@ class Sound:
 
     def delete(self):
         if self.id:
+            import os
+            from flask import current_app
             db = get_soundboards_db()
             cur = db.cursor()
+            
+            # Remove the actual file
+            full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], self.file_path)
+            if os.path.exists(full_path):
+                os.remove(full_path)
+            
+            # Also remove custom icon if it's a file
+            if self.icon and '/' in self.icon:
+                icon_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], self.icon)
+                if os.path.exists(icon_full_path):
+                    # We should be careful about shared icons, but for now we delete it
+                    os.remove(icon_full_path)
+
             cur.execute("DELETE FROM sounds WHERE id = ?", (self.id,))
             db.commit()
 

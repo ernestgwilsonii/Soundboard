@@ -120,6 +120,24 @@ def upload_sound(id):
     
     return render_template('soundboard/upload.html', title='Upload Sound', form=form, soundboard=s)
 
+@bp.route('/sound/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_sound(id):
+    sound = Sound.get_by_id(id)
+    if sound is None:
+        flash('Sound not found.')
+        return redirect(url_for('soundboard.dashboard'))
+    
+    # Check board ownership
+    s = Soundboard.get_by_id(sound.soundboard_id)
+    if s is None or s.user_id != current_user.id:
+        flash('Permission denied.')
+        return redirect(url_for('soundboard.dashboard'))
+    
+    sound.delete()
+    flash('Sound deleted.')
+    return redirect(url_for('soundboard.edit', id=s.id))
+
 @bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete(id):
