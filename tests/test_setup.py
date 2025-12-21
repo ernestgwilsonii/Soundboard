@@ -27,3 +27,14 @@ def test_env_example_content():
         content = f.read()
         assert 'SECRET_KEY' in content
         assert 'DEBUG' in content
+
+def test_config_loading():
+    # This will fail until config.py is created
+    import config
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    assert hasattr(config, 'Config')
+    assert hasattr(config.Config, 'SECRET_KEY')
+    assert hasattr(config.Config, 'DEBUG')
+    assert config.Config.SECRET_KEY is not None
