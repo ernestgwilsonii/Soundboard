@@ -12,6 +12,24 @@ class User(UserMixin):
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
+    def save(self):
+        import sqlite3
+        from config import Config
+        with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+            cur = conn.cursor()
+            if self.id is None:
+                cur.execute(
+                    "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
+                    (self.username, self.email, self.password_hash, self.role)
+                )
+                self.id = cur.lastrowid
+            else:
+                cur.execute(
+                    "UPDATE users SET username=?, email=?, password_hash=?, role=? WHERE id=?",
+                    (self.username, self.email, self.password_hash, self.role, self.id)
+                )
+            conn.commit()
+
     def check_password(self, password):
         if self.password_hash is None:
             return False
