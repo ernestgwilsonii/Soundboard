@@ -45,3 +45,10 @@ def test_app_factory():
     app = create_app()
     assert isinstance(app, Flask)
     assert app.config['SECRET_KEY'] is not None
+
+def test_logging_configuration():
+    import logging
+    from app import create_app
+    app = create_app()
+    # Check if a file handler is added for production (not DEBUG)
+    assert len(app.logger.handlers) > 0
