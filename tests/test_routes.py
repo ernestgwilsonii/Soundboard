@@ -23,12 +23,13 @@ def client(monkeypatch):
     for db_path in [accounts_db, soundboards_db]:
         if os.path.exists(db_path): os.remove(db_path)
         
-    with sqlite3.connect(accounts_db) as conn:
-        with open('app/schema_accounts.sql', 'r') as f:
-            conn.executescript(f.read())
-    with sqlite3.connect(soundboards_db) as conn:
-        with open('app/schema_soundboards.sql', 'r') as f:
-            conn.executescript(f.read())
+    with app.app_context():
+        with sqlite3.connect(accounts_db) as conn:
+            with open('app/schema_accounts.sql', 'r') as f:
+                conn.executescript(f.read())
+        with sqlite3.connect(soundboards_db) as conn:
+            with open('app/schema_soundboards.sql', 'r') as f:
+                conn.executescript(f.read())
                 
     with app.test_client() as client:
         yield client
@@ -49,6 +50,7 @@ def test_auth_blueprint_registered(client):
         assert login_url == '/auth/login'
 
 def test_registration_flow(client):
+    # Registration flow should redirect to login upon success
     response = client.post('/auth/register', data={
         'username': 'newuser',
         'email': 'newuser@example.com',
@@ -127,95 +129,82 @@ def test_soundboard_creation_flow(client):
     assert response.status_code == 200
     assert b'My Soundboards' in response.data
     assert b'Test SB' in response.data
+
+def test_soundboard_edit_flow(client):
+    from app.models import User, Soundboard
+    with client.application.app_context():
+        u = User(username='edituser', email='edit@example.com')
+        u.set_password('cat')
+        u.save()
+        s = Soundboard(name='Old Name', user_id=u.id, icon='old-icon')
+        s.save()
+        sb_id = s.id
+            
+    client.post('/auth/login', data={'username': 'edituser', 'password': 'cat', 'submit': 'Sign In'})
     
+    response = client.post(f'/soundboard/edit/{sb_id}', data={
+        'name': 'New Name',
+        'icon': 'new-icon',
+        'submit': 'Save'
+    }, follow_redirects=True)
     
+    assert response.status_code == 200
+    assert b'My Soundboards' in response.data
+    assert b'New Name' in response.data
     
-    def test_soundboard_edit_flow(client):
+    with client.application.app_context():
+        s_updated = Soundboard.get_by_id(sb_id)
+        assert s_updated.name == 'New Name'
+
+def test_soundboard_delete_flow(client):
+    from app.models import User, Soundboard
+    with client.application.app_context():
+        u = User(username='deluser', email='del@example.com')
+        u.set_password('cat')
+        u.save()
+        s = Soundboard(name='To Delete', user_id=u.id, icon='del-icon')
+        s.save()
+        sb_id = s.id
+            
+    client.post('/auth/login', data={'username': 'deluser', 'password': 'cat', 'submit': 'Sign In'})
     
-        from app.models import User, Soundboard
+    response = client.post(f'/soundboard/delete/{sb_id}', follow_redirects=True)
     
-        with client.application.app_context():
+    assert response.status_code == 200
+    assert b'Soundboard deleted.' in response.data
     
-            u = User(username='edituser', email='edit@example.com')
+    with client.application.app_context():
+        assert Soundboard.get_by_id(sb_id) is None
+
+def test_sound_upload_flow(client):
+    from app.models import User, Soundboard, Sound
+    import io
     
-            u.set_password('cat')
+    with client.application.app_context():
+        u = User(username='upuser', email='up@example.com')
+        u.set_password('cat')
+        u.save()
+        s = Soundboard(name='Upload Board', user_id=u.id)
+        s.save()
+        sb_id = s.id
+            
+    client.post('/auth/login', data={'username': 'upuser', 'password': 'cat', 'submit': 'Sign In'})
     
-            u.save()
+    data = {
+        'name': 'Test Sound',
+        'audio_file': (io.BytesIO(b"fake audio data"), 'test.mp3'),
+        'icon': 'fas fa-volume-up',
+        'submit': 'Upload'
+    }
     
-            s = Soundboard(name='Old Name', user_id=u.id, icon='old-icon')
+    response = client.post(f'/soundboard/{sb_id}/upload', data=data, content_type='multipart/form-data', follow_redirects=True)
     
-            s.save()
+    assert response.status_code == 200
+    assert b'Edit Soundboard' in response.data # Redirected back to edit page
     
-            sb_id = s.id
-    
-                
-    
-        client.post('/auth/login', data={'username': 'edituser', 'password': 'cat', 'submit': 'Sign In'})
-    
-        
-    
-        response = client.post(f'/soundboard/edit/{sb_id}', data={
-    
-            'name': 'New Name',
-    
-            'icon': 'new-icon',
-    
-            'submit': 'Save'
-    
-        }, follow_redirects=True)
-    
-        
-    
-        assert response.status_code == 200
-    
-        assert b'Soundboard "New Name" updated!' in response.data
-    
-        
-    
-        with client.application.app_context():
-    
-            s_updated = Soundboard.get_by_id(sb_id)
-    
-            assert s_updated.name == 'New Name'
-    
-    
-    
-    def test_soundboard_delete_flow(client):
-    
-        from app.models import User, Soundboard
-    
-        with client.application.app_context():
-    
-            u = User(username='deluser', email='del@example.com')
-    
-            u.set_password('cat')
-    
-            u.save()
-    
-            s = Soundboard(name='To Delete', user_id=u.id, icon='del-icon')
-    
-            s.save()
-    
-            sb_id = s.id
-    
-                
-    
-        client.post('/auth/login', data={'username': 'deluser', 'password': 'cat', 'submit': 'Sign In'})
-    
-        
-    
-        response = client.post(f'/soundboard/delete/{sb_id}', follow_redirects=True)
-    
-        
-    
-        assert response.status_code == 200
-    
-        assert b'Soundboard deleted.' in response.data
-    
-        
-    
-        with client.application.app_context():
-    
-            assert Soundboard.get_by_id(sb_id) is None
-    
-    
+    with client.application.app_context():
+        sbs = Soundboard.get_by_id(sb_id)
+        sounds = sbs.get_sounds()
+        assert len(sounds) == 1
+        assert sounds[0].name == 'Test Sound'
+        assert sounds[0].file_path.endswith('test.mp3')

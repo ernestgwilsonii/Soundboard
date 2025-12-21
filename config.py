@@ -13,7 +13,8 @@ class Config:
     SOUNDBOARDS_DB = os.path.join(basedir, 'soundboards.sqlite3')
     
     # Sound file storage
-    SOUNDS_DIR = os.path.join(basedir, 'sounds')
+    SOUNDS_DIR = os.path.join(basedir, 'app', 'static', 'uploads')
     UPLOAD_FOLDER = SOUNDS_DIR
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB limit
     ALLOWED_EXTENSIONS = {'mp3', 'wav', 'ogg'}
+    ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}

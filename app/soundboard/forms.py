@@ -6,6 +6,9 @@ from wtforms.validators import DataRequired, Length
 class SoundboardForm(FlaskForm):
     name = StringField('Soundboard Name', validators=[DataRequired(), Length(min=1, max=64)])
     icon = StringField('Icon (Font Awesome class or URL)', validators=[Length(max=255)])
+    icon_image = FileField('Custom Icon Image (optional)', validators=[
+        FileAllowed(['png', 'jpg', 'jpeg', 'gif'], 'Images only!')
+    ])
     submit = SubmitField('Save')
 
 class SoundForm(FlaskForm):
@@ -15,4 +18,7 @@ class SoundForm(FlaskForm):
         FileAllowed(['mp3', 'wav', 'ogg'], 'Audio files only!')
     ])
     icon = StringField('Icon (Font Awesome class)', validators=[Length(max=255)])
+    icon_image = FileField('Custom Icon Image (optional)', validators=[
+        FileAllowed(['png', 'jpg', 'jpeg', 'gif'], 'Images only!')
+    ])
     submit = SubmitField('Upload')

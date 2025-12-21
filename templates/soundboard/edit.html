@@ -4,7 +4,7 @@
 <div class="row justify-content-center">
     <div class="col-md-6">
         <h1 class="text-center">Edit Soundboard</h1>
-        <form action="" method="post" novalidate>
+        <form action="" method="post" enctype="multipart/form-data" novalidate>
             {{ form.hidden_tag() }}
             <div class="mb-3">
                 {{ form.name.label(class="form-label") }}
@@ -20,11 +20,46 @@
                 <span class="text-danger">[{{ error }}]</span>
                 {% endfor %}
             </div>
+            <div class="mb-3">
+                {{ form.icon_image.label(class="form-label") }}
+                {{ form.icon_image(class="form-control") }}
+                {% for error in form.icon_image.errors %}
+                <span class="text-danger">[{{ error }}]</span>
+                {% endfor %}
+            </div>
             <div class="d-grid gap-2">
                 {{ form.submit(class="btn btn-primary") }}
                 <a href="{{ url_for('soundboard.dashboard') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
+        <hr class="my-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Sounds</h3>
+            <a href="{{ url_for('soundboard.upload_sound', id=soundboard.id) }}" class="btn btn-success btn-sm">
+                <i class="fas fa-upload"></i> Upload Sound
+            </a>
+        </div>
+        <div class="list-group mb-4">
+            {% for sound in sounds %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    {% if '/' in sound.icon %}
+                    <img src="{{ url_for('static', filename='uploads/' + sound.icon) }}" alt="{{ sound.name }}" class="me-2" style="width: 24px; height: 24px; object-fit: contain;">
+                    {% else %}
+                    <i class="{{ sound.icon or 'fas fa-volume-up' }} me-2"></i>
+                    {% endif %}
+                    {{ sound.name }}
+                </div>
+                <form action="#" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted text-center">No sounds uploaded yet.</p>
+            {% endfor %}
+        </div>
         <hr class="my-4">
         <div class="card border-danger">
             <div class="card-body">
