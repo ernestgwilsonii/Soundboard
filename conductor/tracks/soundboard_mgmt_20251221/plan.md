@@ -1,28 +1,28 @@
 # Track Plan: Soundboard Management and File Uploads
 
-## Phase 1: Soundboard and Sound Models
-- [ ] Task: Implement `Soundboard` model in `app/models.py` with methods for save, delete, and retrieval.
-- [ ] Task: Implement `Sound` model in `app/models.py` with methods for save, delete, and retrieval.
-- [ ] Task: Add tests for `Soundboard` and `Sound` model CRUD operations.
-- [ ] Task: Conductor - User Manual Verification 'Soundboard and Sound Models' (Protocol in workflow.md)
+## Phase 1: Models and Database Integration [checkpoint: 1345280]
+- [x] Task: Implement `Soundboard` and `Sound` models in `app/models.py` with CRUD methods. 8fb0d36
+- [x] Task: Create unit tests for models using a test SQLite database. 8fb0d36
+- [x] Task: Implement database connection management for the soundboard database. decf2a5
+- [x] Task: Conductor - User Manual Verification 'Models and Database Integration' (Protocol in workflow.md) 1345280
 
-## Phase 2: Soundboard Blueprint and Creation
-- [ ] Task: Create `app/soundboard/` directory and `app/soundboard/forms.py` for creation/edit forms.
-- [ ] Task: Create the `soundboard` blueprint and register it in `app/__init__.py`.
-- [ ] Task: Implement route and template for creating a new soundboard.
-- [ ] Task: Implement a "Dashboard" or "My Soundboards" page.
-- [ ] Task: Conductor - User Manual Verification 'Soundboard Blueprint and Creation' (Protocol in workflow.md)
+## Phase 2: Soundboard Management (CRUD)
+- [ ] Task: Create `app/soundboard/` blueprint and register it.
+- [ ] Task: Implement `SoundboardForm` for creation and editing.
+- [ ] Task: Implement routes and templates for "Create", "Edit", and "Delete" soundboards.
+- [ ] Task: Implement the user dashboard ("My Soundboards").
+- [ ] Task: Conductor - User Manual Verification 'Soundboard Management (CRUD)' (Protocol in workflow.md)
 
-## Phase 3: Sound Uploads and File Handling
-- [ ] Task: Configure upload folder and allowed extensions in `config.py`.
-- [ ] Task: Implement sound upload route and form.
-- [ ] Task: Implement secure file saving logic.
-- [ ] Task: Implement sound deletion (including file removal).
-- [ ] Task: Conductor - User Manual Verification 'Sound Uploads and File Handling' (Protocol in workflow.md)
+## Phase 3: Audio and Icon Uploads
+- [ ] Task: Implement `SoundForm` for audio uploads including name and icon selection.
+- [ ] Task: Configure secure file upload paths and allowed extensions in `config.py`.
+- [ ] Task: Implement the "Upload Sound" route and file saving logic.
+- [ ] Task: Implement custom image upload logic for icons.
+- [ ] Task: Conductor - User Manual Verification 'Audio and Icon Uploads' (Protocol in workflow.md)
 
-## Phase 4: Soundboard View and Playback
-- [ ] Task: Implement the interactive soundboard view template.
-- [ ] Task: Add JavaScript to handle icon clicks and audio playback.
-- [ ] Task: Implement route to serve uploaded audio files if not using static directly.
-- [ ] Task: Add delete/edit buttons to the soundboard view for owners.
-- [ ] Task: Conductor - User Manual Verification 'Soundboard View and Playback' (Protocol in workflow.md)
+## Phase 4: Soundboard Interface and Playback
+- [ ] Task: Implement the grid-based soundboard view template.
+- [ ] Task: Add Font Awesome integration for icon rendering.
+- [ ] Task: Implement JavaScript for immediate audio playback on icon click.
+- [ ] Task: Implement sound deletion from a soundboard.
+- [ ] Task: Conductor - User Manual Verification 'Soundboard Interface and Playback' (Protocol in workflow.md)
