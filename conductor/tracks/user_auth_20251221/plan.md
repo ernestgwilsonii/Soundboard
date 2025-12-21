@@ -1,11 +1,11 @@
 # Track Plan: User Authentication
 
-## Phase 1: Models and Login Manager
+## Phase 1: Models and Login Manager [checkpoint: c0c0e20]
 - [x] Task: Install `Flask-Login` and update `requirements.txt`. 62442a4
 - [x] Task: Update the `User` model in a new `app/models.py` file to include `UserMixin` and password hashing methods. c82c37f
 - [x] Task: Initialize `Flask-Login`'s `LoginManager` in `app/__init__.py`. c025c8e
 - [x] Task: Implement the `load_user` callback for `Flask-Login`. c025c8e
-- [ ] Task: Conductor - User Manual Verification 'Models and Login Manager' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Models and Login Manager' (Protocol in workflow.md) c0c0e20
 
 ## Phase 2: Registration and Forms
 - [ ] Task: Create `app/auth/forms.py` with `RegistrationForm` and `LoginForm` using `Flask-WTF`.
