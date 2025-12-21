@@ -9,7 +9,7 @@
 ## Phase 2: Project Structure and Configuration
 - [x] Task: Create the project directory structure (app/, tests/, static/, templates/). a2c490f
 - [x] Task: Create a .env file for environment variables (SECRET_KEY, DEBUG). 6b19456
-- [ ] Task: Create a `config.py` file to load configuration from environment variables.
+- [x] Task: Create a `config.py` file to load configuration from environment variables. 0e8088e
 - [ ] Task: Create `app/__init__.py` to implement the application factory pattern.
 - [ ] Task: Conductor - User Manual Verification 'Project Structure and Configuration' (Protocol in workflow.md)
 
