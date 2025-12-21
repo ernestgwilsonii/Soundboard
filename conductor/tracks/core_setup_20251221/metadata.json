@@ -1,0 +1,8 @@
+{
+"track_id": "core_setup_20251221",
+"type": "feature",
+"status": "new",
+"created_at": "2025-12-21T00:00:00Z",
+"updated_at": "2025-12-21T00:00:00Z",
+"description": "Set up the core Flask application and initial project structure, including basic routing and account management foundations."
+}
