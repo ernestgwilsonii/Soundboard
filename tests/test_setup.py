@@ -18,3 +18,12 @@ def test_directory_structure():
     assert os.path.isdir('app')
     assert os.path.isdir('static')
     assert os.path.isdir('templates')
+
+def test_env_example_exists():
+    assert os.path.exists('.env.example')
+
+def test_env_example_content():
+    with open('.env.example', 'r') as f:
+        content = f.read()
+        assert 'SECRET_KEY' in content
+        assert 'DEBUG' in content
