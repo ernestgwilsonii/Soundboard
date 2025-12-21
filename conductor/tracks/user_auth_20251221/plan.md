@@ -15,7 +15,7 @@
 - [x] Task: Conductor - User Manual Verification 'Registration and Forms' (Protocol in workflow.md) 22e9aab
 
 ## Phase 3: Login and Session Management
-- [ ] Task: Implement the login route and `login.html` template.
+- [x] Task: Implement the login route and `login.html` template. 6104639
 - [ ] Task: Implement the logout route.
 - [ ] Task: Update the base template to show "Login" or "Logout/Profile" based on authentication status.
 - [ ] Task: Verify that a user can log in and out successfully.
