@@ -1,0 +1,20 @@
+DROP TABLE IF EXISTS soundboards;
+DROP TABLE IF EXISTS sounds;
+
+CREATE TABLE soundboards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    icon TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sounds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    soundboard_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    icon TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
+);
