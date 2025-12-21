@@ -2,7 +2,7 @@
 
 ## Phase 1: Models and Login Manager
 - [x] Task: Install `Flask-Login` and update `requirements.txt`. 62442a4
-- [ ] Task: Update the `User` model in a new `app/models.py` file to include `UserMixin` and password hashing methods.
+- [x] Task: Update the `User` model in a new `app/models.py` file to include `UserMixin` and password hashing methods. c82c37f
 - [ ] Task: Initialize `Flask-Login`'s `LoginManager` in `app/__init__.py`.
 - [ ] Task: Implement the `load_user` callback for `Flask-Login`.
 - [ ] Task: Conductor - User Manual Verification 'Models and Login Manager' (Protocol in workflow.md)
