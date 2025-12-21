@@ -22,13 +22,19 @@ def test_auth_blueprint_registered(client):
         login_url = url_for('auth.login')
         assert login_url == '/auth/login'
 
+def test_soundboard_blueprint_registered(client):
+    from flask import url_for
+    # This should not raise an error if registered
+    with client.application.test_request_context():
+        create_url = url_for('soundboard.create')
+        assert create_url == '/soundboard/create'
+
 def test_registration_flow(client):
     # This test will check if registration successfully adds a user
     import sqlite3
-    from config import Config
     
     # Ensure user doesn't exist
-    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
         conn.execute("DELETE FROM users WHERE username = ?", ('newuser',))
     
     response = client.post('/auth/register', data={
@@ -43,7 +49,7 @@ def test_registration_flow(client):
     assert b"Congratulations, you are now a registered user!" in response.data
     
     # Verify in DB
-    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE username = ?", ('newuser',))
@@ -54,16 +60,16 @@ def test_registration_flow(client):
 def test_login_flow(client):
     from app.models import User
     import sqlite3
-    from config import Config
     
     # Ensure user doesn't exist
-    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
         conn.execute("DELETE FROM users WHERE username = ?", ('loginuser',))
     
     # Create a user first
-    u = User(username='loginuser', email='login@example.com')
-    u.set_password('cat')
-    u.save()
+    with client.application.app_context():
+        u = User(username='loginuser', email='login@example.com')
+        u.set_password('cat')
+        u.save()
     
     response = client.post('/auth/login', data={
         'username': 'loginuser',
@@ -80,14 +86,15 @@ def test_login_flow(client):
 def test_logout_flow(client):
     from app.models import User
     import sqlite3
-    from config import Config
     
     # Ensure user exists and is logged in
-    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
         conn.execute("DELETE FROM users WHERE username = ?", ('logoutuser',))
-    u = User(username='logoutuser', email='logout@example.com')
-    u.set_password('cat')
-    u.save()
+    
+    with client.application.app_context():
+        u = User(username='logoutuser', email='logout@example.com')
+        u.set_password('cat')
+        u.save()
     
     # Login
     client.post('/auth/login', data={'username': 'logoutuser', 'password': 'cat', 'submit': 'Sign In'})
@@ -105,14 +112,15 @@ def test_profile_protected(client):
     
     from app.models import User
     import sqlite3
-    from config import Config
     
     # Logged in user should see profile
-    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+    with sqlite3.connect(client.application.config['ACCOUNTS_DB']) as conn:
         conn.execute("DELETE FROM users WHERE username = ?", ('profileuser',))
-    u = User(username='profileuser', email='profile@example.com')
-    u.set_password('cat')
-    u.save()
+    
+    with client.application.app_context():
+        u = User(username='profileuser', email='profile@example.com')
+        u.set_password('cat')
+        u.save()
     
     client.post('/auth/login', data={'username': 'profileuser', 'password': 'cat', 'submit': 'Sign In'})
     response = client.get('/auth/profile')

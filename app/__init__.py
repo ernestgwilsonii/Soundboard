@@ -29,6 +29,9 @@ def create_app(config_class=Config):
 
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp)
+
+    from app.soundboard import bp as soundboard_bp
+    app.register_blueprint(soundboard_bp)
     
     # Configure logging
     if not app.debug and not app.testing:
