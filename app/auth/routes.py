@@ -25,6 +25,8 @@ def login():
 
 @bp.route('/logout')
 def logout():
+    from flask_login import logout_user
+    logout_user()
     return redirect(url_for('main.index'))
 
 @bp.route('/register', methods=['GET', 'POST'])

@@ -73,7 +73,27 @@ def test_login_flow(client):
     
     assert response.status_code == 200
     # Check if we are redirected to index and user is logged in
-    # (Since we don't have user info on index yet, we can check for logout link later)
-    # For now, just check if it doesn't stay on login page with error
     assert b"Invalid username or password" not in response.data
-    assert b"Sign In" not in response.data # Should not be on login page anymore
+    assert b"Logout" in response.data
+    assert b"Login" not in response.data
+
+def test_logout_flow(client):
+    from app.models import User
+    import sqlite3
+    from config import Config
+    
+    # Ensure user exists and is logged in
+    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+        conn.execute("DELETE FROM users WHERE username = ?", ('logoutuser',))
+    u = User(username='logoutuser', email='logout@example.com')
+    u.set_password('cat')
+    u.save()
+    
+    # Login
+    client.post('/auth/login', data={'username': 'logoutuser', 'password': 'cat', 'submit': 'Sign In'})
+    
+    # Logout
+    response = client.get('/auth/logout', follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Login" in response.data
+    assert b"Logout" not in response.data
