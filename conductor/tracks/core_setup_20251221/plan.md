@@ -1,7 +1,7 @@
 # Track Plan: Core Setup
 
 ## Phase 1: Environment and Dependencies
-- [ ] Task: Create a virtual environment and activate it.
+- [x] Task: Create a virtual environment and activate it. d3a1f1b
 - [ ] Task: Create a `requirements.txt` file with initial dependencies (Flask, Flask-WTF, python-dotenv, werkzeug).
 - [ ] Task: Install dependencies and freeze the requirements.
 - [ ] Task: Conductor - User Manual Verification 'Environment and Dependencies' (Protocol in workflow.md)
