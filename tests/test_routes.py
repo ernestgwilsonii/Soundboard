@@ -97,3 +97,24 @@ def test_logout_flow(client):
     assert response.status_code == 200
     assert b"Login" in response.data
     assert b"Logout" not in response.data
+
+def test_profile_protected(client):
+    # Anonymous user should be redirected to login
+    response = client.get('/auth/profile', follow_redirects=True)
+    assert b"Sign In" in response.data
+    
+    from app.models import User
+    import sqlite3
+    from config import Config
+    
+    # Logged in user should see profile
+    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+        conn.execute("DELETE FROM users WHERE username = ?", ('profileuser',))
+    u = User(username='profileuser', email='profile@example.com')
+    u.set_password('cat')
+    u.save()
+    
+    client.post('/auth/login', data={'username': 'profileuser', 'password': 'cat', 'submit': 'Sign In'})
+    response = client.get('/auth/profile')
+    assert response.status_code == 200
+    assert b"User: profileuser" in response.data

@@ -1,4 +1,5 @@
 from flask import render_template, redirect, url_for, flash
+from flask_login import login_required
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm
 
@@ -43,3 +44,8 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('auth.login'))
     return render_template('auth/signup.html', title='Register', form=form)
+
+@bp.route('/profile')
+@login_required
+def profile():
+    return render_template('auth/profile.html', title='Profile')
