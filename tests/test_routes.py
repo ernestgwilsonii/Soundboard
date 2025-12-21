@@ -50,3 +50,30 @@ def test_registration_flow(client):
         user = cur.fetchone()
         assert user is not None
         assert user['email'] == 'newuser@example.com'
+
+def test_login_flow(client):
+    from app.models import User
+    import sqlite3
+    from config import Config
+    
+    # Ensure user doesn't exist
+    with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+        conn.execute("DELETE FROM users WHERE username = ?", ('loginuser',))
+    
+    # Create a user first
+    u = User(username='loginuser', email='login@example.com')
+    u.set_password('cat')
+    u.save()
+    
+    response = client.post('/auth/login', data={
+        'username': 'loginuser',
+        'password': 'cat',
+        'submit': 'Sign In'
+    }, follow_redirects=True)
+    
+    assert response.status_code == 200
+    # Check if we are redirected to index and user is logged in
+    # (Since we don't have user info on index yet, we can check for logout link later)
+    # For now, just check if it doesn't stay on login page with error
+    assert b"Invalid username or password" not in response.data
+    assert b"Sign In" not in response.data # Should not be on login page anymore

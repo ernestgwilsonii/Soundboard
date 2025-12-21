@@ -36,6 +36,20 @@ class User(UserMixin):
         return check_password_hash(self.password_hash, password)
 
     @staticmethod
+    def get_by_username(username):
+        import sqlite3
+        from config import Config
+        with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+            row = cur.fetchone()
+            if row:
+                return User(id=row['id'], username=row['username'], email=row['email'], 
+                            password_hash=row['password_hash'], role=row['role'])
+        return None
+
+    @staticmethod
     def get_by_id(user_id):
         import sqlite3
         from config import Config
