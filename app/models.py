@@ -65,3 +65,107 @@ class User(UserMixin):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+class Soundboard:
+    def __init__(self, id=None, name=None, user_id=None, icon=None):
+        self.id = id
+        self.name = name
+        self.user_id = user_id
+        self.icon = icon
+
+    def save(self):
+        import sqlite3
+        from config import Config
+        with sqlite3.connect(Config.SOUNDBOARDS_DB) as conn:
+            cur = conn.cursor()
+            if self.id is None:
+                cur.execute(
+                    "INSERT INTO soundboards (name, user_id, icon) VALUES (?, ?, ?)",
+                    (self.name, self.user_id, self.icon)
+                )
+                self.id = cur.lastrowid
+            else:
+                cur.execute(
+                    "UPDATE soundboards SET name=?, user_id=?, icon=? WHERE id=?",
+                    (self.name, self.user_id, self.icon, self.id)
+                )
+            conn.commit()
+
+    def delete(self):
+        import sqlite3
+        from config import Config
+        if self.id:
+            with sqlite3.connect(Config.SOUNDBOARDS_DB) as conn:
+                cur = conn.cursor()
+                # Also delete associated sounds
+                cur.execute("DELETE FROM sounds WHERE soundboard_id = ?", (self.id,))
+                cur.execute("DELETE FROM soundboards WHERE id = ?", (self.id,))
+                conn.commit()
+
+    @staticmethod
+    def get_by_id(soundboard_id):
+        import sqlite3
+        from config import Config
+        with sqlite3.connect(Config.SOUNDBOARDS_DB) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM soundboards WHERE id = ?", (soundboard_id,))
+            row = cur.fetchone()
+            if row:
+                return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], icon=row['icon'])
+        return None
+
+    def __repr__(self):
+        return f'<Soundboard {self.name}>'
+
+class Sound:
+    def __init__(self, id=None, soundboard_id=None, name=None, file_path=None, icon=None):
+        self.id = id
+        self.soundboard_id = soundboard_id
+        self.name = name
+        self.file_path = file_path
+        self.icon = icon
+
+    def save(self):
+        import sqlite3
+        from config import Config
+        with sqlite3.connect(Config.SOUNDBOARDS_DB) as conn:
+            cur = conn.cursor()
+            if self.id is None:
+                cur.execute(
+                    "INSERT INTO sounds (soundboard_id, name, file_path, icon) VALUES (?, ?, ?, ?)",
+                    (self.soundboard_id, self.name, self.file_path, self.icon)
+                )
+                self.id = cur.lastrowid
+            else:
+                cur.execute(
+                    "UPDATE sounds SET soundboard_id=?, name=?, file_path=?, icon=? WHERE id=?",
+                    (self.soundboard_id, self.name, self.file_path, self.icon, self.id)
+                )
+            conn.commit()
+
+    def delete(self):
+        import sqlite3
+        from config import Config
+        if self.id:
+            with sqlite3.connect(Config.SOUNDBOARDS_DB) as conn:
+                cur = conn.cursor()
+                cur.execute("DELETE FROM sounds WHERE id = ?", (self.id,))
+                conn.commit()
+
+    @staticmethod
+    def get_by_id(sound_id):
+        import sqlite3
+        from config import Config
+        with sqlite3.connect(Config.SOUNDBOARDS_DB) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM sounds WHERE id = ?", (sound_id,))
+            row = cur.fetchone()
+            if row:
+                return Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
+                             file_path=row['file_path'], icon=row['icon'])
+        return None
+
+    def __repr__(self):
+        return f'<Sound {self.name}>'
