@@ -20,8 +20,8 @@
 - [x] Task: Conductor - User Manual Verification 'Database Initialization' (Protocol in workflow.md) c5763b8
 
 ## Phase 4: Basic Routing and Logging
-- [ ] Task: Create a `main` blueprint in `app/main/` with a simple route (`/`) rendering a template.
-- [ ] Task: Create a base template (`base.html`) and an index template (`index.html`).
+- [x] Task: Create a `main` blueprint in `app/main/` with a simple route (`/`) rendering a template. 5a97c22
+- [x] Task: Create a base template (`base.html`) and an index template (`index.html`). 5a97c22
 - [ ] Task: Configure Python's `logging` in `app/__init__.py`.
 - [ ] Task: Register the `main` blueprint in the application factory.
 - [ ] Task: Run the application and verify the landing page loads.
