@@ -9,6 +9,15 @@ def dashboard():
     sbs = Soundboard.get_by_user_id(current_user.id)
     return render_template('soundboard/dashboard.html', title='My Soundboards', soundboards=sbs)
 
+@bp.route('/view/<int:id>')
+def view(id):
+    s = Soundboard.get_by_id(id)
+    if s is None:
+        flash('Soundboard not found.')
+        return redirect(url_for('main.index'))
+    sounds = s.get_sounds()
+    return render_template('soundboard/view.html', title=s.name, soundboard=s, sounds=sounds)
+
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():

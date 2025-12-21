@@ -43,7 +43,7 @@
             {% for sound in sounds %}
             <div class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                    {% if '/' in sound.icon %}
+                    {% if sound.icon and '/' in sound.icon %}
                     <img src="{{ url_for('static', filename='uploads/' + sound.icon) }}" alt="{{ sound.name }}" class="me-2" style="width: 24px; height: 24px; object-fit: contain;">
                     {% else %}
                     <i class="{{ sound.icon or 'fas fa-volume-up' }} me-2"></i>

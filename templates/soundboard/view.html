@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center mb-4">
+        <h1>
+            {% if soundboard.icon and '/' in soundboard.icon %}
+            <img src="{{ url_for('static', filename='uploads/' + soundboard.icon) }}" alt="" style="width: 48px; height: 48px; object-fit: contain;">
+            {% else %}
+            <i class="{{ soundboard.icon or 'fas fa-music' }}"></i>
+            {% endif %}
+            {{ soundboard.name }}
+        </h1>
+        <p class="text-muted">Click an icon to play the sound.</p>
+    </div>
+</div>
+
+<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-4">
+    {% for sound in sounds %}
+    <div class="col">
+        <div class="card h-100 sound-card text-center p-3" 
+             onclick="playSound('{{ url_for('static', filename='uploads/' + sound.file_path) }}')"
+             style="cursor: pointer; transition: transform 0.1s;">
+            <div class="card-body p-0">
+                {% if sound.icon and '/' in sound.icon %}
+                <img src="{{ url_for('static', filename='uploads/' + sound.icon) }}" alt="{{ sound.name }}" class="mb-2" style="width: 64px; height: 64px; object-fit: contain;">
+                {% else %}
+                <i class="{{ sound.icon or 'fas fa-volume-up' }} fa-3x mb-2"></i>
+                {% endif %}
+                <h6 class="card-title mb-0">{{ sound.name }}</h6>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center">
+        <p class="text-muted">This soundboard is currently empty.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function playSound(url) {
+    const audio = new Audio(url);
+    audio.play().catch(error => {
+        console.error("Error playing sound:", error);
+        alert("Failed to play sound. Please check the file format or try again.");
+    });
+}
+
+// Add visual feedback on click
+document.querySelectorAll('.sound-card').forEach(card => {
+    card.addEventListener('mousedown', () => card.style.transform = 'scale(0.95)');
+    card.addEventListener('mouseup', () => card.style.transform = 'scale(1)');
+    card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
+});
+</script>
+
+<style>
+.sound-card:hover {
+    background-color: #f8f9fa;
+    border-color: #0d6efd;
+}
+</style>
+{% endblock %}

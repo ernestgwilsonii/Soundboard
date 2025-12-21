@@ -217,4 +217,21 @@ def test_sound_upload_flow(client):
     
     with client.application.app_context():
         assert Sound.get_by_id(sound_id) is None
+
+def test_soundboard_view_route(client):
+    from app.models import User, Soundboard, Sound
+    with client.application.app_context():
+        u = User(username='viewuser', email='view@example.com')
+        u.set_password('cat')
+        u.save()
+        s = Soundboard(name='View Board', user_id=u.id)
+        s.save()
+        snd = Sound(soundboard_id=s.id, name='View Sound', file_path='1/test.mp3')
+        snd.save()
+        sb_id = s.id
+            
+    response = client.get(f'/soundboard/view/{sb_id}')
+    assert response.status_code == 200
+    assert b'View Board' in response.data
+    assert b'View Sound' in response.data
         
