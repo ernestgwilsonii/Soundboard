@@ -15,7 +15,7 @@
 
 ## Phase 3: Database Initialization
 - [x] Task: Create a `schema.sql` (or Python script) to define the `users` table for `accounts.sqlite3` and `soundboards` table for `soundboards.sqlite3`. 104b8ae
-- [ ] Task: Write a script to initialize the two SQLite databases (`init_db.py`).
+- [x] Task: Write a script to initialize the two SQLite databases (`init_db.py`). 1b5e968
 - [ ] Task: Execute the initialization script and verify database creation.
 - [ ] Task: Conductor - User Manual Verification 'Database Initialization' (Protocol in workflow.md)
 
