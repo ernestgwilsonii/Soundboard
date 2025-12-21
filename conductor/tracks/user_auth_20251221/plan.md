@@ -22,7 +22,7 @@
 - [x] Task: Conductor - User Manual Verification 'Login and Session Management' (Protocol in workflow.md) e39b02c
 
 ## Phase 4: Profile and Protection
-- [ ] Task: Create a protected profile route and `profile.html` template.
-- [ ] Task: Add `@login_required` decorators to protect restricted routes.
-- [ ] Task: Verify that unauthorized users are redirected to the login page when accessing protected routes.
+- [x] Task: Create a protected profile route and `profile.html` template. 30a8c30
+- [x] Task: Add `@login_required` decorators to protect restricted routes. 30a8c30
+- [x] Task: Verify that unauthorized users are redirected to the login page when accessing protected routes. 30a8c30
 - [ ] Task: Conductor - User Manual Verification 'Profile and Protection' (Protocol in workflow.md)
