@@ -36,6 +36,7 @@ def test_soundboards_schema():
     assert 'name' in columns
     assert 'user_id' in columns
     assert 'icon' in columns
+    assert 'is_public' in columns
 
 def test_init_db():
     from init_db import init_db
@@ -57,13 +58,15 @@ def test_init_db():
     os.remove(test_soundboards_db)
 
 def test_load_user():
-    from app import login
-    # This might need mock or real DB setup
+    from app import create_app, login
     from app.models import User
     import sqlite3
     
-    # Create a temporary DB with a user
+    app = create_app()
+    app.config['TESTING'] = True
     db_path = 'test_load_user.sqlite3'
+    app.config['ACCOUNTS_DB'] = os.path.abspath(db_path)
+    
     if os.path.exists(db_path): os.remove(db_path)
     
     with sqlite3.connect(db_path) as conn:
@@ -72,15 +75,10 @@ def test_load_user():
         conn.execute("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
                      ('loader', 'loader@example.com', 'hash'))
     
-    # Monkeypatch Config.ACCOUNTS_DB or provide a way to use this test DB
-    import app
-    original_db = app.Config.ACCOUNTS_DB
-    app.Config.ACCOUNTS_DB = os.path.abspath(db_path)
-    
-    user = app.login._user_callback(1)
-    assert user is not None
-    assert user.username == 'loader'
+    with app.app_context():
+        user = login._user_callback(1)
+        assert user is not None
+        assert user.username == 'loader'
     
     # Cleanup
-    app.Config.ACCOUNTS_DB = original_db
     os.remove(db_path)
