@@ -14,7 +14,7 @@
 - [x] Task: Conductor - User Manual Verification 'Project Structure and Configuration' (Protocol in workflow.md) 06e6afa
 
 ## Phase 3: Database Initialization
-- [ ] Task: Create a `schema.sql` (or Python script) to define the `users` table for `accounts.sqlite3` and `soundboards` table for `soundboards.sqlite3`.
+- [x] Task: Create a `schema.sql` (or Python script) to define the `users` table for `accounts.sqlite3` and `soundboards` table for `soundboards.sqlite3`. 104b8ae
 - [ ] Task: Write a script to initialize the two SQLite databases (`init_db.py`).
 - [ ] Task: Execute the initialization script and verify database creation.
 - [ ] Task: Conductor - User Manual Verification 'Database Initialization' (Protocol in workflow.md)
