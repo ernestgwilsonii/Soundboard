@@ -13,11 +13,11 @@
 - [x] Task: Create `app/__init__.py` to implement the application factory pattern. 55472cf
 - [x] Task: Conductor - User Manual Verification 'Project Structure and Configuration' (Protocol in workflow.md) 06e6afa
 
-## Phase 3: Database Initialization
+## Phase 3: Database Initialization [checkpoint: c5763b8]
 - [x] Task: Create a `schema.sql` (or Python script) to define the `users` table for `accounts.sqlite3` and `soundboards` table for `soundboards.sqlite3`. 104b8ae
 - [x] Task: Write a script to initialize the two SQLite databases (`init_db.py`). 1b5e968
 - [x] Task: Execute the initialization script and verify database creation. 6357977
-- [ ] Task: Conductor - User Manual Verification 'Database Initialization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Database Initialization' (Protocol in workflow.md) c5763b8
 
 ## Phase 4: Basic Routing and Logging
 - [ ] Task: Create a `main` blueprint in `app/main/` with a simple route (`/`) rendering a template.
