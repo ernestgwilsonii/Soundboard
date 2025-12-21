@@ -14,12 +14,12 @@
 - [x] Task: Verify that a new user can be created in the `accounts.sqlite3` database. f4dab8d
 - [x] Task: Conductor - User Manual Verification 'Registration and Forms' (Protocol in workflow.md) 22e9aab
 
-## Phase 3: Login and Session Management
+## Phase 3: Login and Session Management [checkpoint: e39b02c]
 - [x] Task: Implement the login route and `login.html` template. 6104639
 - [x] Task: Implement the logout route. 2a3c910
 - [x] Task: Update the base template to show "Login" or "Logout/Profile" based on authentication status. 2a3c910
 - [x] Task: Verify that a user can log in and out successfully. 2a3c910
-- [ ] Task: Conductor - User Manual Verification 'Login and Session Management' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Login and Session Management' (Protocol in workflow.md) e39b02c
 
 ## Phase 4: Profile and Protection
 - [ ] Task: Create a protected profile route and `profile.html` template.
