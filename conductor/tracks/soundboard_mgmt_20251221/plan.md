@@ -13,16 +13,16 @@
 - [x] Task: Implement the user dashboard ("My Soundboards"). cccc0f8
 - [x] Task: Conductor - User Manual Verification 'Soundboard Management (CRUD)' (Protocol in workflow.md) 67848d6
 
-## Phase 3: Audio and Icon Uploads
-- [ ] Task: Implement `SoundForm` for audio uploads including name and icon selection.
-- [ ] Task: Configure secure file upload paths and allowed extensions in `config.py`.
-- [ ] Task: Implement the "Upload Sound" route and file saving logic.
-- [ ] Task: Implement custom image upload logic for icons.
-- [ ] Task: Conductor - User Manual Verification 'Audio and Icon Uploads' (Protocol in workflow.md)
+## Phase 3: Audio and Icon Uploads [checkpoint: 689c9fb]
+- [x] Task: Implement `SoundForm` for audio uploads including name and icon selection. 5868626
+- [x] Task: Configure secure file upload paths and allowed extensions in `config.py`. 01e469b
+- [x] Task: Implement the "Upload Sound" route and file saving logic. cccc0f8
+- [x] Task: Implement custom image upload logic for icons. 4e8f3c3
+- [x] Task: Implement sound deletion from a soundboard (including file removal). 69432ef
+- [x] Task: Conductor - User Manual Verification 'Audio and Icon Uploads' (Protocol in workflow.md) 689c9fb
 
 ## Phase 4: Soundboard Interface and Playback
 - [ ] Task: Implement the grid-based soundboard view template.
 - [ ] Task: Add Font Awesome integration for icon rendering.
 - [ ] Task: Implement JavaScript for immediate audio playback on icon click.
-- [ ] Task: Implement sound deletion from a soundboard.
 - [ ] Task: Conductor - User Manual Verification 'Soundboard Interface and Playback' (Protocol in workflow.md)
