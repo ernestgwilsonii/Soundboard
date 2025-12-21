@@ -14,3 +14,6 @@ class Config:
     
     # Sound file storage
     SOUNDS_DIR = os.path.join(basedir, 'sounds')
+    UPLOAD_FOLDER = SOUNDS_DIR
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB limit
+    ALLOWED_EXTENSIONS = {'mp3', 'wav', 'ogg'}

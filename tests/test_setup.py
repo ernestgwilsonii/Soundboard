@@ -63,3 +63,10 @@ def test_login_manager_initialized():
     from app import create_app
     app = create_app()
     assert hasattr(app, 'login_manager')
+
+def test_upload_config():
+    from app import create_app
+    app = create_app()
+    assert 'UPLOAD_FOLDER' in app.config
+    assert app.config['MAX_CONTENT_LENGTH'] == 5 * 1024 * 1024
+    assert 'mp3' in app.config['ALLOWED_EXTENSIONS']
