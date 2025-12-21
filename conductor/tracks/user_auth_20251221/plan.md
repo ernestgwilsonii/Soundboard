@@ -8,7 +8,7 @@
 - [x] Task: Conductor - User Manual Verification 'Models and Login Manager' (Protocol in workflow.md) c0c0e20
 
 ## Phase 2: Registration and Forms
-- [ ] Task: Create `app/auth/forms.py` with `RegistrationForm` and `LoginForm` using `Flask-WTF`.
+- [x] Task: Create `app/auth/forms.py` with `RegistrationForm` and `LoginForm` using `Flask-WTF`. fbb535f
 - [ ] Task: Create the `auth` blueprint and register it in `app/__init__.py`.
 - [ ] Task: Implement the registration route and `signup.html` template.
 - [ ] Task: Verify that a new user can be created in the `accounts.sqlite3` database.
