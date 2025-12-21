@@ -7,12 +7,12 @@
 - [x] Task: Implement the `load_user` callback for `Flask-Login`. c025c8e
 - [x] Task: Conductor - User Manual Verification 'Models and Login Manager' (Protocol in workflow.md) c0c0e20
 
-## Phase 2: Registration and Forms
+## Phase 2: Registration and Forms [checkpoint: 22e9aab]
 - [x] Task: Create `app/auth/forms.py` with `RegistrationForm` and `LoginForm` using `Flask-WTF`. fbb535f
 - [x] Task: Create the `auth` blueprint and register it in `app/__init__.py`. 999f386
 - [x] Task: Implement the registration route and `signup.html` template. f4dab8d
 - [x] Task: Verify that a new user can be created in the `accounts.sqlite3` database. f4dab8d
-- [ ] Task: Conductor - User Manual Verification 'Registration and Forms' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Registration and Forms' (Protocol in workflow.md) 22e9aab
 
 ## Phase 3: Login and Session Management
 - [ ] Task: Implement the login route and `login.html` template.
