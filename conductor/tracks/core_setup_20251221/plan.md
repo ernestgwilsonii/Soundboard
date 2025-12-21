@@ -24,5 +24,5 @@
 - [x] Task: Create a base template (`base.html`) and an index template (`index.html`). 5a97c22
 - [x] Task: Configure Python's `logging` in `app/__init__.py`. 859761d
 - [ ] Task: Register the `main` blueprint in the application factory.
-- [ ] Task: Run the application and verify the landing page loads.
+- [x] Task: Run the application and verify the landing page loads. f9f25bc
 - [ ] Task: Conductor - User Manual Verification 'Basic Routing and Logging' (Protocol in workflow.md)
