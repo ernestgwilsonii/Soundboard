@@ -1,7 +1,7 @@
 # Track Plan: User Authentication
 
 ## Phase 1: Models and Login Manager
-- [ ] Task: Install `Flask-Login` and update `requirements.txt`.
+- [x] Task: Install `Flask-Login` and update `requirements.txt`. 62442a4
 - [ ] Task: Update the `User` model in a new `app/models.py` file to include `UserMixin` and password hashing methods.
 - [ ] Task: Initialize `Flask-Login`'s `LoginManager` in `app/__init__.py`.
 - [ ] Task: Implement the `load_user` callback for `Flask-Login`.
