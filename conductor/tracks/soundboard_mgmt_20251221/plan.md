@@ -6,12 +6,12 @@
 - [x] Task: Implement database connection management for the soundboard database. decf2a5
 - [x] Task: Conductor - User Manual Verification 'Models and Database Integration' (Protocol in workflow.md) 1345280
 
-## Phase 2: Soundboard Management (CRUD)
-- [ ] Task: Create `app/soundboard/` blueprint and register it.
-- [ ] Task: Implement `SoundboardForm` for creation and editing.
-- [ ] Task: Implement routes and templates for "Create", "Edit", and "Delete" soundboards.
-- [ ] Task: Implement the user dashboard ("My Soundboards").
-- [ ] Task: Conductor - User Manual Verification 'Soundboard Management (CRUD)' (Protocol in workflow.md)
+## Phase 2: Soundboard Management (CRUD) [checkpoint: 67848d6]
+- [x] Task: Create `app/soundboard/` blueprint and register it. b5f5dfa
+- [x] Task: Implement `SoundboardForm` for creation and editing. 5eb6094
+- [x] Task: Implement routes and templates for "Create", "Edit", and "Delete" soundboards. cccc0f8
+- [x] Task: Implement the user dashboard ("My Soundboards"). cccc0f8
+- [x] Task: Conductor - User Manual Verification 'Soundboard Management (CRUD)' (Protocol in workflow.md) 67848d6
 
 ## Phase 3: Audio and Icon Uploads
 - [ ] Task: Implement `SoundForm` for audio uploads including name and icon selection.
