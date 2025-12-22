@@ -5,7 +5,42 @@
         <div class="container-fluid py-5 text-center">
             <h1 class="display-5 fw-bold">Welcome to Soundboard</h1>
             <p class="col-md-8 fs-4 mx-auto">Create, customize, and share your own unique soundboards.</p>
-            <button class="btn btn-primary btn-lg" type="button">Get Started</button>
+            {% if current_user.is_anonymous %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Get Started</a>
+            {% else %}
+            <a href="{{ url_for('soundboard.create') }}" class="btn btn-primary btn-lg">Create a Board</a>
+            {% endif %}
         </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2>Recent Discoveries</h2>
+            <a href="{{ url_for('soundboard.gallery') }}" class="btn btn-outline-primary btn-sm">View All</a>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for sb in soundboards %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    {% if sb.icon and '/' in sb.icon %}
+                    <img src="{{ url_for('static', filename='uploads/' + sb.icon) }}" alt="{{ sb.name }}" class="mb-3" style="width: 64px; height: 64px; object-fit: contain;">
+                    {% else %}
+                    <i class="{{ sb.icon or 'fas fa-music' }} fa-3x mb-3"></i>
+                    {% endif %}
+                    <h5 class="card-title">{{ sb.name }}</h5>
+                    <div class="mt-3">
+                        <a href="{{ url_for('soundboard.view', id=sb.id) }}" class="btn btn-sm btn-primary">Listen</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center">
+            <p class="text-muted">Start by sharing your first public soundboard!</p>
+        </div>
+        {% endfor %}
     </div>
 {% endblock %}
