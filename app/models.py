@@ -184,6 +184,13 @@ class Soundboard:
         return [Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
                       file_path=row['file_path'], icon=row['icon']) for row in rows]
 
+    def get_creator_username(self):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT username FROM users WHERE id = ?", (self.user_id,))
+        row = cur.fetchone()
+        return row['username'] if row else 'Unknown'
+
     def __repr__(self):
         return f'<Soundboard {self.name}>'
 
