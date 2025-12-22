@@ -112,7 +112,7 @@ def test_soundboard_blueprint_registered(client):
         assert create_url == '/soundboard/create'
 
 def test_soundboard_creation_flow(client):
-    from app.models import User
+    from app.models import User, Soundboard
     with client.application.app_context():
         u = User(username='sbuser', email='sb@example.com')
         u.set_password('cat')
@@ -123,12 +123,17 @@ def test_soundboard_creation_flow(client):
     response = client.post('/soundboard/create', data={
         'name': 'Test SB',
         'icon': 'fas fa-test',
+        'is_public': True,
         'submit': 'Save'
     }, follow_redirects=True)
     
     assert response.status_code == 200
     assert b'My Soundboards' in response.data
     assert b'Test SB' in response.data
+    
+    with client.application.app_context():
+        sbs = Soundboard.get_by_user_id(u.id)
+        assert sbs[0].is_public is True
 
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard
@@ -136,7 +141,7 @@ def test_soundboard_edit_flow(client):
         u = User(username='edituser', email='edit@example.com')
         u.set_password('cat')
         u.save()
-        s = Soundboard(name='Old Name', user_id=u.id, icon='old-icon')
+        s = Soundboard(name='Old Name', user_id=u.id, icon='old-icon', is_public=False)
         s.save()
         sb_id = s.id
             
@@ -145,6 +150,7 @@ def test_soundboard_edit_flow(client):
     response = client.post(f'/soundboard/edit/{sb_id}', data={
         'name': 'New Name',
         'icon': 'new-icon',
+        'is_public': True,
         'submit': 'Save'
     }, follow_redirects=True)
     
@@ -155,6 +161,7 @@ def test_soundboard_edit_flow(client):
     with client.application.app_context():
         s_updated = Soundboard.get_by_id(sb_id)
         assert s_updated.name == 'New Name'
+        assert s_updated.is_public is True
 
 def test_soundboard_delete_flow(client):
     from app.models import User, Soundboard

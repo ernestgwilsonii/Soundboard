@@ -38,7 +38,7 @@ def create():
             f.save(full_path)
             icon = icon_path
             
-        s = Soundboard(name=form.name.data, user_id=current_user.id, icon=icon)
+        s = Soundboard(name=form.name.data, user_id=current_user.id, icon=icon, is_public=form.is_public.data)
         s.save()
         flash(f'Soundboard "{s.name}" created!')
         return redirect(url_for('soundboard.dashboard'))
@@ -62,6 +62,7 @@ def edit(id):
     form = SoundboardForm()
     if form.validate_on_submit():
         s.name = form.name.data
+        s.is_public = form.is_public.data
         if form.icon_image.data:
             f = form.icon_image.data
             filename = secure_filename(f.filename)
@@ -79,6 +80,7 @@ def edit(id):
     elif request.method == 'GET':
         form.name.data = s.name
         form.icon.data = s.icon
+        form.is_public.data = s.is_public
     
     # Get sounds for this board
     sounds = s.get_sounds()
