@@ -130,6 +130,19 @@ def test_soundboard_creation_flow(client):
     assert response.status_code == 200
     assert b'My Soundboards' in response.data
     assert b'Test SB' in response.data
+
+def test_gallery_route(client):
+    from app.models import User, Soundboard
+    with client.application.app_context():
+        u = User(username='galleryuser', email='gallery@example.com')
+        u.set_password('cat')
+        u.save()
+        s = Soundboard(name='Public Gallery Board', user_id=u.id, is_public=True)
+        s.save()
+        
+    response = client.get('/soundboard/gallery')
+    assert response.status_code == 200
+    assert b'Public Gallery Board' in response.data
     
     with client.application.app_context():
         sbs = Soundboard.get_by_user_id(u.id)

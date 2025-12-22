@@ -18,6 +18,11 @@ def view(id):
     sounds = s.get_sounds()
     return render_template('soundboard/view.html', title=s.name, soundboard=s, sounds=sounds)
 
+@bp.route('/gallery')
+def gallery():
+    sbs = Soundboard.get_public()
+    return render_template('soundboard/gallery.html', title='Public Gallery', soundboards=sbs)
+
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
