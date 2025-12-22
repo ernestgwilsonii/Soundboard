@@ -21,8 +21,8 @@
 - [x] Task: Verify that search results include board names, creator names, and sound names. cf0c1cf
 - [x] Task: Conductor - User Manual Verification 'Global Search Functionality' (Protocol in workflow.md) e7df30a
 
-## Phase 4: Access Control and Final Polish
-- [ ] Task: Ensure the `view` route allows anonymous access for public boards.
-- [ ] Task: Verify that private boards are inaccessible to anyone but the owner.
-- [ ] Task: Refine the UI for search results and the gallery grid.
-- [ ] Task: Conductor - User Manual Verification 'Access Control and Final Polish' (Protocol in workflow.md)
+## Phase 4: Access Control and Final Polish [checkpoint: 1bf14f9]
+- [x] Task: Ensure the `view` route allows anonymous access for public boards. c4f0ba4
+- [x] Task: Verify that private boards are inaccessible to anyone but the owner. c4f0ba4
+- [x] Task: Refine the UI for search results and the gallery grid. 983b3de
+- [x] Task: Conductor - User Manual Verification 'Access Control and Final Polish' (Protocol in workflow.md) 1bf14f9
