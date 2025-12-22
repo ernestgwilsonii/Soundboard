@@ -1,6 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.auth import bp
+from app.auth.forms import LoginForm, RegistrationForm
 from functools import wraps
 
 def admin_required(f):
