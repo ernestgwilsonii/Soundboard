@@ -26,3 +26,19 @@ def toggle_user_active(id):
     status = "enabled" if u.active else "disabled"
     flash(f'User {u.username} has been {status}.')
     return redirect(url_for('admin.users'))
+
+@bp.route('/user/<int:id>/toggle_role', methods=['POST'])
+@admin_required
+def toggle_user_role(id):
+    u = User.get_by_id(id)
+    if u is None:
+        flash('User not found.')
+        return redirect(url_for('admin.users'))
+    if u.id == current_user.id:
+        flash('You cannot change your own role!')
+        return redirect(url_for('admin.users'))
+    
+    u.role = 'admin' if u.role == 'user' else 'user'
+    u.save()
+    flash(f'User {u.username} role changed to {u.role}.')
+    return redirect(url_for('admin.users'))

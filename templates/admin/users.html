@@ -43,8 +43,10 @@
                                 {% if user.active %}Disable{% else %}Enable{% endif %}
                             </button>
                         </form>
-                        <form action="#" method="post" class="d-inline ms-1">
-                            <button type="submit" class="btn btn-sm btn-outline-warning">Toggle Role</button>
+                        <form action="{{ url_for('admin.toggle_user_role', id=user.id) }}" method="post" class="d-inline ms-1">
+                            <button type="submit" class="btn btn-sm btn-outline-warning" {% if user.id == current_user.id %}disabled{% endif %}>
+                                Toggle Role
+                            </button>
                         </form>
                         <a href="#" class="btn btn-sm btn-outline-secondary ms-1">Reset Pwd</a>
                     </div>

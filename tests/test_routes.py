@@ -261,6 +261,34 @@ def test_toggle_user_active_flow(client):
         u3 = User.get_by_id(user_id)
         assert u3.active is True
 
+def test_toggle_user_role_flow(client):
+    from app.models import User
+    with client.application.app_context():
+        u = User(username='roleuser', email='role@e.com', role='user')
+        u.set_password('cat')
+        u.save()
+        user_id = u.id
+        
+        a = User(username='roleadmin', email='rolea@e.com', role='admin')
+        a.set_password('cat')
+        a.save()
+        
+    client.post('/auth/login', data={'username': 'roleadmin', 'password': 'cat', 'submit': 'Sign In'})
+    
+    # Toggle to admin
+    response = client.post(f'/admin/user/{user_id}/toggle_role', follow_redirects=True)
+    assert b'role changed to admin' in response.data
+    with client.application.app_context():
+        u2 = User.get_by_id(user_id)
+        assert u2.role == 'admin'
+        
+    # Toggle back to user
+    response = client.post(f'/admin/user/{user_id}/toggle_role', follow_redirects=True)
+    assert b'role changed to user' in response.data
+    with client.application.app_context():
+        u3 = User.get_by_id(user_id)
+        assert u3.role == 'user'
+
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard
     with client.application.app_context():
