@@ -43,10 +43,11 @@ def test_user_representation(app):
     assert str(u) == '<User test>'
 
 def test_soundboard_model(app):
-    s = Soundboard(name='My Board', user_id=1, icon='fas fa-music')
+    s = Soundboard(name='My Board', user_id=1, icon='fas fa-music', is_public=True)
     assert s.name == 'My Board'
     assert s.user_id == 1
     assert s.icon == 'fas fa-music'
+    assert s.is_public is True
     assert str(s) == '<Soundboard My Board>'
 
 def test_sound_model(app):
@@ -59,19 +60,20 @@ def test_sound_model(app):
 
 def test_soundboard_crud(app):
     # Create
-    s = Soundboard(name='CRUD Board', user_id=1, icon='test-icon')
+    s = Soundboard(name='CRUD Board', user_id=1, icon='test-icon', is_public=True)
     s.save()
     assert s.id is not None
     
     # Read
     s2 = Soundboard.get_by_id(s.id)
     assert s2.name == 'CRUD Board'
+    assert s2.is_public is True
     
     # Update
-    s2.name = 'Updated Board'
+    s2.is_public = False
     s2.save()
     s3 = Soundboard.get_by_id(s.id)
-    assert s3.name == 'Updated Board'
+    assert s3.is_public is False
     
     # Delete
     s3.delete()

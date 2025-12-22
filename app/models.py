@@ -60,25 +60,26 @@ class User(UserMixin):
         return f'<User {self.username}>'
 
 class Soundboard:
-    def __init__(self, id=None, name=None, user_id=None, icon=None):
+    def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False):
         self.id = id
         self.name = name
         self.user_id = user_id
         self.icon = icon
+        self.is_public = bool(is_public)
 
     def save(self):
         db = get_soundboards_db()
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO soundboards (name, user_id, icon) VALUES (?, ?, ?)",
-                (self.name, self.user_id, self.icon)
+                "INSERT INTO soundboards (name, user_id, icon, is_public) VALUES (?, ?, ?, ?)",
+                (self.name, self.user_id, self.icon, int(self.is_public))
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE soundboards SET name=?, user_id=?, icon=? WHERE id=?",
-                (self.name, self.user_id, self.icon, self.id)
+                "UPDATE soundboards SET name=?, user_id=?, icon=?, is_public=? WHERE id=?",
+                (self.name, self.user_id, self.icon, int(self.is_public), self.id)
             )
         db.commit()
 
@@ -98,7 +99,8 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards WHERE id = ?", (soundboard_id,))
         row = cur.fetchone()
         if row:
-            return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], icon=row['icon'])
+            return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                             icon=row['icon'], is_public=row['is_public'])
         return None
 
     @staticmethod
@@ -107,7 +109,8 @@ class Soundboard:
         cur = db.cursor()
         cur.execute("SELECT * FROM soundboards WHERE user_id = ? ORDER BY name ASC", (user_id,))
         rows = cur.fetchall()
-        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], icon=row['icon']) for row in rows]
+        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                          icon=row['icon'], is_public=row['is_public']) for row in rows]
 
     def get_sounds(self):
         db = get_soundboards_db()
