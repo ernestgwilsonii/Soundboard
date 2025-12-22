@@ -112,6 +112,24 @@ class Soundboard:
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
                           icon=row['icon'], is_public=row['is_public']) for row in rows]
 
+    @staticmethod
+    def get_public():
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY name ASC")
+        rows = cur.fetchall()
+        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+
+    @staticmethod
+    def get_recent_public(limit=6):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY created_at DESC LIMIT ?", (limit,))
+        rows = cur.fetchall()
+        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+
     def get_sounds(self):
         db = get_soundboards_db()
         cur = db.cursor()

@@ -79,6 +79,19 @@ def test_soundboard_crud(app):
     s3.delete()
     assert Soundboard.get_by_id(s.id) is None
 
+def test_soundboard_get_public(app):
+    # Create public and private boards
+    s1 = Soundboard(name='Public Board', user_id=1, is_public=True)
+    s1.save()
+    s2 = Soundboard(name='Private Board', user_id=1, is_public=False)
+    s2.save()
+    
+    public_boards = Soundboard.get_public()
+    assert len(public_boards) >= 1
+    assert any(b.name == 'Public Board' for b in public_boards)
+    assert all(b.is_public for b in public_boards)
+    assert not any(b.name == 'Private Board' for b in public_boards)
+
 def test_sound_crud(app):
     # Create
     s = Sound(name='CRUD Sound', soundboard_id=1, file_path='path/to/file', icon='test-icon')
