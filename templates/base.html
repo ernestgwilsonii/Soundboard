@@ -47,6 +47,10 @@
                     </li>
                     {% endif %}
                 </ul>
+                <form class="d-flex ms-lg-3" action="{{ url_for('soundboard.search') }}" method="get">
+                    <input class="form-control me-2" type="search" name="q" placeholder="Search boards..." aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
             </div>
         </div>
     </nav>
