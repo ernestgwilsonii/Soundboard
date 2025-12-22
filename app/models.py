@@ -56,6 +56,15 @@ class User(UserMixin):
                         password_hash=row['password_hash'], role=row['role'])
         return None
 
+    @staticmethod
+    def get_all():
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users ORDER BY username ASC")
+        rows = cur.fetchall()
+        return [User(id=row['id'], username=row['username'], email=row['email'], 
+                     password_hash=row['password_hash'], role=row['role']) for row in rows]
+
     def __repr__(self):
         return f'<User {self.username}>'
 

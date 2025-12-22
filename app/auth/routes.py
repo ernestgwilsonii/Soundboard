@@ -1,7 +1,16 @@
-from flask import render_template, redirect, url_for, flash
-from flask_login import login_required
+from flask import render_template, redirect, url_for, flash, request
+from flask_login import login_required, current_user
 from app.auth import bp
-from app.auth.forms import LoginForm, RegistrationForm
+from functools import wraps
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            flash('You do not have permission to access this page.')
+            return redirect(url_for('main.index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -9,6 +18,7 @@ def login():
     from flask_login import current_user, login_user
     from urllib.parse import urlparse
     from app.models import User
+    # flash('TEST LOGIN FLASH') # Temporary test
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     form = LoginForm()
@@ -43,6 +53,8 @@ def register():
         user.save()
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('auth.login'))
+    elif request.method == 'POST':
+        print(f"DEBUG: Form errors: {form.errors}")
     return render_template('auth/signup.html', title='Register', form=form)
 
 @bp.route('/profile')

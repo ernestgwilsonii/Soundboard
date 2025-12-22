@@ -42,6 +42,22 @@ def test_user_representation(app):
     u = User(username='test', email='test@example.com')
     assert str(u) == '<User test>'
 
+def test_user_get_all(app):
+    # Already some users created in previous tests might exist if not cleared
+    # But fixture clears them.
+    u1 = User(username='user1', email='u1@e.com')
+    u1.set_password('cat')
+    u1.save()
+    u2 = User(username='user2', email='u2@e.com')
+    u2.set_password('cat')
+    u2.save()
+    
+    users = User.get_all()
+    assert len(users) >= 2
+    usernames = [u.username for u in users]
+    assert 'user1' in usernames
+    assert 'user2' in usernames
+
 def test_soundboard_model(app):
     s = Soundboard(name='My Board', user_id=1, icon='fas fa-music', is_public=True)
     assert s.name == 'My Board'

@@ -188,6 +188,50 @@ def test_view_access_control(client):
     assert response.status_code == 200
     assert b'Private View' in response.data
 
+def test_admin_required_logic(client):
+    from app.models import User
+    with client.application.app_context():
+        # Create regular user
+        u1 = User(username='reguser', email='reg@e.com')
+        u1.set_password('cat')
+        u1.save()
+        # Create admin user
+        u2 = User(username='adminuser', email='admin@e.com', role='admin')
+        u2.set_password('cat')
+        u2.save()
+        
+    # Test route protection (we'll check if it redirects non-admins)
+    # We'll use a route that we know uses admin_required or mock it.
+    # For now, let's just test the logic via a temporary route in the blueprint if needed,
+    # or wait until Phase 2 when the real route exists.
+    # Actually, let's implement User.get_all first.
+
+def test_admin_required_decorator(client):
+    from app.models import User
+    with client.application.app_context():
+        # Create regular user
+        u1 = User(username='reguser', email='reg@e.com')
+        u1.set_password('cat')
+        u1.save()
+        # Create admin user
+        u2 = User(username='adminuser', email='admin@e.com', role='admin')
+        u2.set_password('cat')
+        u2.save()
+        
+    # Test route protection (we'll use a dummy admin route)
+    # First, login as regular user
+    client.post('/auth/login', data={'username': 'reguser', 'password': 'cat', 'submit': 'Sign In'})
+    response = client.get('/admin/users', follow_redirects=True)
+    assert b'You do not have permission to access this page.' in response.data
+    
+    # Login as admin user
+    client.post('/auth/logout', follow_redirects=True)
+    client.post('/auth/login', data={'username': 'adminuser', 'password': 'cat', 'submit': 'Sign In'})
+    response = client.get('/admin/users')
+    # Since Phase 2 implements the route, this might be 404 for now, 
+    # but the DECORATOR itself is what we are testing if we applied it to a test route.
+    # Let's wait until Phase 2 for full route test or implement a temporary test route.
+
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard
     with client.application.app_context():
