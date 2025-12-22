@@ -7,12 +7,12 @@
 - [x] Task: Update CRUD routes to correctly save and update the `is_public` status. a656247
 - [x] Task: Conductor - User Manual Verification 'Model Update and Visibility Toggle' (Protocol in workflow.md) 5326853
 
-## Phase 2: Public Gallery Implementation
-- [ ] Task: Implement `Soundboard.get_public()` and `Soundboard.get_recent_public()` methods.
-- [ ] Task: Create the `/gallery` route in `app/soundboard/routes.py` and its corresponding template.
-- [ ] Task: Update the main index route (`/`) to display recent public soundboards.
-- [ ] Task: Add a "Gallery" link to the navigation bar.
-- [ ] Task: Conductor - User Manual Verification 'Public Gallery Implementation' (Protocol in workflow.md)
+## Phase 2: Public Gallery Implementation [checkpoint: e245fb6]
+- [x] Task: Implement `Soundboard.get_public()` and `Soundboard.get_recent_public()` methods. a73aac9
+- [x] Task: Create the `/gallery` route in `app/soundboard/routes.py` and its corresponding template. f29c789
+- [x] Task: Update the main index route (`/`) to display recent public soundboards. 003df28
+- [x] Task: Add a "Gallery" link to the navigation bar. 512825b
+- [x] Task: Conductor - User Manual Verification 'Public Gallery Implementation' (Protocol in workflow.md) e245fb6
 
 ## Phase 3: Global Search Functionality
 - [ ] Task: Implement a `search` helper or model method that performs the multi-criteria SQL search.
