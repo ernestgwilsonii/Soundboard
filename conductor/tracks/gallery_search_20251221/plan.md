@@ -14,12 +14,12 @@
 - [x] Task: Add a "Gallery" link to the navigation bar. 512825b
 - [x] Task: Conductor - User Manual Verification 'Public Gallery Implementation' (Protocol in workflow.md) e245fb6
 
-## Phase 3: Global Search Functionality
-- [ ] Task: Implement a `search` helper or model method that performs the multi-criteria SQL search.
-- [ ] Task: Create the `/search` route and its corresponding template.
-- [ ] Task: Add a search bar to the home page and gallery page.
-- [ ] Task: Verify that search results include board names, creator names, and sound names.
-- [ ] Task: Conductor - User Manual Verification 'Global Search Functionality' (Protocol in workflow.md)
+## Phase 3: Global Search Functionality [checkpoint: e7df30a]
+- [x] Task: Implement a `search` helper or model method that performs the multi-criteria SQL search. cf0c1cf
+- [x] Task: Create the `/search` route and its corresponding template. bdc327a
+- [x] Task: Add a search bar to the home page and gallery page. 922ed72
+- [x] Task: Verify that search results include board names, creator names, and sound names. cf0c1cf
+- [x] Task: Conductor - User Manual Verification 'Global Search Functionality' (Protocol in workflow.md) e7df30a
 
 ## Phase 4: Access Control and Final Polish
 - [ ] Task: Ensure the `view` route allows anonymous access for public boards.
