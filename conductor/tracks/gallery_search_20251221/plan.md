@@ -1,11 +1,11 @@
 # Track Plan: Public Soundboard Gallery and Global Search
 
-## Phase 1: Model Update and Visibility Toggle
-- [ ] Task: Add `is_public` column to the `soundboards` table in `app/schema_soundboards.sql`.
-- [ ] Task: Update the `Soundboard` model in `app/models.py` to support the `is_public` field.
-- [ ] Task: Update `SoundboardForm` in `app/soundboard/forms.py` to include the "Public" checkbox.
-- [ ] Task: Update CRUD routes to correctly save and update the `is_public` status.
-- [ ] Task: Conductor - User Manual Verification 'Model Update and Visibility Toggle' (Protocol in workflow.md)
+## Phase 1: Model Update and Visibility Toggle [checkpoint: 5326853]
+- [x] Task: Add `is_public` column to the `soundboards` table in `app/schema_soundboards.sql`. d505b47
+- [x] Task: Update the `Soundboard` model in `app/models.py` to support the `is_public` field. 2c52de0
+- [x] Task: Update `SoundboardForm` in `app/soundboard/forms.py` to include the "Public" checkbox. a12db8e
+- [x] Task: Update CRUD routes to correctly save and update the `is_public` status. a656247
+- [x] Task: Conductor - User Manual Verification 'Model Update and Visibility Toggle' (Protocol in workflow.md) 5326853
 
 ## Phase 2: Public Gallery Implementation
 - [ ] Task: Implement `Soundboard.get_public()` and `Soundboard.get_recent_public()` methods.
