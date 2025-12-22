@@ -130,6 +130,52 @@ class Soundboard:
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
                           icon=row['icon'], is_public=row['is_public']) for row in rows]
 
+    @staticmethod
+    def search(query):
+        from app.db import get_accounts_db, get_soundboards_db
+        from config import Config
+        
+        # We need to search across two databases. 
+        # This is tricky with raw SQLite. 
+        # Strategy: 
+        # 1. Find user IDs matching query in accounts DB.
+        # 2. Search soundboards DB for matching names OR matching user IDs.
+        # 3. Search soundboards DB for matching sounds and get their soundboard IDs.
+        
+        user_ids = []
+        accounts_db = get_accounts_db()
+        ac_cur = accounts_db.cursor()
+        ac_cur.execute("SELECT id FROM users WHERE username LIKE ?", (f'%{query}%',))
+        user_ids = [row['id'] for row in ac_cur.fetchall()]
+        
+        soundboards_db = get_soundboards_db()
+        sb_cur = soundboards_db.cursor()
+        
+        # Build query for soundboards
+        search_query = "SELECT DISTINCT id, name, user_id, icon, is_public FROM soundboards WHERE is_public = 1 AND (name LIKE ?"
+        params = [f'%{query}%']
+        
+        if user_ids:
+            placeholders = ','.join(['?'] * len(user_ids))
+            search_query += f" OR user_id IN ({placeholders})"
+            params.extend(user_ids)
+            
+        # Search sounds and get their board IDs
+        sb_cur.execute("SELECT DISTINCT soundboard_id FROM sounds WHERE name LIKE ?", (f'%{query}%',))
+        sound_sb_ids = [row['soundboard_id'] for row in sb_cur.fetchall()]
+        
+        if sound_sb_ids:
+            placeholders = ','.join(['?'] * len(sound_sb_ids))
+            search_query += f" OR id IN ({placeholders})"
+            params.extend(sound_sb_ids)
+            
+        search_query += ") ORDER BY name ASC"
+        
+        sb_cur.execute(search_query, params)
+        rows = sb_cur.fetchall()
+        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+
     def get_sounds(self):
         db = get_soundboards_db()
         cur = db.cursor()

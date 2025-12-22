@@ -92,6 +92,40 @@ def test_soundboard_get_public(app):
     assert all(b.is_public for b in public_boards)
     assert not any(b.name == 'Private Board' for b in public_boards)
 
+def test_soundboard_search(app):
+    from app.models import User, Soundboard, Sound
+    with app.app_context():
+        u = User(username='searcher', email='search@example.com')
+        u.set_password('cat')
+        u.save()
+        
+        # Board with specific name
+        s1 = Soundboard(name='Unique Name Board', user_id=u.id, is_public=True)
+        s1.save()
+        
+        # Board with specific sound
+        s2 = Soundboard(name='Sound Host', user_id=u.id, is_public=True)
+        s2.save()
+        snd = Sound(name='Target Sound', soundboard_id=s2.id, file_path='p')
+        snd.save()
+        
+        # Private board (should not be found)
+        s3 = Soundboard(name='Private Target', user_id=u.id, is_public=False)
+        s3.save()
+        
+        # Search by board name
+        results = Soundboard.search('Unique')
+        assert any(b.name == 'Unique Name Board' for b in results)
+        
+        # Search by username
+        results = Soundboard.search('searcher')
+        assert len(results) >= 2
+        
+        # Search by sound name
+        results = Soundboard.search('Target')
+        assert any(b.name == 'Sound Host' for b in results)
+        assert not any(b.name == 'Private Target' for b in results)
+
 def test_sound_crud(app):
     # Create
     s = Sound(name='CRUD Sound', soundboard_id=1, file_path='path/to/file', icon='test-icon')
