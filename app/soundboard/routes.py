@@ -23,6 +23,15 @@ def gallery():
     sbs = Soundboard.get_public()
     return render_template('soundboard/gallery.html', title='Public Gallery', soundboards=sbs)
 
+@bp.route('/search')
+def search():
+    query = request.args.get('q', '')
+    if query:
+        sbs = Soundboard.search(query)
+    else:
+        sbs = []
+    return render_template('soundboard/search.html', title='Search Results', soundboards=sbs, query=query)
+
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():

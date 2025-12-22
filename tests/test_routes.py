@@ -143,6 +143,19 @@ def test_gallery_route(client):
     response = client.get('/soundboard/gallery')
     assert response.status_code == 200
     assert b'Public Gallery Board' in response.data
+
+def test_search_route(client):
+    from app.models import User, Soundboard
+    with client.application.app_context():
+        u = User(username='searchuser', email='search@example.com')
+        u.set_password('cat')
+        u.save()
+        s = Soundboard(name='Find Me Board', user_id=u.id, is_public=True)
+        s.save()
+        
+    response = client.get('/soundboard/search?q=Find')
+    assert response.status_code == 200
+    assert b'Find Me Board' in response.data
     
     with client.application.app_context():
         sbs = Soundboard.get_by_user_id(u.id)
