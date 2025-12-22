@@ -3,12 +3,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.db import get_accounts_db, get_soundboards_db
 
 class User(UserMixin):
-    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user'):
+    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', active=True):
         self.id = id
         self.username = username
         self.email = email
         self.password_hash = password_hash
         self.role = role
+        self.active = bool(active)
+
+    @property
+    def is_active(self):
+        return self.active
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -18,14 +23,14 @@ class User(UserMixin):
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
-                (self.username, self.email, self.password_hash, self.role)
+                "INSERT INTO users (username, email, password_hash, role, active) VALUES (?, ?, ?, ?, ?)",
+                (self.username, self.email, self.password_hash, self.role, int(self.active))
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE users SET username=?, email=?, password_hash=?, role=? WHERE id=?",
-                (self.username, self.email, self.password_hash, self.role, self.id)
+                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=? WHERE id=?",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), self.id)
             )
         db.commit()
 
@@ -42,7 +47,7 @@ class User(UserMixin):
         row = cur.fetchone()
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
-                        password_hash=row['password_hash'], role=row['role'])
+                        password_hash=row['password_hash'], role=row['role'], active=row['active'])
         return None
 
     @staticmethod
@@ -53,7 +58,7 @@ class User(UserMixin):
         row = cur.fetchone()
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
-                        password_hash=row['password_hash'], role=row['role'])
+                        password_hash=row['password_hash'], role=row['role'], active=row['active'])
         return None
 
     @staticmethod
@@ -63,7 +68,7 @@ class User(UserMixin):
         cur.execute("SELECT * FROM users ORDER BY username ASC")
         rows = cur.fetchall()
         return [User(id=row['id'], username=row['username'], email=row['email'], 
-                     password_hash=row['password_hash'], role=row['role']) for row in rows]
+                     password_hash=row['password_hash'], role=row['role'], active=row['active']) for row in rows]
 
     def __repr__(self):
         return f'<User {self.username}>'

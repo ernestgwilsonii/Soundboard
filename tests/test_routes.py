@@ -225,12 +225,41 @@ def test_admin_required_decorator(client):
     assert b'You do not have permission to access this page.' in response.data
     
     # Login as admin user
-    client.post('/auth/logout', follow_redirects=True)
-    client.post('/auth/login', data={'username': 'adminuser', 'password': 'cat', 'submit': 'Sign In'})
+    client.get('/auth/logout', follow_redirects=True)
+    client.post('/auth/login', data={'username': 'adminuser', 'password': 'cat', 'submit': 'Sign In'}, follow_redirects=True)
     response = client.get('/admin/users')
-    # Since Phase 2 implements the route, this might be 404 for now, 
-    # but the DECORATOR itself is what we are testing if we applied it to a test route.
-    # Let's wait until Phase 2 for full route test or implement a temporary test route.
+    assert response.status_code == 200
+    assert b'User Management' in response.data
+    assert b'reguser' in response.data
+    assert b'adminuser' in response.data
+
+def test_toggle_user_active_flow(client):
+    from app.models import User
+    with client.application.app_context():
+        u = User(username='tgluser', email='tgl@e.com')
+        u.set_password('cat')
+        u.save()
+        user_id = u.id
+        
+        a = User(username='tgladmin', email='tgla@e.com', role='admin')
+        a.set_password('cat')
+        a.save()
+        
+    client.post('/auth/login', data={'username': 'tgladmin', 'password': 'cat', 'submit': 'Sign In'})
+    
+    # Toggle to inactive
+    response = client.post(f'/admin/user/{user_id}/toggle_active', follow_redirects=True)
+    assert b'has been disabled' in response.data
+    with client.application.app_context():
+        u2 = User.get_by_id(user_id)
+        assert u2.active is False
+        
+    # Toggle back to active
+    response = client.post(f'/admin/user/{user_id}/toggle_active', follow_redirects=True)
+    assert b'has been enabled' in response.data
+    with client.application.app_context():
+        u3 = User.get_by_id(user_id)
+        assert u3.active is True
 
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard

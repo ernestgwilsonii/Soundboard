@@ -42,6 +42,23 @@ def test_user_representation(app):
     u = User(username='test', email='test@example.com')
     assert str(u) == '<User test>'
 
+def test_user_mixin_inheritance(app):
+    from flask_login import UserMixin
+    u = User(username='test', email='test@example.com')
+    assert isinstance(u, UserMixin)
+    assert u.is_authenticated
+    assert u.is_active is True
+    assert not u.is_anonymous
+
+def test_user_active_status(app):
+    u = User(username='inactive', email='inactive@e.com', active=False)
+    u.set_password('cat')
+    u.save()
+    
+    u2 = User.get_by_id(u.id)
+    assert u2.active is False
+    assert u2.is_active is False
+
 def test_user_get_all(app):
     # Already some users created in previous tests might exist if not cleared
     # But fixture clears them.
