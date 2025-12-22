@@ -11,10 +11,18 @@ def dashboard():
 
 @bp.route('/view/<int:id>')
 def view(id):
+    from flask_login import current_user
     s = Soundboard.get_by_id(id)
     if s is None:
         flash('Soundboard not found.')
         return redirect(url_for('main.index'))
+    
+    # Access control: Private boards only accessible by owner
+    if not s.is_public:
+        if not current_user.is_authenticated or s.user_id != current_user.id:
+            flash('This soundboard is private.')
+            return redirect(url_for('main.index'))
+            
     sounds = s.get_sounds()
     return render_template('soundboard/view.html', title=s.name, soundboard=s, sounds=sounds)
 

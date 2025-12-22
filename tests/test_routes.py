@@ -156,10 +156,37 @@ def test_search_route(client):
     response = client.get('/soundboard/search?q=Find')
     assert response.status_code == 200
     assert b'Find Me Board' in response.data
-    
+
+def test_view_access_control(client):
+    from app.models import User, Soundboard
     with client.application.app_context():
-        sbs = Soundboard.get_by_user_id(u.id)
-        assert sbs[0].is_public is True
+        u = User(username='owner', email='owner@example.com')
+        u.set_password('cat')
+        u.save()
+        
+        public_sb = Soundboard(name='Public View', user_id=u.id, is_public=True)
+        public_sb.save()
+        pub_id = public_sb.id
+        
+        private_sb = Soundboard(name='Private View', user_id=u.id, is_public=False)
+        private_sb.save()
+        priv_id = private_sb.id
+        
+    # Anonymous access to public board
+    response = client.get(f'/soundboard/view/{pub_id}')
+    assert response.status_code == 200
+    assert b'Public View' in response.data
+    
+    # Anonymous access to private board (should redirect or error)
+    response = client.get(f'/soundboard/view/{priv_id}', follow_redirects=True)
+    assert response.status_code == 200 # Redirected to index
+    assert b'Private View' not in response.data
+    
+    # Authenticated access to own private board
+    client.post('/auth/login', data={'username': 'owner', 'password': 'cat', 'submit': 'Sign In'})
+    response = client.get(f'/soundboard/view/{priv_id}')
+    assert response.status_code == 200
+    assert b'Private View' in response.data
 
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard
@@ -257,7 +284,7 @@ def test_soundboard_view_route(client):
         u = User(username='viewuser', email='view@example.com')
         u.set_password('cat')
         u.save()
-        s = Soundboard(name='View Board', user_id=u.id)
+        s = Soundboard(name='View Board', user_id=u.id, is_public=True)
         s.save()
         snd = Sound(soundboard_id=s.id, name='View Sound', file_path='1/test.mp3')
         snd.save()
