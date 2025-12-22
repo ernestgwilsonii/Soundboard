@@ -31,8 +31,9 @@ def test_soundboard_form(app):
     from app.soundboard.forms import SoundboardForm
     with app.app_context():
         # Valid form
-        form = SoundboardForm(name='New Board', icon='fas fa-music')
+        form = SoundboardForm(name='New Board', icon='fas fa-music', is_public=True)
         assert form.validate()
+        assert form.is_public.data is True
         
         # Invalid form (missing name)
         form = SoundboardForm(name='', icon='fas fa-music')

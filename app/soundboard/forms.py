@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length
 
 class SoundboardForm(FlaskForm):
@@ -9,6 +9,7 @@ class SoundboardForm(FlaskForm):
     icon_image = FileField('Custom Icon Image (optional)', validators=[
         FileAllowed(['png', 'jpg', 'jpeg', 'gif'], 'Images only!')
     ])
+    is_public = BooleanField('Public (Shared with everyone)')
     submit = SubmitField('Save')
 
 class SoundForm(FlaskForm):
