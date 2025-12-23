@@ -39,6 +39,17 @@ def test_soundboard_form(app):
         form = SoundboardForm(name='', icon='fas fa-music')
         assert not form.validate()
 
+def test_admin_password_reset_form(app):
+    from app.admin.forms import AdminPasswordResetForm
+    with app.app_context():
+        # Valid
+        form = AdminPasswordResetForm(password='newpass', password_confirm='newpass')
+        assert form.validate()
+        
+        # Mismatch
+        form = AdminPasswordResetForm(password='newpass', password_confirm='wrong')
+        assert not form.validate()
+
 def test_sound_form(app):
     from app.soundboard.forms import SoundForm
     with app.app_context():
