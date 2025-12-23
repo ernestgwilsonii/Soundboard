@@ -29,6 +29,17 @@
                         <a class="nav-link" href="{{ url_for('soundboard.dashboard') }}">My Soundboards</a>
                     </li>
                     {% endif %}
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Admin
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">User Management</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.soundboards') }}">Content Management</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if current_user.is_anonymous %}

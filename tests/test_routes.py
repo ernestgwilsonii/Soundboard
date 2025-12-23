@@ -255,12 +255,14 @@ def test_admin_required_decorator(client):
     client.post('/auth/login', data={'username': 'reguser', 'password': 'cat', 'submit': 'Sign In'})
     response = client.get('/admin/users', follow_redirects=True)
     assert b'You do not have permission to access this page.' in response.data
+    assert b'Admin' not in response.data
     
     # Login as admin user
     client.get('/auth/logout', follow_redirects=True)
     client.post('/auth/login', data={'username': 'adminuser', 'password': 'cat', 'submit': 'Sign In'}, follow_redirects=True)
     response = client.get('/admin/users')
     assert response.status_code == 200
+    assert b'Admin' in response.data
     assert b'User Management' in response.data
     assert b'reguser' in response.data
     assert b'adminuser' in response.data
