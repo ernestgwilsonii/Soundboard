@@ -42,3 +42,20 @@ def toggle_user_role(id):
     u.save()
     flash(f'User {u.username} role changed to {u.role}.')
     return redirect(url_for('admin.users'))
+
+@bp.route('/user/<int:id>/reset_password', methods=['GET', 'POST'])
+@admin_required
+def reset_password(id):
+    from app.admin.forms import AdminPasswordResetForm
+    u = User.get_by_id(id)
+    if u is None:
+        flash('User not found.')
+        return redirect(url_for('admin.users'))
+    
+    form = AdminPasswordResetForm()
+    if form.validate_on_submit():
+        u.set_password(form.password.data)
+        u.save()
+        flash(f'Password for {u.username} has been reset.')
+        return redirect(url_for('admin.users'))
+    return render_template('admin/reset_password.html', title='Reset Password', form=form, user=u)

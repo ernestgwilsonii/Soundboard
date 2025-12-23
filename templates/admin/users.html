@@ -48,7 +48,7 @@
                                 Toggle Role
                             </button>
                         </form>
-                        <a href="#" class="btn btn-sm btn-outline-secondary ms-1">Reset Pwd</a>
+                        <a href="{{ url_for('admin.reset_password', id=user.id) }}" class="btn btn-sm btn-outline-secondary ms-1">Reset Pwd</a>
                     </div>
                 </td>
             </tr>

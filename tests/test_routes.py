@@ -289,6 +289,34 @@ def test_toggle_user_role_flow(client):
         u3 = User.get_by_id(user_id)
         assert u3.role == 'user'
 
+def test_admin_password_reset_flow(client):
+    from app.models import User
+    with client.application.app_context():
+        u = User(username='resetuser', email='reset@e.com')
+        u.set_password('oldpass')
+        u.save()
+        user_id = u.id
+        
+        a = User(username='resetadmin', email='reseta@e.com', role='admin')
+        a.set_password('cat')
+        a.save()
+        
+    client.post('/auth/login', data={'username': 'resetadmin', 'password': 'cat', 'submit': 'Sign In'})
+    
+    # Reset password
+    response = client.post(f'/admin/user/{user_id}/reset_password', data={
+        'password': 'newpassword',
+        'password_confirm': 'newpassword',
+        'submit': 'Reset Password'
+    }, follow_redirects=True)
+    
+    assert b'has been reset' in response.data
+    
+    # Verify new password works
+    client.get('/auth/logout', follow_redirects=True)
+    response = client.post('/auth/login', data={'username': 'resetuser', 'password': 'newpassword', 'submit': 'Sign In'}, follow_redirects=True)
+    assert b'Logout' in response.data
+
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard
     with client.application.app_context():
