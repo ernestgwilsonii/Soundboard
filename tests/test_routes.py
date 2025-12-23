@@ -188,6 +188,38 @@ def test_view_access_control(client):
     assert response.status_code == 200
     assert b'Private View' in response.data
 
+def test_admin_crud_override(client):
+    from app.models import User, Soundboard
+    with client.application.app_context():
+        # User owns a board
+        u = User(username='regular', email='reg@test.com')
+        u.set_password('cat')
+        u.save()
+        s = Soundboard(name='Regular Board', user_id=u.id)
+        s.save()
+        sb_id = s.id
+        
+        # Admin exists
+        a = User(username='bigadmin', email='admin@test.com', role='admin')
+        a.set_password('cat')
+        a.save()
+        
+    # Login as admin
+    client.post('/auth/login', data={'username': 'bigadmin', 'password': 'cat', 'submit': 'Sign In'})
+    
+    # Admin edits regular user's board
+    response = client.post(f'/soundboard/edit/{sb_id}', data={
+        'name': 'Admin Overwritten',
+        'submit': 'Save'
+    }, follow_redirects=True)
+    assert b'Admin Overwritten' in response.data
+    
+    # Admin deletes regular user's board
+    response = client.post(f'/soundboard/delete/{sb_id}', follow_redirects=True)
+    assert b'Soundboard deleted.' in response.data
+    with client.application.app_context():
+        assert Soundboard.get_by_id(sb_id) is None
+
 def test_admin_required_logic(client):
     from app.models import User
     with client.application.app_context():

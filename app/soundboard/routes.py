@@ -77,7 +77,9 @@ def edit(id):
     if s is None:
         flash('Soundboard not found.')
         return redirect(url_for('soundboard.dashboard'))
-    if s.user_id != current_user.id:
+    
+    # Ownership check with admin override
+    if s.user_id != current_user.id and current_user.role != 'admin':
         flash('You do not have permission to edit this soundboard.')
         return redirect(url_for('soundboard.dashboard'))
     
@@ -117,8 +119,13 @@ def upload_sound(id):
     from flask import current_app
     
     s = Soundboard.get_by_id(id)
-    if s is None or s.user_id != current_user.id:
-        flash('Soundboard not found or permission denied.')
+    if s is None:
+        flash('Soundboard not found.')
+        return redirect(url_for('soundboard.dashboard'))
+        
+    # Ownership check with admin override
+    if s.user_id != current_user.id and current_user.role != 'admin':
+        flash('Permission denied.')
         return redirect(url_for('soundboard.dashboard'))
     
     form = SoundForm()
@@ -161,9 +168,9 @@ def delete_sound(id):
         flash('Sound not found.')
         return redirect(url_for('soundboard.dashboard'))
     
-    # Check board ownership
+    # Check board ownership with admin override
     s = Soundboard.get_by_id(sound.soundboard_id)
-    if s is None or s.user_id != current_user.id:
+    if s is None or (s.user_id != current_user.id and current_user.role != 'admin'):
         flash('Permission denied.')
         return redirect(url_for('soundboard.dashboard'))
     
@@ -178,7 +185,9 @@ def delete(id):
     if s is None:
         flash('Soundboard not found.')
         return redirect(url_for('soundboard.dashboard'))
-    if s.user_id != current_user.id:
+    
+    # Ownership check with admin override
+    if s.user_id != current_user.id and current_user.role != 'admin':
         flash('You do not have permission to delete this soundboard.')
         return redirect(url_for('soundboard.dashboard'))
     
