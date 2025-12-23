@@ -19,8 +19,12 @@
 - [x] Task: Add integration tests for administrative password overrides. a9e5128
 - [x] Task: Conductor - User Manual Verification 'Administrative Password Reset' (Protocol in workflow.md) a827762
 
-## Phase 4: Content Moderation and Navigation
-- [ ] Task: Implement a global soundboard management view (`/admin/soundboards`).
-- [ ] Task: Update existing Soundboard and Sound CRUD routes to allow the 'admin' role to bypass ownership checks.
-- [ ] Task: Add an "Admin Dashboard" link to the navbar, visible only to administrators.
-- [ ] Task: Conductor - User Manual Verification 'Content Moderation and Navigation' (Protocol in workflow.md)
+## Phase 4: Content Moderation and Navigation [checkpoint: 7c479d0]
+
+- [x] Task: Implement a global soundboard management view (`/admin/soundboards`). cf0c1cf
+
+- [x] Task: Update existing Soundboard and Sound CRUD routes to allow the 'admin' role to bypass ownership checks. b004519
+
+- [x] Task: Add an "Admin Dashboard" link to the navbar, visible only to administrators. 7c479d0
+
+- [x] Task: Conductor - User Manual Verification 'Content Moderation and Navigation' (Protocol in workflow.md) 7c479d0
