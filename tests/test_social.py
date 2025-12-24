@@ -34,10 +34,10 @@ def app_context(monkeypatch):
 
 def test_ratings_model(app_context):
     with app_context.app_context():
-        u1 = User(username='u1', email='u1@example.com')
+        u1 = User(username='u1', email='u1@example.com', is_verified=True)
         u1.set_password('p')
         u1.save()
-        u2 = User(username='u2', email='u2@example.com')
+        u2 = User(username='u2', email='u2@example.com', is_verified=True)
         u2.set_password('p')
         u2.save()
         
@@ -64,7 +64,7 @@ def test_ratings_model(app_context):
 
 def test_comments_model(app_context):
     with app_context.app_context():
-        u = User(username='commenter', email='c@example.com')
+        u = User(username='commenter', email='c@example.com', is_verified=True)
         u.set_password('p')
         u.save()
         
@@ -86,7 +86,7 @@ def test_comments_model(app_context):
 def test_rating_api(app_context):
     client = app_context.test_client()
     with app_context.app_context():
-        u = User(username='rater', email='r@example.com')
+        u = User(username='rater', email='r@example.com', is_verified=True)
         u.set_password('p')
         u.save()
         sb = Soundboard(name='Rate Me', user_id=u.id, is_public=True)
@@ -111,7 +111,7 @@ def test_rating_api(app_context):
 def test_comment_routes(app_context):
     client = app_context.test_client()
     with app_context.app_context():
-        u = User(username='commenter2', email='c2@example.com')
+        u = User(username='commenter2', email='c2@example.com', is_verified=True)
         u.set_password('p')
         u.save()
         sb = Soundboard(name='Comment Route Board', user_id=u.id, is_public=True)

@@ -65,7 +65,7 @@ def test_registration_flow(client):
 def test_login_flow(client):
     from app.models import User
     with client.application.app_context():
-        u = User(username='loginuser', email='login@example.com')
+        u = User(username='loginuser', email='login@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
     
@@ -81,7 +81,7 @@ def test_login_flow(client):
 def test_logout_flow(client):
     from app.models import User
     with client.application.app_context():
-        u = User(username='logoutuser', email='logout@example.com')
+        u = User(username='logoutuser', email='logout@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
     
@@ -96,7 +96,7 @@ def test_profile_protected(client):
     
     from app.models import User
     with client.application.app_context():
-        u = User(username='profileuser', email='profile@example.com')
+        u = User(username='profileuser', email='profile@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
     
@@ -114,7 +114,7 @@ def test_soundboard_blueprint_registered(client):
 def test_soundboard_creation_flow(client):
     from app.models import User, Soundboard
     with client.application.app_context():
-        u = User(username='sbuser', email='sb@example.com')
+        u = User(username='sbuser', email='sb@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
             
@@ -134,7 +134,7 @@ def test_soundboard_creation_flow(client):
 def test_gallery_route(client):
     from app.models import User, Soundboard
     with client.application.app_context():
-        u = User(username='galleryuser', email='gallery@example.com')
+        u = User(username='galleryuser', email='gallery@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         s = Soundboard(name='Public Gallery Board', user_id=u.id, is_public=True)
@@ -147,7 +147,7 @@ def test_gallery_route(client):
 def test_search_route(client):
     from app.models import User, Soundboard
     with client.application.app_context():
-        u = User(username='searchuser', email='search@example.com')
+        u = User(username='searchuser', email='search@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         s = Soundboard(name='Find Me Board', user_id=u.id, is_public=True)
@@ -160,7 +160,7 @@ def test_search_route(client):
 def test_view_access_control(client):
     from app.models import User, Soundboard
     with client.application.app_context():
-        u = User(username='owner', email='owner@example.com')
+        u = User(username='owner', email='owner@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         
@@ -403,7 +403,7 @@ def test_admin_update_email_flow(client):
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard
     with client.application.app_context():
-        u = User(username='edituser', email='edit@example.com')
+        u = User(username='edituser', email='edit@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         s = Soundboard(name='Old Name', user_id=u.id, icon='old-icon', is_public=False)
@@ -431,7 +431,7 @@ def test_soundboard_edit_flow(client):
 def test_soundboard_delete_flow(client):
     from app.models import User, Soundboard
     with client.application.app_context():
-        u = User(username='deluser', email='del@example.com')
+        u = User(username='deluser', email='del@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         s = Soundboard(name='To Delete', user_id=u.id, icon='del-icon')
@@ -453,7 +453,7 @@ def test_sound_upload_flow(client):
     import io
     
     with client.application.app_context():
-        u = User(username='upuser', email='up@example.com')
+        u = User(username='upuser', email='up@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         s = Soundboard(name='Upload Board', user_id=u.id)
@@ -493,7 +493,7 @@ def test_sound_upload_flow(client):
 def test_soundboard_view_route(client):
     from app.models import User, Soundboard, Sound
     with client.application.app_context():
-        u = User(username='viewuser', email='view@example.com')
+        u = User(username='viewuser', email='view@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         s = Soundboard(name='View Board', user_id=u.id, is_public=True)
@@ -510,7 +510,7 @@ def test_soundboard_view_route(client):
 def test_sidebar_data_route(client):
     from app.models import User, Soundboard
     with client.application.app_context():
-        u = User(username='sidebaruser', email='sidebar@example.com')
+        u = User(username='sidebaruser', email='sidebar@example.com', is_verified=True)
         u.set_password('cat')
         u.save()
         
@@ -529,7 +529,7 @@ def test_sidebar_data_route(client):
 def test_change_password_route(client):
     from app.models import User
     with client.application.app_context():
-        u = User(username='pwuser', email='pw@example.com')
+        u = User(username='pwuser', email='pw@example.com', is_verified=True)
         u.set_password('oldpass')
         u.save()
         
