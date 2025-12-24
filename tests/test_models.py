@@ -59,6 +59,21 @@ def test_user_active_status(app):
     assert u2.active is False
     assert u2.is_active is False
 
+def test_user_favorites(app):
+    u = User(username='favuser', email='fav@e.com')
+    u.set_password('cat')
+    u.save()
+    
+    # Add favorite
+    u.add_favorite(101)
+    favorites = u.get_favorites()
+    assert 101 in favorites
+    
+    # Remove favorite
+    u.remove_favorite(101)
+    favorites = u.get_favorites()
+    assert 101 not in favorites
+
 def test_user_get_all(app):
     # Already some users created in previous tests might exist if not cleared
     # But fixture clears them.
@@ -82,6 +97,18 @@ def test_soundboard_model(app):
     assert s.icon == 'fas fa-music'
     assert s.is_public is True
     assert str(s) == '<Soundboard My Board>'
+
+def test_soundboard_get_all(app):
+    s1 = Soundboard(name='SB1', user_id=1)
+    s1.save()
+    s2 = Soundboard(name='SB2', user_id=1)
+    s2.save()
+    
+    sbs = Soundboard.get_all()
+    assert len(sbs) >= 2
+    names = [s.name for s in sbs]
+    assert 'SB1' in names
+    assert 'SB2' in names
 
 def test_sound_model(app):
     s = Sound(name='Explosion', soundboard_id=1, file_path='sounds/1/explosion.mp3', icon='fas fa-bomb')

@@ -34,6 +34,31 @@ class User(UserMixin):
             )
         db.commit()
 
+    def add_favorite(self, soundboard_id):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute(
+            "INSERT OR IGNORE INTO favorites (user_id, soundboard_id) VALUES (?, ?)",
+            (self.id, soundboard_id)
+        )
+        db.commit()
+
+    def remove_favorite(self, soundboard_id):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute(
+            "DELETE FROM favorites WHERE user_id = ? AND soundboard_id = ?",
+            (self.id, soundboard_id)
+        )
+        db.commit()
+
+    def get_favorites(self):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT soundboard_id FROM favorites WHERE user_id = ?", (self.id,))
+        rows = cur.fetchall()
+        return [row['soundboard_id'] for row in rows]
+
     def check_password(self, password):
         if self.password_hash is None:
             return False
@@ -116,6 +141,15 @@ class Soundboard:
             return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
                              icon=row['icon'], is_public=row['is_public'])
         return None
+
+    @staticmethod
+    def get_all():
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM soundboards ORDER BY name ASC")
+        rows = cur.fetchall()
+        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                          icon=row['icon'], is_public=row['is_public']) for row in rows]
 
     @staticmethod
     def get_by_user_id(user_id):
