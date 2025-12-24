@@ -312,6 +312,30 @@ def delete_sound(id):
     flash('Sound deleted.')
     return redirect(url_for('soundboard.edit', id=s.id))
 
+@bp.route('/sound/<int:id>/settings', methods=['POST'])
+@login_required
+def update_sound_settings(id):
+    from flask import jsonify
+    sound = Sound.get_by_id(id)
+    if sound is None:
+        return jsonify({'error': 'Sound not found'}), 404
+        
+    s = Soundboard.get_by_id(sound.soundboard_id)
+    if s.user_id != current_user.id and current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+        
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+        
+    sound.volume = data.get('volume', sound.volume)
+    sound.is_loop = data.get('is_loop', sound.is_loop)
+    sound.start_time = data.get('start_time', sound.start_time)
+    sound.end_time = data.get('end_time', sound.end_time)
+    
+    sound.save()
+    return jsonify({'status': 'success'})
+
 @bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete(id):

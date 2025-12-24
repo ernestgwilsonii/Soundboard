@@ -56,21 +56,95 @@
                     {% endif %}
                     {{ sound.name }}
                 </div>
-                <form action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                        <i class="fas fa-trash"></i>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                            onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }})">
+                        <i class="fas fa-cog"></i>
                     </button>
-                </form>
+                    <form action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
             {% else %}
             <p class="text-muted text-center">No sounds uploaded yet.</p>
             {% endfor %}
         </div>
-...
+
+        <!-- Sound Settings Modal -->
+        <div class="modal fade" id="soundSettingsModal" tabindex="-1" aria-labelledby="soundSettingsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="soundSettingsModalLabel">Sound Settings: <span id="modal-sound-name"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="sound-settings-form">
+                            <input type="hidden" id="modal-sound-id">
+                            
+                            <div class="mb-3">
+                                <label for="modal-volume" class="form-label">Volume: <span id="volume-val">100</span>%</label>
+                                <input type="range" class="form-range" id="modal-volume" min="0" max="1" step="0.05">
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="modal-loop">
+                                <label class="form-check-label" for="modal-loop">Loop playback</label>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="modal-start" class="form-label">Start (sec)</label>
+                                        <input type="number" class="form-control" id="modal-start" min="0" step="0.1">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="modal-end" class="form-label">End (sec)</label>
+                                        <input type="number" class="form-control" id="modal-end" min="0" step="0.1" placeholder="End">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="saveSoundSettings()">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+        <div class="card border-danger">
+            <div class="card-body">
+                <h5 class="card-title text-danger">Danger Zone</h5>
+                <p class="card-text">Deleting a soundboard is permanent and cannot be undone.</p>
+                <form action="{{ url_for('soundboard.delete', id=soundboard.id) }}" method="post" onsubmit="return confirm('Are you sure?');">
+                    <button type="submit" class="btn btn-danger">Delete Soundboard</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Volume range label update
+    const volInput = document.getElementById('modal-volume');
+    if (volInput) {
+        volInput.addEventListener('input', function() {
+            document.getElementById('volume-val').textContent = Math.round(this.value * 100);
+        });
+    }
+
     const el = document.getElementById('sounds-list');
     if (el && el.children.length > 1) {
         Sortable.create(el, {
@@ -82,6 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({ ids: itemIds })
                 })
@@ -97,18 +172,49 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function openSoundSettings(id, name, volume, loop, start, end) {
+    document.getElementById('modal-sound-id').value = id;
+    document.getElementById('modal-sound-name').textContent = name;
+    document.getElementById('modal-volume').value = volume;
+    document.getElementById('volume-val').textContent = Math.round(volume * 100);
+    document.getElementById('modal-loop').checked = loop;
+    document.getElementById('modal-start').value = start;
+    document.getElementById('modal-end').value = end || '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('soundSettingsModal'));
+    modal.show();
+}
+
+function saveSoundSettings() {
+    const id = document.getElementById('modal-sound-id').value;
+    const data = {
+        volume: parseFloat(document.getElementById('modal-volume').value),
+        is_loop: document.getElementById('modal-loop').checked,
+        start_time: parseFloat(document.getElementById('modal-start').value) || 0,
+        end_time: parseFloat(document.getElementById('modal-end').value) || null
+    };
+    
+    fetch(`/soundboard/sound/${id}/settings`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to save settings');
+        return response.json();
+    })
+    .then(data => {
+        // Hide modal and reload to reflect changes (simplest for now)
+        location.reload();
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Error saving settings: ' + err.message);
+    });
+}
 </script>
-{% endblock %}
-        <hr class="my-4">
-        <div class="card border-danger">
-            <div class="card-body">
-                <h5 class="card-title text-danger">Danger Zone</h5>
-                <p class="card-text">Deleting a soundboard is permanent and cannot be undone.</p>
-                <form action="{{ url_for('soundboard.delete', id=soundboard.id) }}" method="post" onsubmit="return confirm('Are you sure?');">
-                    <button type="submit" class="btn btn-danger">Delete Soundboard</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
