@@ -10,7 +10,7 @@
 - [x] Task: Create an `admin_settings` table or a simple config entry for the featured board ID. ac0fe97
 - [x] Task: Implement the admin settings route and form to select the featured board. 4d2801e
 - [x] Task: Implement the fallback logic in `Soundboard.get_featured()` model method. 2f569fe
-- [ ] Task: Update the home page template to render the "Featured" badge.
+- [x] Task: Update the home page template to render the "Featured" badge. 5e0bef1
 - [ ] Task: Conductor - User Manual Verification 'Administrative Control for Featured Board' (Protocol in workflow.md)
 
 ## Phase 3: Dynamic Sidebar (Burger Menu) UI
