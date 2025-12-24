@@ -5,7 +5,7 @@ from itsdangerous import URLSafeTimedSerializer
 from app.db import get_accounts_db, get_soundboards_db
 
 class User(UserMixin):
-    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', active=True, is_verified=False):
+    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', active=True, is_verified=False, avatar_path=None):
         self.id = id
         self.username = username
         self.email = email
@@ -13,6 +13,7 @@ class User(UserMixin):
         self.role = role
         self.active = bool(active)
         self.is_verified = bool(is_verified)
+        self.avatar_path = avatar_path
 
     @property
     def is_active(self):
@@ -26,14 +27,14 @@ class User(UserMixin):
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO users (username, email, password_hash, role, active, is_verified) VALUES (?, ?, ?, ?, ?, ?)",
-                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified))
+                "INSERT INTO users (username, email, password_hash, role, active, is_verified, avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=? WHERE id=?",
-                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.id)
+                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=?, avatar_path=? WHERE id=?",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.id)
             )
         db.commit()
 
@@ -76,7 +77,7 @@ class User(UserMixin):
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                        is_verified=row['is_verified'])
+                        is_verified=row['is_verified'], avatar_path=row['avatar_path'])
         return None
 
     @staticmethod
@@ -88,7 +89,7 @@ class User(UserMixin):
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                        is_verified=row['is_verified'])
+                        is_verified=row['is_verified'], avatar_path=row['avatar_path'])
         return None
 
     @staticmethod
@@ -100,7 +101,7 @@ class User(UserMixin):
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                        is_verified=row['is_verified'])
+                        is_verified=row['is_verified'], avatar_path=row['avatar_path'])
         return None
 
     @staticmethod
@@ -111,7 +112,7 @@ class User(UserMixin):
         rows = cur.fetchall()
         return [User(id=row['id'], username=row['username'], email=row['email'], 
                      password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                     is_verified=row['is_verified']) for row in rows]
+                     is_verified=row['is_verified'], avatar_path=row['avatar_path']) for row in rows]
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -500,6 +501,9 @@ class Comment:
         cur.execute("SELECT username FROM users WHERE id = ?", (self.user_id,))
         row = cur.fetchone()
         return row['username'] if row else 'Unknown'
+
+    def get_author(self):
+        return User.get_by_id(self.user_id)
 
 class Playlist:
     def __init__(self, id=None, user_id=None, name=None, description=None, is_public=False, created_at=None):

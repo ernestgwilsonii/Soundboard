@@ -128,19 +128,32 @@ def reset_password(token):
 def profile():
     return render_template('auth/profile.html', title='Profile')
 
-@bp.route('/change_email', methods=['GET', 'POST'])
+@bp.route('/update_profile', methods=['GET', 'POST'])
 @login_required
-def change_email():
-    from app.auth.forms import UpdateEmailForm
-    form = UpdateEmailForm()
+def update_profile():
+    from app.auth.forms import UpdateProfileForm
+    from werkzeug.utils import secure_filename
+    import os
+    from flask import current_app
+    form = UpdateProfileForm()
     if form.validate_on_submit():
         current_user.email = form.email.data
+        if form.avatar.data:
+            f = form.avatar.data
+            filename = secure_filename(f"{current_user.id}_{f.filename}")
+            avatar_path = os.path.join('avatars', filename)
+            full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], avatar_path)
+            if not os.path.exists(os.path.dirname(full_path)):
+                os.makedirs(os.path.dirname(full_path))
+            f.save(full_path)
+            current_user.avatar_path = avatar_path
+            
         current_user.save()
-        flash('Your email has been updated.')
+        flash('Your profile has been updated.')
         return redirect(url_for('auth.profile'))
     elif request.method == 'GET':
         form.email.data = current_user.email
-    return render_template('auth/change_email.html', title='Change Email', form=form)
+    return render_template('auth/update_profile.html', title='Update Profile', form=form)
 
 @bp.route('/change_password', methods=['GET', 'POST'])
 @login_required
