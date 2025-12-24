@@ -5,10 +5,12 @@ from flask import Flask
 from config import Config
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from flask_mail import Mail
 
 login = LoginManager()
 login.login_view = 'auth.login'
 csrf = CSRFProtect()
+mail = Mail()
 
 @login.user_loader
 def load_user(id):
@@ -22,6 +24,7 @@ def create_app(config_class=Config):
     # Initialize Flask extensions here (if any)
     login.init_app(app)
     csrf.init_app(app)
+    mail.init_app(app)
     
     from app import db
     db.init_app(app)

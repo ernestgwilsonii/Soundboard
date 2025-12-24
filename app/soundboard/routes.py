@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app.soundboard import bp
 from app.models import Soundboard, Sound
 from app.db import get_soundboards_db
+from app.auth.routes import verification_required
 
 @bp.route('/dashboard')
 @login_required
@@ -85,7 +86,7 @@ def rate_board(id):
     })
 
 @bp.route('/<int:id>/comment', methods=['POST'])
-@login_required
+@verification_required
 def post_comment(id):
     from app.soundboard.forms import CommentForm
     from app.models import Comment
@@ -175,7 +176,7 @@ def search():
     return render_template('soundboard/search.html', title='Search Results', soundboards=sbs, query=query)
 
 @bp.route('/create', methods=['GET', 'POST'])
-@login_required
+@verification_required
 def create():
     from app.soundboard.forms import SoundboardForm
     from werkzeug.utils import secure_filename
@@ -245,7 +246,7 @@ def edit(id):
     return render_template('soundboard/edit.html', title='Edit Soundboard', form=form, soundboard=s, sounds=sounds)
 
 @bp.route('/<int:id>/upload', methods=['GET', 'POST'])
-@login_required
+@verification_required
 def upload_sound(id):
     from app.soundboard.forms import SoundForm
     from werkzeug.utils import secure_filename

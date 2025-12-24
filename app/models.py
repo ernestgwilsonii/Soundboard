@@ -1,15 +1,18 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import current_app
+from itsdangerous import URLSafeTimedSerializer
 from app.db import get_accounts_db, get_soundboards_db
 
 class User(UserMixin):
-    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', active=True):
+    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', active=True, is_verified=False):
         self.id = id
         self.username = username
         self.email = email
         self.password_hash = password_hash
         self.role = role
         self.active = bool(active)
+        self.is_verified = bool(is_verified)
 
     @property
     def is_active(self):
@@ -23,14 +26,14 @@ class User(UserMixin):
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO users (username, email, password_hash, role, active) VALUES (?, ?, ?, ?, ?)",
-                (self.username, self.email, self.password_hash, self.role, int(self.active))
+                "INSERT INTO users (username, email, password_hash, role, active, is_verified) VALUES (?, ?, ?, ?, ?, ?)",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified))
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=? WHERE id=?",
-                (self.username, self.email, self.password_hash, self.role, int(self.active), self.id)
+                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=? WHERE id=?",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.id)
             )
         db.commit()
 
@@ -72,7 +75,20 @@ class User(UserMixin):
         row = cur.fetchone()
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
-                        password_hash=row['password_hash'], role=row['role'], active=row['active'])
+                        password_hash=row['password_hash'], role=row['role'], active=row['active'],
+                        is_verified=row['is_verified'])
+        return None
+
+    @staticmethod
+    def get_by_email(email):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+        row = cur.fetchone()
+        if row:
+            return User(id=row['id'], username=row['username'], email=row['email'], 
+                        password_hash=row['password_hash'], role=row['role'], active=row['active'],
+                        is_verified=row['is_verified'])
         return None
 
     @staticmethod
@@ -83,7 +99,8 @@ class User(UserMixin):
         row = cur.fetchone()
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
-                        password_hash=row['password_hash'], role=row['role'], active=row['active'])
+                        password_hash=row['password_hash'], role=row['role'], active=row['active'],
+                        is_verified=row['is_verified'])
         return None
 
     @staticmethod
@@ -93,10 +110,24 @@ class User(UserMixin):
         cur.execute("SELECT * FROM users ORDER BY username ASC")
         rows = cur.fetchall()
         return [User(id=row['id'], username=row['username'], email=row['email'], 
-                     password_hash=row['password_hash'], role=row['role'], active=row['active']) for row in rows]
+                     password_hash=row['password_hash'], role=row['role'], active=row['active'],
+                     is_verified=row['is_verified']) for row in rows]
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+    def get_token(self, salt):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps(self.email, salt=salt)
+
+    @staticmethod
+    def verify_token(token, salt, expiration=3600):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            email = s.loads(token, salt=salt, max_age=expiration)
+        except:
+            return None
+        return User.get_by_email(email)
 
 class Soundboard:
     def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False):
@@ -242,7 +273,9 @@ class Soundboard:
         cur.execute("SELECT * FROM sounds WHERE soundboard_id = ? ORDER BY display_order ASC, name ASC", (self.id,))
         rows = cur.fetchall()
         return [Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
-                      file_path=row['file_path'], icon=row['icon'], display_order=row['display_order']) for row in rows]
+                      file_path=row['file_path'], icon=row['icon'], display_order=row['display_order'],
+                      volume=row['volume'], is_loop=row['is_loop'], 
+                      start_time=row['start_time'], end_time=row['end_time']) for row in rows]
 
     def get_creator_username(self):
         db = get_accounts_db()
@@ -273,13 +306,18 @@ class Soundboard:
         return f'<Soundboard {self.name}>'
 
 class Sound:
-    def __init__(self, id=None, soundboard_id=None, name=None, file_path=None, icon=None, display_order=0):
+    def __init__(self, id=None, soundboard_id=None, name=None, file_path=None, icon=None, 
+                 display_order=0, volume=1.0, is_loop=False, start_time=0.0, end_time=None):
         self.id = id
         self.soundboard_id = soundboard_id
         self.name = name
         self.file_path = file_path
         self.icon = icon
         self.display_order = display_order
+        self.volume = volume
+        self.is_loop = bool(is_loop)
+        self.start_time = start_time
+        self.end_time = end_time
 
     def save(self):
         db = get_soundboards_db()
@@ -288,18 +326,19 @@ class Sound:
             # If display_order is 0 (default), find the next available order
             if self.display_order == 0:
                 cur.execute("SELECT MAX(display_order) FROM sounds WHERE soundboard_id = ?", (self.soundboard_id,))
-                max_order = cur.fetchone()[0]
-                self.display_order = (max_order + 1) if max_order is not None else 1
+                max_row = cur.fetchone()
+                max_order = max_row[0] if max_row and max_row[0] is not None else 0
+                self.display_order = (max_order + 1)
 
             cur.execute(
-                "INSERT INTO sounds (soundboard_id, name, file_path, icon, display_order) VALUES (?, ?, ?, ?, ?)",
-                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order)
+                "INSERT INTO sounds (soundboard_id, name, file_path, icon, display_order, volume, is_loop, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.volume, int(self.is_loop), self.start_time, self.end_time)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE sounds SET soundboard_id=?, name=?, file_path=?, icon=?, display_order=? WHERE id=?",
-                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.id)
+                "UPDATE sounds SET soundboard_id=?, name=?, file_path=?, icon=?, display_order=?, volume=?, is_loop=?, start_time=?, end_time=? WHERE id=?",
+                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.volume, int(self.is_loop), self.start_time, self.end_time, self.id)
             )
         db.commit()
 
@@ -333,7 +372,9 @@ class Sound:
         row = cur.fetchone()
         if row:
             return Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
-                         file_path=row['file_path'], icon=row['icon'])
+                         file_path=row['file_path'], icon=row['icon'], display_order=row['display_order'],
+                         volume=row['volume'], is_loop=row['is_loop'], 
+                         start_time=row['start_time'], end_time=row['end_time'])
         return None
 
     def __repr__(self):

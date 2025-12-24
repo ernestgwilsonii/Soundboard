@@ -28,6 +28,21 @@ MIGRATIONS = [
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
         );
+    """),
+    (4, 'add_playback_settings_to_sounds', Config.SOUNDBOARDS_DB, """
+        ALTER TABLE sounds ADD COLUMN volume FLOAT NOT NULL DEFAULT 1.0;
+    """),
+    (5, 'add_loop_to_sounds', Config.SOUNDBOARDS_DB, """
+        ALTER TABLE sounds ADD COLUMN is_loop INTEGER NOT NULL DEFAULT 0;
+    """),
+    (6, 'add_trimming_to_sounds', Config.SOUNDBOARDS_DB, """
+        ALTER TABLE sounds ADD COLUMN start_time FLOAT NOT NULL DEFAULT 0.0;
+    """),
+    (7, 'add_end_time_to_sounds', Config.SOUNDBOARDS_DB, """
+        ALTER TABLE sounds ADD COLUMN end_time FLOAT;
+    """),
+    (8, 'add_is_verified_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0;
     """)
 ]
 

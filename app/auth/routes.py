@@ -13,6 +13,17 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def verification_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        if not current_user.is_verified:
+            flash('Please verify your email address to access this feature.')
+            return redirect(url_for('auth.profile'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     from flask import request
@@ -45,18 +56,38 @@ def logout():
 def register():
     from flask_login import current_user
     from app.models import User
+    from app.email import send_verification_email
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
+        user.is_verified = False
         user.save()
-        flash('Congratulations, you are now a registered user!')
+        send_verification_email(user)
+        flash('Congratulations, you are now a registered user! Please check your email to verify your account.')
         return redirect(url_for('auth.login'))
     elif request.method == 'POST':
         print(f"DEBUG: Form errors: {form.errors}")
     return render_template('auth/signup.html', title='Register', form=form)
+
+@bp.route('/verify/<token>')
+def verify_email(token):
+    from app.models import User
+    user = User.verify_token(token, salt='email-verify')
+    if not user:
+        flash('The verification link is invalid or has expired.')
+        return redirect(url_for('main.index'))
+    
+    if user.is_verified:
+        flash('Account already verified.')
+    else:
+        user.is_verified = True
+        user.save()
+        flash('Your account has been verified!')
+    
+    return redirect(url_for('auth.login'))
 
 @bp.route('/profile')
 @login_required

@@ -1,0 +1,12 @@
+Dear {{ user.username }},
+
+Welcome to Soundboard!
+
+To verify your account, please click on the following link:
+
+{{ url_for('auth.verify_email', token=token, _external=True) }}
+
+If you did not register for an account, please ignore this email.
+
+Sincerely,
+The Soundboard Team
