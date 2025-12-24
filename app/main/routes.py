@@ -28,14 +28,23 @@ def sidebar_data():
             for sb in Soundboard.get_by_user_id(current_user.id)
         ]
         
-        # To be implemented in Phase 4 properly, for now empty or basic
         fav_ids = current_user.get_favorites()
         for fid in fav_ids:
             sb = Soundboard.get_by_id(fid)
             if sb:
                 favorites.append({'id': sb.id, 'name': sb.name, 'icon': sb.icon})
+    
+    # Explore section: All public boards grouped by user
+    public_boards = Soundboard.get_public()
+    explore = {}
+    for sb in public_boards:
+        creator = sb.get_creator_username()
+        if creator not in explore:
+            explore[creator] = []
+        explore[creator].append({'id': sb.id, 'name': sb.name, 'icon': sb.icon})
                 
     return jsonify({
         'my_boards': my_boards,
-        'favorites': favorites
+        'favorites': favorites,
+        'explore': explore
     })

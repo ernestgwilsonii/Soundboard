@@ -523,4 +523,6 @@ def test_sidebar_data_route(client):
     data = response.get_json()
     assert len(data['my_boards']) == 1
     assert data['my_boards'][0]['name'] == 'My Sidebar Board'
+    assert 'sidebaruser' in data['explore']
+    assert data['explore']['sidebaruser'][0]['name'] == 'My Sidebar Board'
         

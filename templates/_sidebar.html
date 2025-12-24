@@ -28,7 +28,13 @@
             </div>
             {% endif %}
 
-            <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">Community</div>
+            <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">Explore community</div>
+            <div id="sidebar-explore" style="max-height: 400px; overflow-y: auto;">
+                <!-- Placeholder for dynamic list -->
+                <div class="px-3 py-2 text-muted small italic">Loading...</div>
+            </div>
+
+            <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">Other</div>
             <a href="{{ url_for('soundboard.search') }}" class="list-group-item list-group-item-action py-3">
                 <i class="fas fa-search me-3"></i>Search All Boards
             </a>
@@ -48,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 const myBoardsContainer = document.getElementById('sidebar-my-boards');
                 const favoritesContainer = document.getElementById('sidebar-favorites');
+                const exploreContainer = document.getElementById('sidebar-explore');
                 
                 if (myBoardsContainer) {
                     if (data.my_boards.length > 0) {
@@ -72,6 +79,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         `).join('');
                     } else {
                         favoritesContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No favorites yet.</div>';
+                    }
+                }
+
+                if (exploreContainer) {
+                    let exploreHtml = '';
+                    const creators = Object.keys(data.explore).sort();
+                    if (creators.length > 0) {
+                        creators.forEach(creator => {
+                            exploreHtml += `<div class="px-3 py-1 mt-2 small text-muted border-bottom">${creator}</div>`;
+                            data.explore[creator].forEach(sb => {
+                                exploreHtml += `
+                                    <a href="/soundboard/view/${sb.id}" class="list-group-item list-group-item-action py-2 border-0">
+                                        <i class="${sb.icon && !sb.icon.includes('/') ? sb.icon : 'fas fa-music'} me-2 small"></i>
+                                        ${sb.name}
+                                    </a>
+                                `;
+                            });
+                        });
+                        exploreContainer.innerHTML = exploreHtml;
+                    } else {
+                        exploreContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No public boards yet.</div>';
                     }
                 }
             })
