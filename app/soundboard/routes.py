@@ -4,6 +4,7 @@ from app.soundboard import bp
 from app.models import Soundboard, Sound
 from app.db import get_soundboards_db
 from app.auth.routes import verification_required
+from app import limiter
 
 @bp.route('/dashboard')
 @login_required
@@ -57,6 +58,7 @@ def toggle_favorite(id):
 
 @bp.route('/<int:id>/rate', methods=['POST'])
 @login_required
+@limiter.limit("20 per minute")
 def rate_board(id):
     from flask import jsonify
     from app.models import Rating
@@ -87,6 +89,7 @@ def rate_board(id):
 
 @bp.route('/<int:id>/comment', methods=['POST'])
 @verification_required
+@limiter.limit("10 per minute")
 def post_comment(id):
     from app.soundboard.forms import CommentForm
     from app.models import Comment
@@ -271,6 +274,7 @@ def edit(id):
 
 @bp.route('/<int:id>/upload', methods=['GET', 'POST'])
 @verification_required
+@limiter.limit("5 per minute")
 def upload_sound(id):
     from app.soundboard.forms import SoundForm
     from werkzeug.utils import secure_filename

@@ -6,11 +6,14 @@ from config import Config
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 login = LoginManager()
 login.login_view = 'auth.login'
 csrf = CSRFProtect()
 mail = Mail()
+limiter = Limiter(key_func=get_remote_address)
 
 @login.user_loader
 def load_user(id):
@@ -25,6 +28,13 @@ def create_app(config_class=Config):
     login.init_app(app)
     csrf.init_app(app)
     mail.init_app(app)
+    limiter.init_app(app)
+    
+    # Bypass rate limiting for admins
+    @limiter.request_filter
+    def admin_whitelist():
+        from flask_login import current_user
+        return current_user.is_authenticated and current_user.role == 'admin'
     
     from app import db
     db.init_app(app)

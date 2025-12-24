@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm
 from functools import wraps
+from app import limiter
 
 def admin_required(f):
     @wraps(f)
@@ -25,6 +26,7 @@ def verification_required(f):
     return decorated_function
 
 @bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def login():
     from flask import request
     from flask_login import current_user, login_user
@@ -64,6 +66,7 @@ def logout():
     return redirect(url_for('main.index'))
 
 @bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per hour")
 def register():
     from flask_login import current_user
     from app.models import User
