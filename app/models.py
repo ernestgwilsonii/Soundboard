@@ -173,10 +173,22 @@ class Soundboard:
     def get_recent_public(limit=6):
         db = get_soundboards_db()
         cur = db.cursor()
-        cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY created_at DESC LIMIT ?", (limit,))
+        cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY created_at DESC, id DESC LIMIT ?", (limit,))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
                           icon=row['icon'], is_public=row['is_public']) for row in rows]
+
+    @staticmethod
+    def get_featured():
+        featured_id = AdminSettings.get_setting('featured_soundboard_id')
+        if featured_id:
+            sb = Soundboard.get_by_id(featured_id)
+            if sb and sb.is_public:
+                return sb
+        
+        # Fallback to most recent public board
+        recent = Soundboard.get_recent_public(limit=1)
+        return recent[0] if recent else None
 
     @staticmethod
     def search(query):
