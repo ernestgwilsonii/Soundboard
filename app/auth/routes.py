@@ -89,6 +89,40 @@ def verify_email(token):
     
     return redirect(url_for('auth.login'))
 
+@bp.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    from app.auth.forms import PasswordResetRequestForm
+    from app.models import User
+    from app.email import send_password_reset_email
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    form = PasswordResetRequestForm()
+    if form.validate_on_submit():
+        user = User.get_by_email(form.email.data)
+        if user:
+            send_password_reset_email(user)
+        flash('Check your email for the instructions to reset your password')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/reset_password_request.html', title='Reset Password', form=form)
+
+@bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    from app.auth.forms import ResetPasswordForm
+    from app.models import User
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    user = User.verify_token(token, salt='password-reset')
+    if not user:
+        flash('The reset link is invalid or has expired.')
+        return redirect(url_for('main.index'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        user.save()
+        flash('Your password has been reset.')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/reset_password.html', title='Reset Password', form=form)
+
 @bp.route('/profile')
 @login_required
 def profile():

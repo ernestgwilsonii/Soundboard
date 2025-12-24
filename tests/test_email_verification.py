@@ -62,3 +62,25 @@ def test_verification_flow(client):
     with client.application.app_context():
         u = User.get_by_username('verify_me')
         assert u.is_verified == True
+
+def test_password_reset_flow(client):
+    with client.application.app_context():
+        u = User(username='reset_me', email='reset@example.com')
+        u.set_password('oldpass')
+        u.save()
+        token = u.get_token(salt='password-reset')
+        
+    # Request reset
+    response = client.post('/auth/reset_password_request', data={'email': 'reset@example.com'}, follow_redirects=True)
+    assert b'Check your email' in response.data
+    
+    # Use token to reset
+    response = client.post(f'/auth/reset_password/{token}', data={
+        'password': 'newpassword',
+        'password_confirm': 'newpassword'
+    }, follow_redirects=True)
+    assert b'Your password has been reset' in response.data
+    
+    # Verify login
+    response = client.post('/auth/login', data={'username': 'reset_me', 'password': 'newpassword', 'submit': 'Sign In'}, follow_redirects=True)
+    assert b'Logout' in response.data
