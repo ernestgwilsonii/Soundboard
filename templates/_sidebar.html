@@ -39,6 +39,47 @@
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebarMenu');
+    sidebar.addEventListener('show.bs.offcanvas', function () {
+        fetch('{{ url_for("main.sidebar_data") }}')
+            .then(response => response.json())
+            .then(data => {
+                const myBoardsContainer = document.getElementById('sidebar-my-boards');
+                const favoritesContainer = document.getElementById('sidebar-favorites');
+                
+                if (myBoardsContainer) {
+                    if (data.my_boards.length > 0) {
+                        myBoardsContainer.innerHTML = data.my_boards.map(sb => `
+                            <a href="/soundboard/view/${sb.id}" class="list-group-item list-group-item-action py-2 border-0">
+                                <i class="${sb.icon && !sb.icon.includes('/') ? sb.icon : 'fas fa-music'} me-2 small"></i>
+                                ${sb.name}
+                            </a>
+                        `).join('');
+                    } else {
+                        myBoardsContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No soundboards yet.</div>';
+                    }
+                }
+
+                if (favoritesContainer) {
+                    if (data.favorites.length > 0) {
+                        favoritesContainer.innerHTML = data.favorites.map(sb => `
+                            <a href="/soundboard/view/${sb.id}" class="list-group-item list-group-item-action py-2 border-0">
+                                <i class="${sb.icon && !sb.icon.includes('/') ? sb.icon : 'fas fa-music'} me-2 small text-warning"></i>
+                                ${sb.name}
+                            </a>
+                        `).join('');
+                    } else {
+                        favoritesContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No favorites yet.</div>';
+                    }
+                }
+            })
+            .catch(error => console.error('Error fetching sidebar data:', error));
+    });
+});
+</script>
+
 <style>
     #sidebarMenu {
         width: 300px;
