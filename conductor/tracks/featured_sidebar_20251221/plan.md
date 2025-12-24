@@ -1,0 +1,29 @@
+# Track Plan: Featured Soundboard and Dynamic Sidebar
+
+## Phase 1: Database and Model for Favorites
+- [ ] Task: Create a `favorites` table in `app/schema_accounts.sql` (linking users to soundboards).
+- [ ] Task: Update the `User` model to include methods for adding, removing, and listing favorites.
+- [ ] Task: Create unit tests for the favorites relationship.
+- [ ] Task: Conductor - User Manual Verification 'Database and Model for Favorites' (Protocol in workflow.md)
+
+## Phase 2: Administrative Control for Featured Board
+- [ ] Task: Create an `admin_settings` table or a simple config entry for the featured board ID.
+- [ ] Task: Implement the admin settings route and form to select the featured board.
+- [ ] Task: Implement the fallback logic in `Soundboard.get_featured()` model method.
+- [ ] Task: Update the home page template to render the "Featured" badge.
+- [ ] Task: Conductor - User Manual Verification 'Administrative Control for Featured Board' (Protocol in workflow.md)
+
+## Phase 3: Dynamic Sidebar (Burger Menu) UI
+- [ ] Task: Create a new global component/fragment for the sidebar.
+- [ ] Task: Implement the "Burger" toggle button in the navbar.
+- [ ] Task: Implement the "My Soundboards" section (alphabetical list).
+- [ ] Task: Implement the "Explore" section (all public boards, grouped by user).
+- [ ] Task: Add CSS/JS for responsive sidebar behavior.
+- [ ] Task: Conductor - User Manual Verification 'Dynamic Sidebar (Burger Menu) UI' (Protocol in workflow.md)
+
+## Phase 4: Favorites and Pinned Functionality
+- [ ] Task: Implement the "Favorite/Pin" toggle button on the soundboard view page.
+- [ ] Task: Create the AJAX or standard route to handle the toggle action.
+- [ ] Task: Implement the "Favorites & Pinned" section in the sidebar.
+- [ ] Task: Verify that pinning a board instantly updates the sidebar list.
+- [ ] Task: Conductor - User Manual Verification 'Favorites and Pinned Functionality' (Protocol in workflow.md)
