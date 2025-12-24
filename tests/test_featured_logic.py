@@ -83,3 +83,20 @@ def test_get_featured_fallback_invalid_id(app_context):
         featured = Soundboard.get_featured()
         assert featured is not None
         assert featured.id == sb1.id # Should fallback since 999 is invalid
+
+def test_index_route_featured(app_context):
+    client = app_context.test_client()
+    with app_context.app_context():
+        u = User(username='testuser', email='test@example.com')
+        u.set_password('password')
+        u.save()
+        
+        sb = Soundboard(name='Featured Board', user_id=u.id, is_public=True)
+        sb.save()
+        
+        AdminSettings.set_setting('featured_soundboard_id', str(sb.id))
+        
+    response = client.get('/')
+    assert response.status_code == 200
+    assert b"Featured Board" in response.data
+    assert b"Featured" in response.data

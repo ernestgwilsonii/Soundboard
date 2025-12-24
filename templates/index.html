@@ -13,6 +13,35 @@
         </div>
     </div>
 
+    {% if featured %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-4">Featured Board</h2>
+            <div class="card shadow-sm border-primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            {% if featured.icon and '/' in featured.icon %}
+                            <img src="{{ url_for('static', filename='uploads/' + featured.icon) }}" alt="{{ featured.name }}" class="mb-3" style="width: 80px; height: 80px; object-fit: contain;">
+                            {% else %}
+                            <i class="{{ featured.icon or 'fas fa-star text-warning' }} fa-4x mb-3"></i>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-7">
+                            <span class="badge bg-primary mb-2">Featured</span>
+                            <h3 class="card-title">{{ featured.name }}</h3>
+                            <p class="text-muted">Handpicked selection by our community curators. Created by: <strong>{{ featured.get_creator_username() }}</strong></p>
+                        </div>
+                        <div class="col-md-3 text-center text-md-end">
+                            <a href="{{ url_for('soundboard.view', id=featured.id) }}" class="btn btn-lg btn-primary px-5">Play Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h2>Recent Discoveries</h2>
