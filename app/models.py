@@ -239,10 +239,10 @@ class Soundboard:
     def get_sounds(self):
         db = get_soundboards_db()
         cur = db.cursor()
-        cur.execute("SELECT * FROM sounds WHERE soundboard_id = ? ORDER BY name ASC", (self.id,))
+        cur.execute("SELECT * FROM sounds WHERE soundboard_id = ? ORDER BY display_order ASC, name ASC", (self.id,))
         rows = cur.fetchall()
         return [Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
-                      file_path=row['file_path'], icon=row['icon']) for row in rows]
+                      file_path=row['file_path'], icon=row['icon'], display_order=row['display_order']) for row in rows]
 
     def get_creator_username(self):
         db = get_accounts_db()
@@ -255,26 +255,33 @@ class Soundboard:
         return f'<Soundboard {self.name}>'
 
 class Sound:
-    def __init__(self, id=None, soundboard_id=None, name=None, file_path=None, icon=None):
+    def __init__(self, id=None, soundboard_id=None, name=None, file_path=None, icon=None, display_order=0):
         self.id = id
         self.soundboard_id = soundboard_id
         self.name = name
         self.file_path = file_path
         self.icon = icon
+        self.display_order = display_order
 
     def save(self):
         db = get_soundboards_db()
         cur = db.cursor()
         if self.id is None:
+            # If display_order is 0 (default), find the next available order
+            if self.display_order == 0:
+                cur.execute("SELECT MAX(display_order) FROM sounds WHERE soundboard_id = ?", (self.soundboard_id,))
+                max_order = cur.fetchone()[0]
+                self.display_order = (max_order + 1) if max_order is not None else 1
+
             cur.execute(
-                "INSERT INTO sounds (soundboard_id, name, file_path, icon) VALUES (?, ?, ?, ?)",
-                (self.soundboard_id, self.name, self.file_path, self.icon)
+                "INSERT INTO sounds (soundboard_id, name, file_path, icon, display_order) VALUES (?, ?, ?, ?, ?)",
+                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE sounds SET soundboard_id=?, name=?, file_path=?, icon=? WHERE id=?",
-                (self.soundboard_id, self.name, self.file_path, self.icon, self.id)
+                "UPDATE sounds SET soundboard_id=?, name=?, file_path=?, icon=?, display_order=? WHERE id=?",
+                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.id)
             )
         db.commit()
 

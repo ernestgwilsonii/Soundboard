@@ -39,14 +39,16 @@
         <hr class="my-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>Sounds</h3>
+            <span class="text-muted small italic"><i class="fas fa-arrows-alt"></i> Drag to reorder</span>
             <a href="{{ url_for('soundboard.upload_sound', id=soundboard.id) }}" class="btn btn-success btn-sm">
                 <i class="fas fa-upload"></i> Upload Sound
             </a>
         </div>
-        <div class="list-group mb-4">
+        <div id="sounds-list" class="list-group mb-4">
             {% for sound in sounds %}
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
+            <div class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ sound.id }}">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-grip-vertical text-muted me-3 drag-handle" style="cursor: grab;"></i>
                     {% if sound.icon and '/' in sound.icon %}
                     <img src="{{ url_for('static', filename='uploads/' + sound.icon) }}" alt="{{ sound.name }}" class="me-2" style="width: 24px; height: 24px; object-fit: contain;">
                     {% else %}
@@ -64,6 +66,39 @@
             <p class="text-muted text-center">No sounds uploaded yet.</p>
             {% endfor %}
         </div>
+...
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const el = document.getElementById('sounds-list');
+    if (el && el.children.length > 1) {
+        Sortable.create(el, {
+            handle: '.drag-handle',
+            animation: 150,
+            onEnd: function() {
+                const itemIds = Array.from(el.children).map(item => item.dataset.id);
+                fetch(`/soundboard/{{ soundboard.id }}/reorder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ids: itemIds })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to save order');
+                    return response.json();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Failed to save new order. Please refresh and try again.');
+                });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
         <hr class="my-4">
         <div class="card border-danger">
             <div class="card-body">

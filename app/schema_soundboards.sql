@@ -16,6 +16,7 @@ CREATE TABLE sounds (
     name TEXT NOT NULL,
     file_path TEXT NOT NULL,
     icon TEXT,
+    display_order INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
 );

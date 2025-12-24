@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.soundboard import bp
 from app.models import Soundboard, Sound
+from app.db import get_soundboards_db
 
 @bp.route('/dashboard')
 @login_required
@@ -52,6 +53,38 @@ def toggle_favorite(id):
         is_favorite = True
         
     return jsonify({'is_favorite': is_favorite})
+
+@bp.route('/<int:id>/reorder', methods=['POST'])
+@login_required
+def reorder_sounds(id):
+    from flask import jsonify
+    s = Soundboard.get_by_id(id)
+    if s is None:
+        return jsonify({'error': 'Soundboard not found'}), 404
+        
+    if s.user_id != current_user.id and current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+        
+    data = request.get_json()
+    if not data or 'ids' not in data:
+        return jsonify({'error': 'Invalid data'}), 400
+        
+    sound_ids = data['ids']
+    db = get_soundboards_db()
+    cur = db.cursor()
+    
+    try:
+        for index, sound_id in enumerate(sound_ids):
+            cur.execute(
+                "UPDATE sounds SET display_order = ? WHERE id = ? AND soundboard_id = ?",
+                (index + 1, sound_id, s.id)
+            )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({'error': str(e)}), 500
+        
+    return jsonify({'status': 'success'})
 
 @bp.route('/gallery')
 def gallery():
