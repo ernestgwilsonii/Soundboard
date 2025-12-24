@@ -9,3 +9,11 @@ CREATE TABLE users (
     active INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE favorites (
+    user_id INTEGER NOT NULL,
+    soundboard_id INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, soundboard_id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);

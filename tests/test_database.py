@@ -21,6 +21,21 @@ def test_accounts_schema():
     assert 'password_hash' in columns
     assert 'role' in columns
 
+def test_favorites_schema():
+    # Use an in-memory database for testing schema
+    db = sqlite3.connect(':memory:')
+    with open('app/schema_accounts.sql', 'r') as f:
+        db.executescript(f.read())
+    
+    cursor = db.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='favorites';")
+    assert cursor.fetchone() is not None
+    
+    cursor.execute("PRAGMA table_info(favorites);")
+    columns = [row[1] for row in cursor.fetchall()]
+    assert 'user_id' in columns
+    assert 'soundboard_id' in columns
+
 def test_soundboards_schema():
     db = sqlite3.connect(':memory:')
     with open('app/schema_soundboards.sql', 'r') as f:
