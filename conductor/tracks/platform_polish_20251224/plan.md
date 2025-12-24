@@ -9,11 +9,11 @@
 - [x] Task: Create `templates/maintenance.html`. 4bf55dc
 - [x] Task: Conductor - User Manual Verification 'Admin Configuration' (Protocol in workflow.md) 4bf55dc
 
-## Phase 2: Social Sharing
-- [ ] Task: Add "Share" button to `templates/soundboard/view.html` (next to Favorite button).
-- [ ] Task: Implement JavaScript to copy current URL to clipboard.
-- [ ] Task: Add toast/tooltip notification for success.
-- [ ] Task: Conductor - User Manual Verification 'Social Sharing' (Protocol in workflow.md)
+## Phase 2: Social Sharing [checkpoint: 4e79841]
+- [x] Task: Add "Share" button to `templates/soundboard/view.html` (next to Favorite button). 8f7383a
+- [x] Task: Implement JavaScript to copy current URL to clipboard. 8f7383a
+- [x] Task: Add toast/tooltip notification for success. 8f7383a
+- [x] Task: Conductor - User Manual Verification 'Social Sharing' (Protocol in workflow.md) 4e79841
 
 ## Phase 3: Drag-and-Drop Reordering
 - [ ] Task: Add `display_order` column to `sounds` table (requires migration script/SQL).
