@@ -19,6 +19,20 @@
             <span id="favorite-text">{% if is_favorite %}Pinned{% else %}Pin to Sidebar{% endif %}</span>
         </button>
         {% endif %}
+        
+        {% if soundboard.is_public %}
+        <button id="share-btn" class="btn btn-outline-primary ms-2" onclick="shareBoard()">
+            <i class="fas fa-share-alt"></i> Share
+        </button>
+        <div id="share-toast" class="toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Link copied to clipboard!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -97,6 +111,17 @@ function toggleFavorite(boardId) {
         }
     })
     .catch(error => console.error('Error toggling favorite:', error));
+}
+
+function shareBoard() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const toastEl = document.getElementById('share-toast');
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy link. Please copy the URL from your browser address bar.');
+    });
 }
 </script>
 
