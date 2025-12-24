@@ -36,6 +36,18 @@ def test_favorites_schema():
     assert 'user_id' in columns
     assert 'soundboard_id' in columns
 
+def test_admin_settings_schema():
+    db = sqlite3.connect(':memory:')
+    with open('app/schema_accounts.sql', 'r') as f:
+        db.executescript(f.read())
+    
+    cursor = db.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='admin_settings';")
+    assert cursor.fetchone() is not None
+    
+    cursor.execute("SELECT value FROM admin_settings WHERE key='featured_soundboard_id';")
+    assert cursor.fetchone() is not None
+
 def test_soundboards_schema():
     db = sqlite3.connect(':memory:')
     with open('app/schema_soundboards.sql', 'r') as f:
