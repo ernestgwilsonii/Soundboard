@@ -16,7 +16,7 @@
 ## Phase 3: Dynamic Sidebar (Burger Menu) UI
 - [x] Task: Create a new global component/fragment for the sidebar. f9686cb
 - [x] Task: Implement the "Burger" toggle button in the navbar. f9686cb
-- [ ] Task: Implement the "My Soundboards" section (alphabetical list).
+- [x] Task: Implement the "My Soundboards" section (alphabetical list). e1d6b3c
 - [ ] Task: Implement the "Explore" section (all public boards, grouped by user).
 - [ ] Task: Add CSS/JS for responsive sidebar behavior.
 - [ ] Task: Conductor - User Manual Verification 'Dynamic Sidebar (Burger Menu) UI' (Protocol in workflow.md)
