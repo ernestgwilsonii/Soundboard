@@ -65,6 +65,10 @@ def register():
         user.set_password(form.password.data)
         user.is_verified = False
         user.save()
+        
+        from app.models import Activity
+        Activity.record(user.id, 'registration', 'Joined the community!')
+        
         send_verification_email(user)
         flash('Congratulations, you are now a registered user! Please check your email to verify your account.')
         return redirect(url_for('auth.login'))

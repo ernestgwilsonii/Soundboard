@@ -1,7 +1,7 @@
 from flask import render_template, jsonify, request, abort
 from flask_login import current_user
 from app.main import bp
-from app.models import Soundboard, User, AdminSettings
+from app.models import Soundboard, User, AdminSettings, Activity
 
 @bp.app_context_processor
 def inject_announcement():
@@ -29,6 +29,7 @@ def check_maintenance():
 def index():
     featured = Soundboard.get_featured()
     recent_all = Soundboard.get_recent_public(limit=7)
+    activities = Activity.get_recent(limit=10)
     
     # Filter out featured from recent list to avoid duplication
     if featured:
@@ -36,7 +37,7 @@ def index():
     else:
         soundboards = recent_all[:6]
         
-    return render_template('index.html', title='Home', featured=featured, soundboards=soundboards)
+    return render_template('index.html', title='Home', featured=featured, soundboards=soundboards, activities=activities)
 
 @bp.route('/sidebar-data')
 def sidebar_data():

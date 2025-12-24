@@ -203,6 +203,9 @@ def create():
             tag_list = [t.strip() for t in form.tags.data.split(',') if t.strip()]
             for tag_name in tag_list:
                 s.add_tag(tag_name)
+        
+        from app.models import Activity
+        Activity.record(current_user.id, 'create_soundboard', f'Created a new soundboard: "{s.name}"')
                 
         flash(f'Soundboard "{s.name}" created!')
         return redirect(url_for('soundboard.dashboard'))
@@ -310,6 +313,9 @@ def upload_sound(id):
             
         sound = Sound(soundboard_id=s.id, name=form.name.data, file_path=file_path, icon=icon)
         sound.save()
+        
+        from app.models import Activity
+        Activity.record(current_user.id, 'upload_sound', f'Uploaded sound "{sound.name}" to "{s.name}"')
         
         flash(f'Sound "{sound.name}" uploaded!')
         return redirect(url_for('soundboard.edit', id=s.id))

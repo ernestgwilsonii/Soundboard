@@ -75,3 +75,11 @@ CREATE TABLE soundboard_tags (
     FOREIGN KEY (soundboard_id) REFERENCES soundboards (id),
     FOREIGN KEY (tag_id) REFERENCES tags (id)
 );
+
+CREATE TABLE activities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    action_type TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

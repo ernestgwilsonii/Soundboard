@@ -645,6 +645,36 @@ class Tag:
         rows = cur.fetchall()
         return [Tag(id=row['id'], name=row['name']) for row in rows]
 
+class Activity:
+    def __init__(self, id=None, user_id=None, action_type=None, description=None, created_at=None):
+        self.id = id
+        self.user_id = user_id
+        self.action_type = action_type
+        self.description = description
+        self.created_at = created_at
+
+    @staticmethod
+    def record(user_id, action_type, description):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute(
+            "INSERT INTO activities (user_id, action_type, description) VALUES (?, ?, ?)",
+            (user_id, action_type, description)
+        )
+        db.commit()
+
+    @staticmethod
+    def get_recent(limit=20):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM activities ORDER BY created_at DESC LIMIT ?", (limit,))
+        rows = cur.fetchall()
+        return [Activity(id=row['id'], user_id=row['user_id'], action_type=row['action_type'],
+                         description=row['description'], created_at=row['created_at']) for row in rows]
+
+    def get_user(self):
+        return User.get_by_id(self.user_id)
+
 class AdminSettings:
     @staticmethod
     def get_setting(key, default=None):
