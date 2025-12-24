@@ -106,3 +106,41 @@ def test_announcement_banner_visibility(app_context):
     response = client.get('/')
     assert b'Global Alert Test' in response.data
     assert b'alert-danger' in response.data
+
+def test_maintenance_mode_enforcement(app_context):
+    client = app_context.test_client()
+    from app.models import AdminSettings, User
+    
+    # Enable maintenance mode
+    with app_context.app_context():
+        AdminSettings.set_setting('maintenance_mode', '1')
+        
+    # Anonymous user should see maintenance
+    response = client.get('/')
+    assert b'Under Maintenance' in response.data
+    
+    # Login as normal user
+    with app_context.app_context():
+        u = User(username='user', email='user@example.com', role='user')
+        u.set_password('pass')
+        u.save()
+        
+    client.post('/auth/login', data={'username': 'user', 'password': 'pass', 'submit': 'Sign In'})
+    
+    # Normal user should see maintenance
+    response = client.get('/')
+    assert b'Under Maintenance' in response.data
+    
+    # Login as admin
+    with app_context.app_context():
+        a = User(username='admin2', email='admin2@example.com', role='admin')
+        a.set_password('pass')
+        a.save()
+        
+    client.get('/auth/logout')
+    client.post('/auth/login', data={'username': 'admin2', 'password': 'pass', 'submit': 'Sign In'})
+    
+    # Admin should bypass maintenance
+    response = client.get('/')
+    assert b'Under Maintenance' not in response.data
+    assert b'Soundboard' in response.data

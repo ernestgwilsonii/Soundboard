@@ -1,4 +1,4 @@
-from flask import render_template, jsonify
+from flask import render_template, jsonify, request, abort
 from flask_login import current_user
 from app.main import bp
 from app.models import Soundboard, User, AdminSettings
@@ -9,6 +9,24 @@ def inject_announcement():
         'announcement_message': AdminSettings.get_setting('announcement_message'),
         'announcement_type': AdminSettings.get_setting('announcement_type') or 'info'
     }
+
+@bp.before_app_request
+def check_maintenance():
+    # Allow static files and auth routes (login/logout)
+    if request.path.startswith('/static') or request.path.startswith('/auth'):
+        return
+        
+    is_maintenance = AdminSettings.get_setting('maintenance_mode') == '1'
+    if is_maintenance:
+        # Admins bypass maintenance
+        if current_user.is_authenticated and current_user.role == 'admin':
+            return
+        
+        # Check if already on maintenance page to avoid loop (if we were redirecting)
+        # But here we will render template directly or abort
+        # If we use render_template, we need to return it.
+        # before_app_request needs to return None to continue, or a response to stop.
+        return render_template('maintenance.html'), 503
 
 @bp.route('/')
 @bp.route('/index')
