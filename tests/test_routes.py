@@ -525,4 +525,36 @@ def test_sidebar_data_route(client):
     assert data['my_boards'][0]['name'] == 'My Sidebar Board'
     assert 'sidebaruser' in data['explore']
     assert data['explore']['sidebaruser'][0]['name'] == 'My Sidebar Board'
+
+def test_change_password_route(client):
+    from app.models import User
+    with client.application.app_context():
+        u = User(username='pwuser', email='pw@example.com')
+        u.set_password('oldpass')
+        u.save()
+        
+    client.post('/auth/login', data={'username': 'pwuser', 'password': 'oldpass', 'submit': 'Sign In'})
+    
+    # Try with wrong old password
+    response = client.post('/auth/change_password', data={
+        'old_password': 'wrongpassword',
+        'password': 'newpassword',
+        'password_confirm': 'newpassword',
+        'submit': 'Change Password'
+    }, follow_redirects=True)
+    assert b"Invalid current password" in response.data
+    
+    # Try with correct old password
+    response = client.post('/auth/change_password', data={
+        'old_password': 'oldpass',
+        'password': 'newpassword',
+        'password_confirm': 'newpassword',
+        'submit': 'Change Password'
+    }, follow_redirects=True)
+    assert b"Your password has been updated" in response.data
+    
+    # Verify login with new password
+    client.get('/auth/logout')
+    response = client.post('/auth/login', data={'username': 'pwuser', 'password': 'newpassword', 'submit': 'Sign In'}, follow_redirects=True)
+    assert b"Logout" in response.data
         

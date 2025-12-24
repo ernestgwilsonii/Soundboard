@@ -9,6 +9,10 @@
                 <h5 class="card-title">User: {{ current_user.username }}</h5>
                 <p class="card-text"><strong>Email:</strong> {{ current_user.email }}</p>
                 <p class="card-text"><strong>Role:</strong> {{ current_user.role }}</p>
+                <div class="mt-3">
+                    <a href="{{ url_for('auth.change_email') }}" class="btn btn-sm btn-outline-primary">Update Email</a>
+                    <a href="{{ url_for('auth.change_password') }}" class="btn btn-sm btn-outline-secondary ms-2">Change Password</a>
+                </div>
             </div>
         </div>
         <div class="mt-3 text-center">

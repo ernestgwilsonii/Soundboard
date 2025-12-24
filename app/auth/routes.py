@@ -62,3 +62,32 @@ def register():
 @login_required
 def profile():
     return render_template('auth/profile.html', title='Profile')
+
+@bp.route('/change_email', methods=['GET', 'POST'])
+@login_required
+def change_email():
+    from app.auth.forms import UpdateEmailForm
+    form = UpdateEmailForm()
+    if form.validate_on_submit():
+        current_user.email = form.email.data
+        current_user.save()
+        flash('Your email has been updated.')
+        return redirect(url_for('auth.profile'))
+    elif request.method == 'GET':
+        form.email.data = current_user.email
+    return render_template('auth/change_email.html', title='Change Email', form=form)
+
+@bp.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    from app.auth.forms import ChangePasswordForm
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if not current_user.check_password(form.old_password.data):
+            flash('Invalid current password.')
+            return redirect(url_for('auth.change_password'))
+        current_user.set_password(form.password.data)
+        current_user.save()
+        flash('Your password has been updated.')
+        return redirect(url_for('auth.profile'))
+    return render_template('auth/change_password.html', title='Change Password', form=form)
