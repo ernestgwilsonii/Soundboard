@@ -9,7 +9,7 @@
 ## Phase 2: Administrative Control for Featured Board
 - [x] Task: Create an `admin_settings` table or a simple config entry for the featured board ID. ac0fe97
 - [x] Task: Implement the admin settings route and form to select the featured board. 4d2801e
-- [ ] Task: Implement the fallback logic in `Soundboard.get_featured()` model method.
+- [x] Task: Implement the fallback logic in `Soundboard.get_featured()` model method. 2f569fe
 - [ ] Task: Update the home page template to render the "Featured" badge.
 - [ ] Task: Conductor - User Manual Verification 'Administrative Control for Featured Board' (Protocol in workflow.md)
 
