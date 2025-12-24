@@ -107,3 +107,35 @@ def test_rating_api(app_context):
     data = response.get_json()
     assert data['average'] == 1.0
     assert data['count'] == 1
+
+def test_comment_routes(app_context):
+    client = app_context.test_client()
+    with app_context.app_context():
+        u = User(username='commenter2', email='c2@example.com')
+        u.set_password('p')
+        u.save()
+        sb = Soundboard(name='Comment Route Board', user_id=u.id, is_public=True)
+        sb.save()
+        sb_id = sb.id
+        
+    client.post('/auth/login', data={'username': 'commenter2', 'password': 'p', 'submit': 'Sign In'})
+    
+    # Post comment
+    response = client.post(f'/soundboard/{sb_id}/comment', data={'text': 'Route Comment'}, follow_redirects=True)
+    assert b'Comment posted!' in response.data
+    assert b'Route Comment' in response.data
+    
+    # Verify DB
+    with client.application.app_context():
+        sb = Soundboard.get_by_id(sb_id)
+        comments = sb.get_comments()
+        assert len(comments) == 1
+        comment_id = comments[0].id
+        
+    # Delete comment
+    response = client.post(f'/soundboard/comment/{comment_id}/delete', follow_redirects=True)
+    assert b'Comment deleted' in response.data
+    
+    with client.application.app_context():
+        sb = Soundboard.get_by_id(sb_id)
+        assert len(sb.get_comments()) == 0

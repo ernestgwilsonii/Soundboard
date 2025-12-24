@@ -84,6 +84,50 @@ def rate_board(id):
         'count': stats['count']
     })
 
+@bp.route('/<int:id>/comment', methods=['POST'])
+@login_required
+def post_comment(id):
+    from app.soundboard.forms import CommentForm
+    from app.models import Comment
+    s = Soundboard.get_by_id(id)
+    if s is None:
+        flash('Soundboard not found.')
+        return redirect(url_for('main.index'))
+    
+    if not s.is_public:
+        flash('Cannot comment on private soundboards.')
+        return redirect(url_for('main.index'))
+        
+    form = CommentForm()
+    if form.validate_on_submit():
+        comment = Comment(user_id=current_user.id, soundboard_id=s.id, text=form.text.data)
+        comment.save()
+        flash('Comment posted!')
+    
+    return redirect(url_for('soundboard.view', id=s.id))
+
+@bp.route('/comment/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_comment(id):
+    from app.models import Comment
+    comment = Comment.get_by_id(id)
+    if comment is None:
+        flash('Comment not found.')
+        return redirect(url_for('main.index'))
+        
+    s = Soundboard.get_by_id(comment.soundboard_id)
+    
+    # Permission check: Author OR Board Owner OR Admin
+    if (comment.user_id != current_user.id and 
+        s.user_id != current_user.id and 
+        current_user.role != 'admin'):
+        flash('Permission denied.')
+        return redirect(url_for('soundboard.view', id=s.id))
+        
+    comment.delete()
+    flash('Comment deleted.')
+    return redirect(url_for('soundboard.view', id=s.id))
+
 @bp.route('/<int:id>/reorder', methods=['POST'])
 @login_required
 def reorder_sounds(id):

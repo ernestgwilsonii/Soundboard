@@ -76,6 +76,55 @@
     {% endfor %}
 </div>
 
+{% if soundboard.is_public %}
+<hr class="my-5">
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h3>Comments</h3>
+        
+        {% if current_user.is_authenticated %}
+        <form action="{{ url_for('soundboard.post_comment', id=soundboard.id) }}" method="post" class="mb-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="input-group">
+                <input type="text" name="text" class="form-control" placeholder="Add a comment..." required maxlength="500">
+                <button class="btn btn-primary" type="submit">Post</button>
+            </div>
+        </form>
+        {% else %}
+        <p class="text-muted small mb-4">Please <a href="{{ url_for('auth.login') }}">log in</a> to post a comment.</p>
+        {% endif %}
+
+        <div class="comments-list">
+            {% for comment in soundboard.get_comments() %}
+            <div class="card mb-2 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="fw-bold me-2">{{ comment.get_author_username() }}</span>
+                            <small class="text-muted">{{ comment.created_at }}</small>
+                        </div>
+                        
+                        {% if comment.user_id == current_user.id or soundboard.user_id == current_user.id or current_user.role == 'admin' %}
+                        <form action="{{ url_for('soundboard.delete_comment', id=comment.id) }}" method="post" onsubmit="return confirm('Delete this comment?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm text-danger p-0" title="Delete comment">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <div class="mt-2">{{ comment.text }}</div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-muted text-center italic">No comments yet. Be the first to say something!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <script>
 function playSound(url) {
     const audio = new Audio(url);

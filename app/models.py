@@ -251,6 +251,24 @@ class Soundboard:
         row = cur.fetchone()
         return row['username'] if row else 'Unknown'
 
+    def get_average_rating(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT AVG(score) as avg, COUNT(*) as count FROM ratings WHERE soundboard_id = ?", (self.id,))
+        row = cur.fetchone()
+        return {
+            'average': round(row['avg'], 1) if row['avg'] else 0,
+            'count': row['count']
+        }
+
+    def get_comments(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM comments WHERE soundboard_id = ? ORDER BY created_at DESC", (self.id,))
+        rows = cur.fetchall()
+        return [Comment(id=row['id'], user_id=row['user_id'], soundboard_id=row['soundboard_id'], 
+                        text=row['text'], created_at=row['created_at']) for row in rows]
+
     def __repr__(self):
         return f'<Soundboard {self.name}>'
 
@@ -320,6 +338,80 @@ class Sound:
 
     def __repr__(self):
         return f'<Sound {self.name}>'
+
+class Rating:
+    def __init__(self, id=None, user_id=None, soundboard_id=None, score=0, created_at=None):
+        self.id = id
+        self.user_id = user_id
+        self.soundboard_id = soundboard_id
+        self.score = score
+        self.created_at = created_at
+
+    def save(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        if self.id is None:
+            cur.execute(
+                "INSERT INTO ratings (user_id, soundboard_id, score) VALUES (?, ?, ?) "
+                "ON CONFLICT(user_id, soundboard_id) DO UPDATE SET score=excluded.score",
+                (self.user_id, self.soundboard_id, self.score)
+            )
+            self.id = cur.lastrowid
+        else:
+            cur.execute(
+                "UPDATE ratings SET score=? WHERE id=?",
+                (self.score, self.id)
+            )
+        db.commit()
+
+class Comment:
+    def __init__(self, id=None, user_id=None, soundboard_id=None, text=None, created_at=None):
+        self.id = id
+        self.user_id = user_id
+        self.soundboard_id = soundboard_id
+        self.text = text
+        self.created_at = created_at
+
+    def save(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        if self.id is None:
+            cur.execute(
+                "INSERT INTO comments (user_id, soundboard_id, text) VALUES (?, ?, ?)",
+                (self.user_id, self.soundboard_id, self.text)
+            )
+            self.id = cur.lastrowid
+        else:
+            cur.execute(
+                "UPDATE comments SET text=? WHERE id=?",
+                (self.text, self.id)
+            )
+        db.commit()
+
+    def delete(self):
+        if self.id:
+            db = get_soundboards_db()
+            cur = db.cursor()
+            cur.execute("DELETE FROM comments WHERE id = ?", (self.id,))
+            db.commit()
+
+    @staticmethod
+    def get_by_id(comment_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM comments WHERE id = ?", (comment_id,))
+        row = cur.fetchone()
+        if row:
+            return Comment(id=row['id'], user_id=row['user_id'], soundboard_id=row['soundboard_id'], 
+                           text=row['text'], created_at=row['created_at'])
+        return None
+
+    def get_author_username(self):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT username FROM users WHERE id = ?", (self.user_id,))
+        row = cur.fetchone()
+        return row['username'] if row else 'Unknown'
 
 class AdminSettings:
     @staticmethod

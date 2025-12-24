@@ -23,3 +23,7 @@ class SoundForm(FlaskForm):
         FileAllowed(['png', 'jpg', 'jpeg', 'gif'], 'Images only!')
     ])
     submit = SubmitField('Upload')
+
+class CommentForm(FlaskForm):
+    text = StringField('Comment', validators=[DataRequired(), Length(max=500)])
+    submit = SubmitField('Post Comment')
