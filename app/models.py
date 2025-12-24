@@ -301,3 +301,24 @@ class Sound:
 
     def __repr__(self):
         return f'<Sound {self.name}>'
+
+class AdminSettings:
+    @staticmethod
+    def get_setting(key, default=None):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT value FROM admin_settings WHERE key = ?", (key,))
+        row = cur.fetchone()
+        if row:
+            return row['value']
+        return default
+
+    @staticmethod
+    def set_setting(key, value):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute(
+            "INSERT INTO admin_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, value)
+        )
+        db.commit()

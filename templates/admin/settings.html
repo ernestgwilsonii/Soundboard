@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1>Admin Settings</h1>
+        <p class="text-muted">Configure platform-wide settings and defaults.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Platform Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form action="" method="post" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.featured_soundboard_id.label(class="form-label") }}
+                        {{ form.featured_soundboard_id(class="form-control", placeholder="Enter Soundboard ID (e.g. 5)") }}
+                        {% for error in form.featured_soundboard_id.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            The ID of the soundboard that will be highlighted on the home page.
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>Featured Soundboard</h6>
+                <p>Setting a Featured Soundboard ID will highlight that specific board on the homepage for all users. If left blank or invalid, the platform will automatically fallback to the most recently created public soundboard.</p>
+                <hr>
+                <h6>Future Settings</h6>
+                <p class="text-muted italic">More settings like site maintenance mode, default user quotas, or global announcement banners will appear here in future updates.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,13 +2,33 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.admin import bp
 from app.auth.routes import admin_required
-from app.models import User, Soundboard
+from app.models import User, Soundboard, AdminSettings
+from app.admin.forms import FeaturedBoardForm
 
 @bp.route('/users')
 @admin_required
 def users():
     users_list = User.get_all()
     return render_template('admin/users.html', title='User Management', users=users_list)
+
+@bp.route('/settings', methods=['GET', 'POST'])
+@admin_required
+def settings():
+    form = FeaturedBoardForm()
+    if form.validate_on_submit():
+        AdminSettings.set_setting('featured_soundboard_id', form.featured_soundboard_id.data)
+        flash('Settings updated.')
+        return redirect(url_for('admin.settings'))
+    elif request.method == 'GET':
+        form.featured_soundboard_id.data = AdminSettings.get_setting('featured_soundboard_id')
+    
+    return render_template('admin/settings.html', title='Admin Settings', form=form)
+
+@bp.route('/soundboards')
+@admin_required
+def soundboards():
+    sbs = Soundboard.get_all()
+    return render_template('admin/soundboards.html', title='Content Management', soundboards=sbs)
 
 @bp.route('/user/<int:id>/toggle_active', methods=['POST'])
 @admin_required
@@ -59,3 +79,22 @@ def reset_password(id):
         flash(f'Password for {u.username} has been reset.')
         return redirect(url_for('admin.users'))
     return render_template('admin/reset_password.html', title='Reset Password', form=form, user=u)
+
+@bp.route('/user/<int:id>/update_email', methods=['GET', 'POST'])
+@admin_required
+def update_email(id):
+    from app.admin.forms import AdminUpdateEmailForm
+    u = User.get_by_id(id)
+    if u is None:
+        flash('User not found.')
+        return redirect(url_for('admin.users'))
+    
+    form = AdminUpdateEmailForm(user_id=u.id)
+    if form.validate_on_submit():
+        u.email = form.email.data
+        u.save()
+        flash(f'Email for {u.username} has been updated.')
+        return redirect(url_for('admin.users'))
+    elif request.method == 'GET':
+        form.email.data = u.email
+    return render_template('admin/update_email.html', title='Update Email', form=form, user=u)
