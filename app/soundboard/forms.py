@@ -10,6 +10,7 @@ class SoundboardForm(FlaskForm):
         FileAllowed(['png', 'jpg', 'jpeg', 'gif'], 'Images only!')
     ])
     is_public = BooleanField('Public (Shared with everyone)')
+    tags = StringField('Tags (comma separated)', validators=[Length(max=255)])
     submit = SubmitField('Save')
 
 class SoundForm(FlaskForm):

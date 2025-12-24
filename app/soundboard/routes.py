@@ -197,6 +197,13 @@ def create():
             
         s = Soundboard(name=form.name.data, user_id=current_user.id, icon=icon, is_public=form.is_public.data)
         s.save()
+        
+        # Process tags
+        if form.tags.data:
+            tag_list = [t.strip() for t in form.tags.data.split(',') if t.strip()]
+            for tag_name in tag_list:
+                s.add_tag(tag_name)
+                
         flash(f'Soundboard "{s.name}" created!')
         return redirect(url_for('soundboard.dashboard'))
     return render_template('soundboard/create.html', title='Create Soundboard', form=form)
@@ -234,12 +241,26 @@ def edit(id):
         else:
             s.icon = form.icon.data
         s.save()
+        
+        # Process tags (replace existing)
+        current_tags = [t.name for t in s.get_tags()]
+        new_tags = [t.strip().lower() for t in form.tags.data.split(',') if t.strip()] if form.tags.data else []
+        
+        for nt in new_tags:
+            if nt not in current_tags:
+                s.add_tag(nt)
+        
+        for ct in current_tags:
+            if ct not in new_tags:
+                s.remove_tag(ct)
+                
         flash(f'Soundboard "{s.name}" updated!')
         return redirect(url_for('soundboard.dashboard'))
     elif request.method == 'GET':
         form.name.data = s.name
         form.icon.data = s.icon
         form.is_public.data = s.is_public
+        form.tags.data = ", ".join([t.name for t in s.get_tags()])
     
     # Get sounds for this board
     sounds = s.get_sounds()
@@ -376,23 +397,6 @@ def create_playlist():
         return redirect(url_for('soundboard.playlists'))
     return render_template('soundboard/create_playlist.html', title='Create Playlist', form=form)
 
-@bp.route('/playlist/<int:id>/delete', methods=['POST'])
-@login_required
-def delete_playlist(id):
-    from app.models import Playlist
-    pl = Playlist.get_by_id(id)
-    if pl is None:
-        flash('Playlist not found.')
-        return redirect(url_for('soundboard.playlists'))
-    
-    if pl.user_id != current_user.id and current_user.role != 'admin':
-        flash('Permission denied.')
-        return redirect(url_for('soundboard.playlists'))
-        
-    pl.delete()
-    flash('Playlist deleted.')
-    return redirect(url_for('soundboard.playlists'))
-
 @bp.route('/playlist/<int:playlist_id>/add/<int:sound_id>', methods=['POST'])
 @login_required
 def add_to_playlist(playlist_id, sound_id):
@@ -432,3 +436,26 @@ def view_playlist(id):
             
     sounds = pl.get_sounds()
     return render_template('soundboard/view_playlist.html', title=pl.name, playlist=pl, sounds=sounds)
+
+@bp.route('/playlist/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_playlist(id):
+    from app.models import Playlist
+    pl = Playlist.get_by_id(id)
+    if pl is None:
+        flash('Playlist not found.')
+        return redirect(url_for('soundboard.playlists'))
+    
+    if pl.user_id != current_user.id and current_user.role != 'admin':
+        flash('Permission denied.')
+        return redirect(url_for('soundboard.playlists'))
+        
+    pl.delete()
+    flash('Playlist deleted.')
+    return redirect(url_for('soundboard.playlists'))
+
+@bp.route('/tag/<tag_name>')
+def tag_search(tag_name):
+    from app.models import Tag, Soundboard
+    sbs = Soundboard.get_by_tag(tag_name)
+    return render_template('soundboard/search.html', title=f'Tag: {tag_name}', soundboards=sbs, query=tag_name)

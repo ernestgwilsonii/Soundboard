@@ -11,6 +11,15 @@
             {% endif %}
             {{ soundboard.name }}
         </h1>
+        
+        <div class="mb-3">
+            {% for tag in soundboard.get_tags() %}
+            <a href="{{ url_for('soundboard.tag_search', tag_name=tag.name) }}" class="badge rounded-pill bg-secondary text-decoration-none me-1">
+                <i class="fas fa-tag small"></i> {{ tag.name }}
+            </a>
+            {% endfor %}
+        </div>
+
         <p class="text-muted">Click an icon to play the sound.</p>
         
         {% if current_user.is_authenticated and soundboard.is_public %}

@@ -201,6 +201,21 @@ class Soundboard:
                           icon=row['icon'], is_public=row['is_public']) for row in rows]
 
     @staticmethod
+    def get_by_tag(tag_name):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT s.* FROM soundboards s
+            JOIN soundboard_tags st ON s.id = st.soundboard_id
+            JOIN tags t ON st.tag_id = t.id
+            WHERE t.name = ? AND s.is_public = 1
+            ORDER BY s.name ASC
+        """, (tag_name.lower().strip(),))
+        rows = cur.fetchall()
+        return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+
+    @staticmethod
     def get_recent_public(limit=6):
         db = get_soundboards_db()
         cur = db.cursor()
@@ -226,13 +241,6 @@ class Soundboard:
         from app.db import get_accounts_db, get_soundboards_db
         from config import Config
         
-        # We need to search across two databases. 
-        # This is tricky with raw SQLite. 
-        # Strategy: 
-        # 1. Find user IDs matching query in accounts DB.
-        # 2. Search soundboards DB for matching names OR matching user IDs.
-        # 3. Search soundboards DB for matching sounds and get their soundboard IDs.
-        
         user_ids = []
         accounts_db = get_accounts_db()
         ac_cur = accounts_db.cursor()
@@ -242,7 +250,6 @@ class Soundboard:
         soundboards_db = get_soundboards_db()
         sb_cur = soundboards_db.cursor()
         
-        # Build query for soundboards
         search_query = "SELECT DISTINCT id, name, user_id, icon, is_public FROM soundboards WHERE is_public = 1 AND (name LIKE ?"
         params = [f'%{query}%']
         
@@ -251,7 +258,6 @@ class Soundboard:
             search_query += f" OR user_id IN ({placeholders})"
             params.extend(user_ids)
             
-        # Search sounds and get their board IDs
         sb_cur.execute("SELECT DISTINCT soundboard_id FROM sounds WHERE name LIKE ?", (f'%{query}%',))
         sound_sb_ids = [row['soundboard_id'] for row in sb_cur.fetchall()]
         
@@ -259,6 +265,19 @@ class Soundboard:
             placeholders = ','.join(['?'] * len(sound_sb_ids))
             search_query += f" OR id IN ({placeholders})"
             params.extend(sound_sb_ids)
+            
+        # Search tags and get their board IDs
+        sb_cur.execute("""
+            SELECT DISTINCT soundboard_id FROM soundboard_tags st
+            JOIN tags t ON st.tag_id = t.id
+            WHERE t.name LIKE ?
+        """, (f'%{query}%',))
+        tag_sb_ids = [row['soundboard_id'] for row in sb_cur.fetchall()]
+        
+        if tag_sb_ids:
+            placeholders = ','.join(['?'] * len(tag_sb_ids))
+            search_query += f" OR id IN ({placeholders})"
+            params.extend(tag_sb_ids)
             
         search_query += ") ORDER BY name ASC"
         
@@ -302,6 +321,38 @@ class Soundboard:
         return [Comment(id=row['id'], user_id=row['user_id'], soundboard_id=row['soundboard_id'], 
                         text=row['text'], created_at=row['created_at']) for row in rows]
 
+    def get_tags(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT t.* FROM tags t 
+            JOIN soundboard_tags st ON t.id = st.tag_id 
+            WHERE st.soundboard_id = ? 
+            ORDER BY t.name ASC
+        """, (self.id,))
+        rows = cur.fetchall()
+        return [Tag(id=row['id'], name=row['name']) for row in rows]
+
+    def add_tag(self, tag_name):
+        db = get_soundboards_db()
+        tag = Tag.get_or_create(tag_name)
+        if not tag: return
+        cur = db.cursor()
+        cur.execute(
+            "INSERT OR IGNORE INTO soundboard_tags (soundboard_id, tag_id) VALUES (?, ?)",
+            (self.id, tag.id)
+        )
+        db.commit()
+
+    def remove_tag(self, tag_name):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("""
+            DELETE FROM soundboard_tags 
+            WHERE soundboard_id = ? AND tag_id IN (SELECT id FROM tags WHERE name = ?)
+        """, (self.id, tag_name.lower().strip()))
+        db.commit()
+
     def __repr__(self):
         return f'<Soundboard {self.name}>'
 
@@ -323,7 +374,6 @@ class Sound:
         db = get_soundboards_db()
         cur = db.cursor()
         if self.id is None:
-            # If display_order is 0 (default), find the next available order
             if self.display_order == 0:
                 cur.execute("SELECT MAX(display_order) FROM sounds WHERE soundboard_id = ?", (self.soundboard_id,))
                 max_row = cur.fetchone()
@@ -349,16 +399,13 @@ class Sound:
             db = get_soundboards_db()
             cur = db.cursor()
             
-            # Remove the actual file
             full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], self.file_path)
             if os.path.exists(full_path):
                 os.remove(full_path)
             
-            # Also remove custom icon if it's a file
             if self.icon and '/' in self.icon:
                 icon_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], self.icon)
                 if os.path.exists(icon_full_path):
-                    # We should be careful about shared icons, but for now we delete it
                     os.remove(icon_full_path)
 
             cur.execute("DELETE FROM sounds WHERE id = ?", (self.id,))
@@ -453,6 +500,145 @@ class Comment:
         cur.execute("SELECT username FROM users WHERE id = ?", (self.user_id,))
         row = cur.fetchone()
         return row['username'] if row else 'Unknown'
+
+class Playlist:
+    def __init__(self, id=None, user_id=None, name=None, description=None, is_public=False, created_at=None):
+        self.id = id
+        self.user_id = user_id
+        self.name = name
+        self.description = description
+        self.is_public = bool(is_public)
+        self.created_at = created_at
+
+    def save(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        if self.id is None:
+            cur.execute(
+                "INSERT INTO playlists (user_id, name, description, is_public) VALUES (?, ?, ?, ?)",
+                (self.user_id, self.name, self.description, int(self.is_public))
+            )
+            self.id = cur.lastrowid
+        else:
+            cur.execute(
+                "UPDATE playlists SET name=?, description=?, is_public=? WHERE id=?",
+                (self.name, self.description, int(self.is_public), self.id)
+            )
+        db.commit()
+
+    def delete(self):
+        if self.id:
+            db = get_soundboards_db()
+            cur = db.cursor()
+            cur.execute("DELETE FROM playlist_items WHERE playlist_id = ?", (self.id,))
+            cur.execute("DELETE FROM playlists WHERE id = ?", (self.id,))
+            db.commit()
+
+    @staticmethod
+    def get_by_id(playlist_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM playlists WHERE id = ?", (playlist_id,))
+        row = cur.fetchone()
+        if row:
+            return Playlist(id=row['id'], user_id=row['user_id'], name=row['name'], 
+                            description=row['description'], is_public=row['is_public'], 
+                            created_at=row['created_at'])
+        return None
+
+    @staticmethod
+    def get_by_user_id(user_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM playlists WHERE user_id = ? ORDER BY name ASC", (user_id,))
+        rows = cur.fetchall()
+        return [Playlist(id=row['id'], user_id=row['user_id'], name=row['name'], 
+                         description=row['description'], is_public=row['is_public'], 
+                         created_at=row['created_at']) for row in rows]
+
+    def get_sounds(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT s.* FROM sounds s 
+            JOIN playlist_items pi ON s.id = pi.sound_id 
+            WHERE pi.playlist_id = ? 
+            ORDER BY pi.display_order ASC
+        """, (self.id,))
+        rows = cur.fetchall()
+        return [Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
+                      file_path=row['file_path'], icon=row['icon'], display_order=row['display_order'],
+                      volume=row['volume'], is_loop=row['is_loop'], 
+                      start_time=row['start_time'], end_time=row['end_time']) for row in rows]
+
+    def add_sound(self, sound_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT MAX(display_order) FROM playlist_items WHERE playlist_id = ?", (self.id,))
+        max_row = cur.fetchone()
+        order = (max_row[0] + 1) if max_row and max_row[0] is not None else 1
+        
+        cur.execute(
+            "INSERT INTO playlist_items (playlist_id, sound_id, display_order) VALUES (?, ?, ?)",
+            (self.id, sound_id, order)
+        )
+        db.commit()
+
+    def remove_sound(self, sound_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("DELETE FROM playlist_items WHERE playlist_id = ? AND sound_id = ?", (self.id, sound_id))
+        db.commit()
+
+class PlaylistItem:
+    def __init__(self, id=None, playlist_id=None, sound_id=None, display_order=0):
+        self.id = id
+        self.playlist_id = playlist_id
+        self.sound_id = sound_id
+        self.display_order = display_order
+
+class Tag:
+    def __init__(self, id=None, name=None):
+        self.id = id
+        self.name = name
+
+    @staticmethod
+    def get_or_create(name):
+        name = name.lower().strip()
+        if not name: return None
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM tags WHERE name = ?", (name,))
+        row = cur.fetchone()
+        if row:
+            return Tag(id=row['id'], name=row['name'])
+        
+        cur.execute("INSERT INTO tags (name) VALUES (?)", (name,))
+        db.commit()
+        return Tag(id=cur.lastrowid, name=name)
+
+    @staticmethod
+    def get_all():
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM tags ORDER BY name ASC")
+        rows = cur.fetchall()
+        return [Tag(id=row['id'], name=row['name']) for row in rows]
+
+    @staticmethod
+    def get_popular(limit=10):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT t.*, COUNT(st.soundboard_id) as count 
+            FROM tags t 
+            JOIN soundboard_tags st ON t.id = st.tag_id 
+            GROUP BY t.id 
+            ORDER BY count DESC 
+            LIMIT ?
+        """, (limit,))
+        rows = cur.fetchall()
+        return [Tag(id=row['id'], name=row['name']) for row in rows]
 
 class AdminSettings:
     @staticmethod

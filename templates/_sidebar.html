@@ -40,6 +40,12 @@
                 <div class="px-3 py-2 text-muted small italic">Loading...</div>
             </div>
 
+            <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">Popular Tags</div>
+            <div id="sidebar-tags" class="px-3 py-2">
+                <!-- Placeholder for dynamic list -->
+                <div class="text-muted small italic">Loading...</div>
+            </div>
+
             <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">Other</div>
             <a href="{{ url_for('soundboard.search') }}" class="list-group-item list-group-item-action py-3">
                 <i class="fas fa-search me-3"></i>Search All Boards
@@ -120,6 +126,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         exploreContainer.innerHTML = exploreHtml;
                     } else {
                         exploreContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No public boards yet.</div>';
+                    }
+                }
+
+                const tagsContainer = document.getElementById('sidebar-tags');
+                if (tagsContainer) {
+                    if (data.popular_tags.length > 0) {
+                        tagsContainer.innerHTML = data.popular_tags.map(tag => `
+                            <a href="/soundboard/tag/${tag.name}" class="badge rounded-pill bg-light text-dark border text-decoration-none me-1 mb-1">
+                                #${tag.name}
+                            </a>
+                        `).join('');
+                    } else {
+                        tagsContainer.innerHTML = '<div class="text-muted small italic">No tags yet.</div>';
                     }
                 }
             })

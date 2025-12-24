@@ -31,6 +31,11 @@
                 {{ form.is_public(class="form-check-input") }}
                 {{ form.is_public.label(class="form-check-label") }}
             </div>
+            <div class="mb-3">
+                {{ form.tags.label(class="form-label") }}
+                {{ form.tags(class="form-control", placeholder="e.g. fun, gaming, memes") }}
+                <div class="form-text">Separate tags with commas.</div>
+            </div>
             <div class="d-grid gap-2">
                 {{ form.submit(class="btn btn-primary") }}
                 <a href="{{ url_for('soundboard.dashboard') }}" class="btn btn-secondary">Cancel</a>

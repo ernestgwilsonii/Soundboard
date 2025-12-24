@@ -22,10 +22,6 @@ def check_maintenance():
         if current_user.is_authenticated and current_user.role == 'admin':
             return
         
-        # Check if already on maintenance page to avoid loop (if we were redirecting)
-        # But here we will render template directly or abort
-        # If we use render_template, we need to return it.
-        # before_app_request needs to return None to continue, or a response to stop.
         return render_template('maintenance.html'), 503
 
 @bp.route('/')
@@ -47,9 +43,10 @@ def sidebar_data():
     my_boards = []
     favorites = []
     my_playlists = []
+    popular_tags = []
     
     if current_user.is_authenticated:
-        from app.models import Playlist
+        from app.models import Playlist, Tag
         my_boards = [
             {'id': sb.id, 'name': sb.name, 'icon': sb.icon} 
             for sb in Soundboard.get_by_user_id(current_user.id)
@@ -65,11 +62,29 @@ def sidebar_data():
             {'id': pl.id, 'name': pl.name} 
             for pl in Playlist.get_by_user_id(current_user.id)
         ]
+        
+        popular_tags = [
+            {'name': t.name} for t in Tag.get_popular(limit=10)
+        ]
+    else:
+        from app.models import Tag
+        popular_tags = [
+            {'name': t.name} for t in Tag.get_popular(limit=10)
+        ]
     
-    # ...
+    # Explore section: All public boards grouped by user
+    public_boards = Soundboard.get_public()
+    explore = {}
+    for sb in public_boards:
+        creator = sb.get_creator_username()
+        if creator not in explore:
+            explore[creator] = []
+        explore[creator].append({'id': sb.id, 'name': sb.name, 'icon': sb.icon})
+                
     return jsonify({
         'my_boards': my_boards,
         'favorites': favorites,
         'my_playlists': my_playlists,
+        'popular_tags': popular_tags,
         'explore': explore
     })

@@ -27,6 +27,14 @@
                                         <span class="fw-bold">{{ stats.average }}</span>/5
                                         <span class="text-muted">({{ stats.count }})</span>
                                     </div>
+
+                                    <div class="mb-3">
+                                        {% for tag in sb.get_tags() %}
+                                        <a href="{{ url_for('soundboard.tag_search', tag_name=tag.name) }}" class="badge rounded-pill bg-light text-dark border text-decoration-none small">
+                                            #{{ tag.name }}
+                                        </a>
+                                        {% endfor %}
+                                    </div>
                 
                                     <div class="mt-auto">
                 

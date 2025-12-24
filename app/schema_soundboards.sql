@@ -61,3 +61,16 @@ CREATE TABLE playlist_items (
     FOREIGN KEY (playlist_id) REFERENCES playlists (id),
     FOREIGN KEY (sound_id) REFERENCES sounds (id)
 );
+
+CREATE TABLE tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE soundboard_tags (
+    soundboard_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    PRIMARY KEY (soundboard_id, tag_id),
+    FOREIGN KEY (soundboard_id) REFERENCES soundboards (id),
+    FOREIGN KEY (tag_id) REFERENCES tags (id)
+);
