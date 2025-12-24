@@ -14,8 +14,8 @@
 - [x] Task: Conductor - User Manual Verification 'Administrative Control for Featured Board' (Protocol in workflow.md) c1a090e
 
 ## Phase 3: Dynamic Sidebar (Burger Menu) UI
-- [ ] Task: Create a new global component/fragment for the sidebar.
-- [ ] Task: Implement the "Burger" toggle button in the navbar.
+- [x] Task: Create a new global component/fragment for the sidebar. f9686cb
+- [x] Task: Implement the "Burger" toggle button in the navbar. f9686cb
 - [ ] Task: Implement the "My Soundboards" section (alphabetical list).
 - [ ] Task: Implement the "Explore" section (all public boards, grouped by user).
 - [ ] Task: Add CSS/JS for responsive sidebar behavior.
