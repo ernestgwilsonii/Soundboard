@@ -32,6 +32,23 @@
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
+
+        <div class="mt-3">
+            {% set stats = soundboard.get_average_rating() %}
+            <div class="d-flex justify-content-center align-items-center">
+                <div class="me-3">
+                    <span id="avg-rating" class="fw-bold">{{ stats.average }}</span>/5
+                    <small class="text-muted">(<span id="rating-count">{{ stats.count }}</span> ratings)</small>
+                </div>
+                {% if current_user.is_authenticated %}
+                <div id="star-rating" class="fs-4">
+                    {% for i in range(1, 6) %}
+                    <i class="far fa-star rating-star" data-score="{{ i }}" style="cursor: pointer;" onclick="submitRating({{ i }})"></i>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
         {% endif %}
     </div>
 </div>
@@ -123,6 +140,54 @@ function shareBoard() {
         alert('Failed to copy link. Please copy the URL from your browser address bar.');
     });
 }
+
+function submitRating(score) {
+    fetch(`/soundboard/{{ soundboard.id }}/rate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ score: score })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to submit rating');
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('avg-rating').textContent = data.average;
+        document.getElementById('rating-count').textContent = data.count;
+        highlightStars(score);
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Failed to submit rating. Please try again.');
+    });
+}
+
+function highlightStars(score) {
+    document.querySelectorAll('.rating-star').forEach(star => {
+        const starScore = parseInt(star.dataset.score);
+        if (starScore <= score) {
+            star.classList.remove('far');
+            star.classList.add('fas', 'text-warning');
+        } else {
+            star.classList.remove('fas', 'text-warning');
+            star.classList.add('far');
+        }
+    });
+}
+
+// Hover effects for stars
+document.querySelectorAll('.rating-star').forEach(star => {
+    star.addEventListener('mouseover', () => {
+        highlightStars(parseInt(star.dataset.score));
+    });
+});
+
+document.getElementById('star-rating')?.addEventListener('mouseleave', () => {
+    // Reset to current selection if we track it? 
+    // For now simple reset
+});
 </script>
 
 <style>

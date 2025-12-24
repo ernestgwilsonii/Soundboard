@@ -54,6 +54,36 @@ def toggle_favorite(id):
         
     return jsonify({'is_favorite': is_favorite})
 
+@bp.route('/<int:id>/rate', methods=['POST'])
+@login_required
+def rate_board(id):
+    from flask import jsonify
+    from app.models import Rating
+    s = Soundboard.get_by_id(id)
+    if s is None:
+        return jsonify({'error': 'Soundboard not found'}), 404
+    
+    if not s.is_public:
+        return jsonify({'error': 'Cannot rate private soundboards'}), 403
+        
+    data = request.get_json()
+    if not data or 'score' not in data:
+        return jsonify({'error': 'Score required'}), 400
+        
+    score = int(data['score'])
+    if score < 1 or score > 5:
+        return jsonify({'error': 'Score must be between 1 and 5'}), 400
+        
+    rating = Rating(user_id=current_user.id, soundboard_id=s.id, score=score)
+    rating.save()
+    
+    stats = s.get_average_rating()
+    return jsonify({
+        'status': 'success',
+        'average': stats['average'],
+        'count': stats['count']
+    })
+
 @bp.route('/<int:id>/reorder', methods=['POST'])
 @login_required
 def reorder_sounds(id):
