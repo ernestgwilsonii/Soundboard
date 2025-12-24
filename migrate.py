@@ -78,6 +78,27 @@ MIGRATIONS = [
             FOREIGN KEY (soundboard_id) REFERENCES soundboards (id),
             FOREIGN KEY (tag_id) REFERENCES tags (id)
         );
+    """),
+    (13, 'add_avatar_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN avatar_path TEXT;
+    """),
+    (14, 'add_hotkey_to_sounds', Config.SOUNDBOARDS_DB, """
+        ALTER TABLE sounds ADD COLUMN hotkey TEXT;
+    """),
+    (15, 'create_activities_table', Config.SOUNDBOARDS_DB, """
+        CREATE TABLE IF NOT EXISTS activities (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            action_type TEXT NOT NULL,
+            description TEXT NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+    """),
+    (16, 'add_lockout_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0;
+    """),
+    (17, 'add_lockout_until_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN lockout_until TIMESTAMP;
     """)
 ]
 

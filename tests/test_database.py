@@ -21,6 +21,9 @@ def test_accounts_schema():
     assert 'password_hash' in columns
     assert 'role' in columns
     assert 'is_verified' in columns
+    assert 'avatar_path' in columns
+    assert 'failed_login_attempts' in columns
+    assert 'lockout_until' in columns
 
 def test_favorites_schema():
     # Use an in-memory database for testing schema

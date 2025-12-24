@@ -5,7 +5,9 @@ from itsdangerous import URLSafeTimedSerializer
 from app.db import get_accounts_db, get_soundboards_db
 
 class User(UserMixin):
-    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', active=True, is_verified=False, avatar_path=None):
+    def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', 
+                 active=True, is_verified=False, avatar_path=None, 
+                 failed_login_attempts=0, lockout_until=None):
         self.id = id
         self.username = username
         self.email = email
@@ -14,6 +16,8 @@ class User(UserMixin):
         self.active = bool(active)
         self.is_verified = bool(is_verified)
         self.avatar_path = avatar_path
+        self.failed_login_attempts = int(failed_login_attempts)
+        self.lockout_until = lockout_until
 
     @property
     def is_active(self):
@@ -27,14 +31,14 @@ class User(UserMixin):
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO users (username, email, password_hash, role, active, is_verified, avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path)
+                "INSERT INTO users (username, email, password_hash, role, active, is_verified, avatar_path, failed_login_attempts, lockout_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.failed_login_attempts, self.lockout_until)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=?, avatar_path=? WHERE id=?",
-                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.id)
+                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=?, avatar_path=?, failed_login_attempts=?, lockout_until=? WHERE id=?",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.failed_login_attempts, self.lockout_until, self.id)
             )
         db.commit()
 
@@ -77,7 +81,8 @@ class User(UserMixin):
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                        is_verified=row['is_verified'], avatar_path=row['avatar_path'])
+                        is_verified=row['is_verified'], avatar_path=row['avatar_path'],
+                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'])
         return None
 
     @staticmethod
@@ -89,7 +94,8 @@ class User(UserMixin):
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                        is_verified=row['is_verified'], avatar_path=row['avatar_path'])
+                        is_verified=row['is_verified'], avatar_path=row['avatar_path'],
+                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'])
         return None
 
     @staticmethod
@@ -101,7 +107,8 @@ class User(UserMixin):
         if row:
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                        is_verified=row['is_verified'], avatar_path=row['avatar_path'])
+                        is_verified=row['is_verified'], avatar_path=row['avatar_path'],
+                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'])
         return None
 
     @staticmethod
@@ -112,7 +119,8 @@ class User(UserMixin):
         rows = cur.fetchall()
         return [User(id=row['id'], username=row['username'], email=row['email'], 
                      password_hash=row['password_hash'], role=row['role'], active=row['active'],
-                     is_verified=row['is_verified'], avatar_path=row['avatar_path']) for row in rows]
+                     is_verified=row['is_verified'], avatar_path=row['avatar_path'],
+                     failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until']) for row in rows]
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -129,6 +137,28 @@ class User(UserMixin):
         except:
             return None
         return User.get_by_email(email)
+
+    def increment_failed_attempts(self):
+        self.failed_login_attempts += 1
+        if self.failed_login_attempts >= 5:
+            from datetime import datetime, timedelta
+            self.lockout_until = (datetime.now() + timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S')
+        self.save()
+
+    def reset_failed_attempts(self):
+        self.failed_login_attempts = 0
+        self.lockout_until = None
+        self.save()
+
+    def is_locked(self):
+        if not self.lockout_until:
+            return False
+        from datetime import datetime
+        lockout_time = datetime.strptime(self.lockout_until, '%Y-%m-%d %H:%M:%S')
+        if datetime.now() > lockout_time:
+            # Lock expired
+            return False
+        return True
 
 class Soundboard:
     def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False):

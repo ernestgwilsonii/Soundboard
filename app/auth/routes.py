@@ -36,9 +36,20 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.get_by_username(form.username.data)
-        if user is None or not user.check_password(form.password.data):
+        if user is None:
             flash('Invalid username or password')
             return redirect(url_for('auth.login'))
+            
+        if user.is_locked():
+            flash(f'Account is locked due to too many failed attempts. Please try again after {user.lockout_until}.')
+            return redirect(url_for('auth.login'))
+            
+        if not user.check_password(form.password.data):
+            user.increment_failed_attempts()
+            flash('Invalid username or password')
+            return redirect(url_for('auth.login'))
+            
+        user.reset_failed_attempts()
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or urlparse(next_page).netloc != '':

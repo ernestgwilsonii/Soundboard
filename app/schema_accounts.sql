@@ -12,6 +12,9 @@ CREATE TABLE users (
     role TEXT NOT NULL DEFAULT 'user',
     active INTEGER NOT NULL DEFAULT 1,
     is_verified INTEGER NOT NULL DEFAULT 0,
+    avatar_path TEXT,
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    lockout_until TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
