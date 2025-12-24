@@ -24,6 +24,9 @@
         <button id="share-btn" class="btn btn-outline-primary ms-2" onclick="shareBoard()">
             <i class="fas fa-share-alt"></i> Share
         </button>
+        <button class="btn btn-outline-danger ms-2" onclick="stopAllSounds()">
+            <i class="fas fa-stop"></i> Stop All
+        </button>
         <div id="share-toast" class="toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
@@ -57,7 +60,12 @@
     {% for sound in sounds %}
     <div class="col">
         <div class="card h-100 sound-card text-center p-2 p-md-3" 
-             onclick="playSound('{{ url_for('static', filename='uploads/' + sound.file_path) }}')"
+             onclick="playSound('{{ url_for('static', filename='uploads/' + sound.file_path) }}', {
+                 volume: {{ sound.volume }},
+                 loop: {{ 'true' if sound.is_loop else 'false' }},
+                 startTime: {{ sound.start_time }},
+                 endTime: {{ sound.end_time or 'null' }}
+             })"
              style="cursor: pointer; transition: transform 0.1s; min-height: 120px;">
             <div class="card-body p-0 d-flex flex-column justify-content-center">
                 {% if sound.icon and '/' in sound.icon %}
@@ -126,20 +134,54 @@
 {% endif %}
 
 <script>
-function playSound(url) {
+let activeSounds = [];
+
+function playSound(url, settings = {}) {
     const audio = new Audio(url);
+    
+    // Apply settings
+    audio.volume = settings.volume !== undefined ? settings.volume : 1.0;
+    audio.loop = settings.loop === true;
+    
+    // Virtual Trimming logic
+    if (settings.startTime) {
+        audio.currentTime = settings.startTime;
+    }
+    
+    if (settings.endTime) {
+        audio.ontimeupdate = function() {
+            if (audio.currentTime >= settings.endTime) {
+                if (audio.loop) {
+                    audio.currentTime = settings.startTime || 0;
+                } else {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    // Remove from active list
+                    activeSounds = activeSounds.filter(s => s !== audio);
+                }
+            }
+        };
+    }
+
+    activeSounds.push(audio);
+    
     audio.play().catch(error => {
         console.error("Error playing sound:", error);
         alert("Failed to play sound. Please check the file format or try again.");
     });
+    
+    audio.onended = () => {
+        activeSounds = activeSounds.filter(s => s !== audio);
+    };
 }
 
-// Add visual feedback on click
-document.querySelectorAll('.sound-card').forEach(card => {
-    card.addEventListener('mousedown', () => card.style.transform = 'scale(0.95)');
-    card.addEventListener('mouseup', () => card.style.transform = 'scale(1)');
-    card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
-});
+function stopAllSounds() {
+    activeSounds.forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+    });
+    activeSounds = [];
+}
 
 function toggleFavorite(boardId) {
     fetch(`/soundboard/${boardId}/favorite`, {
