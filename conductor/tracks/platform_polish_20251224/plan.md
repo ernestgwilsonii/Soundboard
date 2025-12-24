@@ -24,8 +24,8 @@
 - [x] Task: Connect UI to API to save new order. 0d65a25
 - [x] Task: Conductor - User Manual Verification 'Drag-and-Drop Reordering' (Protocol in workflow.md) 0d65a25
 
-## Phase 4: Mobile Responsiveness Polish
-- [ ] Task: Audit `soundboard/view.html` grid on mobile widths.
-- [ ] Task: Audit `admin/*.html` tables for responsiveness (ensure `table-responsive`).
-- [ ] Task: Verify touch target sizes for all primary buttons.
-- [ ] Task: Conductor - User Manual Verification 'Mobile Responsiveness Polish' (Protocol in workflow.md)
+## Phase 4: Mobile Responsiveness Polish [checkpoint: 3dde2c8]
+- [x] Task: Audit `soundboard/view.html` grid on mobile widths. 3dde2c8
+- [x] Task: Audit `admin/*.html` tables for responsiveness (ensure `table-responsive`). 3dde2c8
+- [x] Task: Verify touch target sizes for all primary buttons. 3dde2c8
+- [x] Task: Conductor - User Manual Verification 'Mobile Responsiveness Polish' (Protocol in workflow.md) 3dde2c8
