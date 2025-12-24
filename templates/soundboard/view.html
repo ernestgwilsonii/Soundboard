@@ -128,12 +128,16 @@
                         <div class="d-flex align-items-center">
                             {% set author = comment.get_author() %}
                             {% if author and author.avatar_path %}
-                            <img src="{{ url_for('static', filename='uploads/' + author.avatar_path) }}" alt="" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            <a href="{{ url_for('auth.public_profile', username=author.username) }}">
+                                <img src="{{ url_for('static', filename='uploads/' + author.avatar_path) }}" alt="" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            </a>
                             {% else %}
                             <i class="fas fa-user-circle fa-2x text-muted me-2"></i>
                             {% endif %}
                             <div>
-                                <span class="fw-bold me-2">{{ author.username if author else 'Unknown' }}</span>
+                                <a href="{{ url_for('auth.public_profile', username=author.username if author else 'Unknown') }}" class="text-decoration-none text-dark fw-bold me-2">
+                                    {{ author.username if author else 'Unknown' }}
+                                </a>
                                 <small class="text-muted">{{ comment.created_at }}</small>
                             </div>
                         </div>

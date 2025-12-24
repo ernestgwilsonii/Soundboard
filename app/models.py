@@ -7,7 +7,8 @@ from app.db import get_accounts_db, get_soundboards_db
 class User(UserMixin):
     def __init__(self, id=None, username=None, email=None, password_hash=None, role='user', 
                  active=True, is_verified=False, avatar_path=None, 
-                 failed_login_attempts=0, lockout_until=None):
+                 failed_login_attempts=0, lockout_until=None,
+                 bio=None, social_x=None, social_youtube=None, social_website=None):
         self.id = id
         self.username = username
         self.email = email
@@ -18,6 +19,10 @@ class User(UserMixin):
         self.avatar_path = avatar_path
         self.failed_login_attempts = int(failed_login_attempts)
         self.lockout_until = lockout_until
+        self.bio = bio
+        self.social_x = social_x
+        self.social_youtube = social_youtube
+        self.social_website = social_website
 
     @property
     def is_active(self):
@@ -31,14 +36,14 @@ class User(UserMixin):
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO users (username, email, password_hash, role, active, is_verified, avatar_path, failed_login_attempts, lockout_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.failed_login_attempts, self.lockout_until)
+                "INSERT INTO users (username, email, password_hash, role, active, is_verified, avatar_path, failed_login_attempts, lockout_until, bio, social_x, social_youtube, social_website) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.failed_login_attempts, self.lockout_until, self.bio, self.social_x, self.social_youtube, self.social_website)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=?, avatar_path=?, failed_login_attempts=?, lockout_until=? WHERE id=?",
-                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.failed_login_attempts, self.lockout_until, self.id)
+                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=?, avatar_path=?, failed_login_attempts=?, lockout_until=?, bio=?, social_x=?, social_youtube=?, social_website=? WHERE id=?",
+                (self.username, self.email, self.password_hash, self.role, int(self.active), int(self.is_verified), self.avatar_path, self.failed_login_attempts, self.lockout_until, self.bio, self.social_x, self.social_youtube, self.social_website, self.id)
             )
         db.commit()
 
@@ -82,7 +87,8 @@ class User(UserMixin):
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
                         is_verified=row['is_verified'], avatar_path=row['avatar_path'],
-                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'])
+                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'],
+                        bio=row['bio'], social_x=row['social_x'], social_youtube=row['social_youtube'], social_website=row['social_website'])
         return None
 
     @staticmethod
@@ -95,7 +101,8 @@ class User(UserMixin):
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
                         is_verified=row['is_verified'], avatar_path=row['avatar_path'],
-                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'])
+                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'],
+                        bio=row['bio'], social_x=row['social_x'], social_youtube=row['social_youtube'], social_website=row['social_website'])
         return None
 
     @staticmethod
@@ -108,7 +115,8 @@ class User(UserMixin):
             return User(id=row['id'], username=row['username'], email=row['email'], 
                         password_hash=row['password_hash'], role=row['role'], active=row['active'],
                         is_verified=row['is_verified'], avatar_path=row['avatar_path'],
-                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'])
+                        failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'],
+                        bio=row['bio'], social_x=row['social_x'], social_youtube=row['social_youtube'], social_website=row['social_website'])
         return None
 
     @staticmethod
@@ -120,7 +128,8 @@ class User(UserMixin):
         return [User(id=row['id'], username=row['username'], email=row['email'], 
                      password_hash=row['password_hash'], role=row['role'], active=row['active'],
                      is_verified=row['is_verified'], avatar_path=row['avatar_path'],
-                     failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until']) for row in rows]
+                     failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'],
+                     bio=row['bio'], social_x=row['social_x'], social_youtube=row['social_youtube'], social_website=row['social_website']) for row in rows]
 
     def __repr__(self):
         return f'<User {self.username}>'

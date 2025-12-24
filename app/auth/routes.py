@@ -146,6 +146,21 @@ def reset_password(token):
 def profile():
     return render_template('auth/profile.html', title='Profile')
 
+@bp.route('/user/<username>')
+def public_profile(username):
+    from app.models import User, Soundboard
+    user = User.get_by_username(username)
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('main.index'))
+    
+    public_sbs = Soundboard.get_by_user_id(user.id)
+    # Filter for public only if it's not the owner viewing their own public profile 
+    # (actually public profile should always show only public sbs)
+    public_sbs = [sb for sb in public_sbs if sb.is_public]
+    
+    return render_template('auth/public_profile.html', title=f'{user.username}\'s Profile', user=user, soundboards=public_sbs)
+
 @bp.route('/update_profile', methods=['GET', 'POST'])
 @login_required
 def update_profile():
@@ -156,6 +171,11 @@ def update_profile():
     form = UpdateProfileForm()
     if form.validate_on_submit():
         current_user.email = form.email.data
+        current_user.bio = form.bio.data
+        current_user.social_x = form.social_x.data
+        current_user.social_youtube = form.social_youtube.data
+        current_user.social_website = form.social_website.data
+        
         if form.avatar.data:
             f = form.avatar.data
             filename = secure_filename(f"{current_user.id}_{f.filename}")
@@ -171,6 +191,10 @@ def update_profile():
         return redirect(url_for('auth.profile'))
     elif request.method == 'GET':
         form.email.data = current_user.email
+        form.bio.data = current_user.bio
+        form.social_x.data = current_user.social_x
+        form.social_youtube.data = current_user.social_youtube
+        form.social_website.data = current_user.social_website
     return render_template('auth/update_profile.html', title='Update Profile', form=form)
 
 @bp.route('/change_password', methods=['GET', 'POST'])

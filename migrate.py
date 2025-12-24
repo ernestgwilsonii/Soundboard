@@ -99,6 +99,18 @@ MIGRATIONS = [
     """),
     (17, 'add_lockout_until_to_users', Config.ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN lockout_until TIMESTAMP;
+    """),
+    (18, 'add_profile_fields_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN bio TEXT;
+    """),
+    (19, 'add_social_x_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN social_x TEXT;
+    """),
+    (20, 'add_social_youtube_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN social_youtube TEXT;
+    """),
+    (21, 'add_social_website_to_users', Config.ACCOUNTS_DB, """
+        ALTER TABLE users ADD COLUMN social_website TEXT;
     """)
 ]
 

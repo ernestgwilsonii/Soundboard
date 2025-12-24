@@ -38,6 +38,10 @@ class UpdateProfileForm(FlaskForm):
     avatar = FileField('Update Profile Picture', validators=[
         FileAllowed(['jpg', 'png', 'jpeg'], 'Images only!')
     ])
+    bio = StringField('Bio', validators=[Length(max=250)])
+    social_x = StringField('X (Twitter) URL', validators=[Length(max=255)])
+    social_youtube = StringField('YouTube URL', validators=[Length(max=255)])
+    social_website = StringField('Personal Website', validators=[Length(max=255)])
     submit = SubmitField('Update Profile')
 
     def validate_email(self, email):

@@ -28,6 +28,38 @@
             </div>
 
             <div class="mb-3">
+                {{ form.bio.label(class="form-label") }}
+                {{ form.bio(class="form-control", placeholder="Tell us about yourself...") }}
+                {% for error in form.bio.errors %}
+                <span class="text-danger">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.social_x.label(class="form-label") }}
+                {{ form.social_x(class="form-control", placeholder="https://x.com/username") }}
+                {% for error in form.social_x.errors %}
+                <span class="text-danger">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.social_youtube.label(class="form-label") }}
+                {{ form.social_youtube(class="form-control", placeholder="https://youtube.com/@channel") }}
+                {% for error in form.social_youtube.errors %}
+                <span class="text-danger">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.social_website.label(class="form-label") }}
+                {{ form.social_website(class="form-control", placeholder="https://yourwebsite.com") }}
+                {% for error in form.social_website.errors %}
+                <span class="text-danger">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
                 {{ form.avatar.label(class="form-label") }}
                 {{ form.avatar(class="form-control") }}
                 <div class="form-text">Choose a JPG or PNG image.</div>
