@@ -69,6 +69,7 @@
     {% for sound in sounds %}
     <div class="col">
         <div class="card h-100 sound-card text-center p-2 p-md-3" 
+             data-hotkey="{{ sound.hotkey or '' }}"
              onclick="playSound('{{ url_for('static', filename='uploads/' + sound.file_path) }}', {
                  volume: {{ sound.volume }},
                  loop: {{ 'true' if sound.is_loop else 'false' }},
@@ -315,6 +316,35 @@ document.querySelectorAll('.rating-star').forEach(star => {
     star.addEventListener('mouseover', () => {
         highlightStars(parseInt(star.dataset.score));
     });
+});
+
+// Keyboard Hotkey Listener
+document.addEventListener('keydown', function(event) {
+    // Ignore if user is typing in a comment box or other input
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    const key = event.key.toUpperCase();
+    const soundCard = document.querySelector(`.sound-card[data-hotkey="${key}"]`);
+    
+    if (soundCard) {
+        event.preventDefault();
+        // Add visual press effect
+        soundCard.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            soundCard.style.transform = 'scale(1)';
+        }, 100);
+        
+        soundCard.click();
+    }
+});
+
+// Add visual feedback on click for mouse as well
+document.querySelectorAll('.sound-card').forEach(card => {
+    card.addEventListener('mousedown', () => card.style.transform = 'scale(0.95)');
+    card.addEventListener('mouseup', () => card.style.transform = 'scale(1)');
+    card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
 });
 
 document.getElementById('star-rating')?.addEventListener('mouseleave', () => {

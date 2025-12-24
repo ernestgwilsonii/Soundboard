@@ -21,6 +21,7 @@ CREATE TABLE sounds (
     is_loop INTEGER NOT NULL DEFAULT 0,
     start_time FLOAT NOT NULL DEFAULT 0.0,
     end_time FLOAT,
+    hotkey TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
 );

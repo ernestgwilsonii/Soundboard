@@ -63,7 +63,7 @@
                 </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-outline-primary btn-sm" 
-                            onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }})">
+                            onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }}, '{{ sound.hotkey or '' }}')">
                         <i class="fas fa-cog"></i>
                     </button>
                     <form action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
@@ -113,6 +113,12 @@
                                         <input type="number" class="form-control" id="modal-end" min="0" step="0.1" placeholder="End">
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="modal-hotkey" class="form-label">Keyboard Hotkey</label>
+                                <input type="text" class="form-control" id="modal-hotkey" maxlength="1" placeholder="e.g. A, 1, X">
+                                <div class="form-text">Single key to trigger this sound on the view page.</div>
                             </div>
                         </form>
                     </div>
@@ -178,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function openSoundSettings(id, name, volume, loop, start, end) {
+function openSoundSettings(id, name, volume, loop, start, end, hotkey) {
     document.getElementById('modal-sound-id').value = id;
     document.getElementById('modal-sound-name').textContent = name;
     document.getElementById('modal-volume').value = volume;
@@ -186,6 +192,7 @@ function openSoundSettings(id, name, volume, loop, start, end) {
     document.getElementById('modal-loop').checked = loop;
     document.getElementById('modal-start').value = start;
     document.getElementById('modal-end').value = end || '';
+    document.getElementById('modal-hotkey').value = hotkey || '';
     
     const modal = new bootstrap.Modal(document.getElementById('soundSettingsModal'));
     modal.show();
@@ -197,7 +204,8 @@ function saveSoundSettings() {
         volume: parseFloat(document.getElementById('modal-volume').value),
         is_loop: document.getElementById('modal-loop').checked,
         start_time: parseFloat(document.getElementById('modal-start').value) || 0,
-        end_time: parseFloat(document.getElementById('modal-end').value) || null
+        end_time: parseFloat(document.getElementById('modal-end').value) || null,
+        hotkey: document.getElementById('modal-hotkey').value.trim().toUpperCase() || null
     };
     
     fetch(`/soundboard/sound/${id}/settings`, {
