@@ -28,9 +28,9 @@
 - [x] Task: Verify that pinning a board instantly updates the sidebar list. 8dc3aec
 - [x] Task: Conductor - User Manual Verification 'Favorites and Pinned Functionality' (Protocol in workflow.md) d3f8b9b
 
-## Phase 5: User Account Security (Capabilities)
+## Phase 5: User Account Security (Capabilities) [checkpoint: fbdfd8e]
 - [x] Task: Create `ChangePasswordForm` in `app/auth/forms.py`. 468081e
 - [x] Task: Implement `/auth/change_password` route and logic. 722fadf
 - [x] Task: Create `auth/change_password.html` template. 722fadf
 - [x] Task: Add "Change Password" link to the User Profile page. 722fadf
-- [ ] Task: Conductor - User Manual Verification 'User Account Security' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'User Account Security' (Protocol in workflow.md) fbdfd8e

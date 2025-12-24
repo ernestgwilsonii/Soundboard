@@ -15,7 +15,8 @@
 - **Languages:** HTML5, CSS3, JavaScript (ES6+).
 - **Styling:** Bootstrap CSS for a responsive, grid-based layout.
 - **Icons:** Font Awesome (CDN or local integration).
-- **Interactivity:** Vanilla JavaScript or small libraries (e.g., for drag-and-drop features).
+- **Interactivity:** Vanilla JavaScript and **SortableJS** for drag-and-drop features.
+- **Data Fetching:** Fetch API for asynchronous sidebar loading and sound reordering.
 
 ## Development and Deployment
 - **Configuration:** Environment-based settings via `.env` or Flask configuration objects.

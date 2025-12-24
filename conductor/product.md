@@ -17,7 +17,17 @@ The Soundboard Website is a professional and intuitive platform that empowers us
 - **Trust and Security:** Implement industry-standard security measures for account protection and comprehensive administrative management.
 
 ## Key Features
+
 - **Dynamic Soundboards:** Interactive grids where icons trigger high-quality audio playback.
-- **Personalized Management:** Secure user accounts with the ability to create, edit, and delete private or public soundboards.
-- **Administrative Control:** Advanced tools for user role management, account moderation, and featured content curation.
+
+- **Personalized Management:** Secure user accounts with the ability to create, edit (including drag-and-drop reordering), delete, and favorite soundboards.
+
+- **Administrative Control:** Advanced tools for user role management, account moderation, featured content curation, global announcements, and system maintenance mode.
+
+- **Enhanced Discovery:** A dynamic sidebar and "Featured" section to easily find personal favorites and explore community content.
+
+- **Social Engagement:** Quick-share capability for public soundboards.
+
 - **Responsive Design:** A polished, professional UI that adapts perfectly to desktop and mobile environments.
+
+

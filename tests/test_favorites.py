@@ -82,3 +82,29 @@ def test_favorite_status_in_view(client):
     
     response = client.get(f'/soundboard/view/{sb_id}')
     assert b'is_favorite = true' in response.data.lower() or b'favorite-btn active' in response.data.lower() or b'text-warning' in response.data.lower()
+
+def test_sidebar_reflects_favorites(client):
+    # Setup
+    with client.application.app_context():
+        u = User(username='sidefav', email='sidefav@example.com')
+        u.set_password('pass')
+        u.save()
+        sb = Soundboard(name='Sidebar Fav Board', user_id=u.id, is_public=True)
+        sb.save()
+        sb_id = sb.id
+        
+    client.post('/auth/login', data={'username': 'sidefav', 'password': 'pass', 'submit': 'Sign In'})
+    
+    # Initially not in favorites
+    response = client.get('/sidebar-data')
+    data = response.get_json()
+    assert len(data['favorites']) == 0
+    
+    # Toggle ON via endpoint
+    client.post(f'/soundboard/{sb_id}/favorite', follow_redirects=True)
+    
+    # Check sidebar again
+    response = client.get('/sidebar-data')
+    data = response.get_json()
+    assert len(data['favorites']) == 1
+    assert data['favorites'][0]['name'] == 'Sidebar Fav Board'

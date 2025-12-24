@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1>Content Management</h1>
+        <p class="text-muted">Manage all soundboards across the platform.</p>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Creator ID</th>
+                <th>Icon</th>
+                <th>Public</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sb in soundboards %}
+            <tr>
+                <td>{{ sb.id }}</td>
+                <td>{{ sb.name }}</td>
+                <td>{{ sb.user_id }}</td>
+                <td>
+                    {% if sb.icon and '/' in sb.icon %}
+                    <img src="{{ url_for('static', filename='uploads/' + sb.icon) }}" alt="" style="width: 24px; height: 24px; object-fit: contain;">
+                    {% else %}
+                    <i class="{{ sb.icon or 'fas fa-music' }}"></i>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if sb.is_public %}
+                    <span class="badge bg-success">Yes</span>
+                    {% else %}
+                    <span class="badge bg-secondary">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('soundboard.view', id=sb.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                        <a href="{{ url_for('soundboard.edit', id=sb.id) }}" class="btn btn-sm btn-outline-secondary ms-1">Edit</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

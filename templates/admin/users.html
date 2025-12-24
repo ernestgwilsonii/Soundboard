@@ -38,17 +38,23 @@
                 </td>
                 <td>
                     <div class="btn-group" role="group">
+                        {% if user.id != current_user.id %}
                         <form action="{{ url_for('admin.toggle_user_active', id=user.id) }}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-sm {% if user.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" {% if user.id == current_user.id %}disabled{% endif %}>
+                            <button type="submit" class="btn btn-sm {% if user.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
                                 {% if user.active %}Disable{% else %}Enable{% endif %}
                             </button>
                         </form>
                         <form action="{{ url_for('admin.toggle_user_role', id=user.id) }}" method="post" class="d-inline ms-1">
-                            <button type="submit" class="btn btn-sm btn-outline-warning" {% if user.id == current_user.id %}disabled{% endif %}>
+                            <button type="submit" class="btn btn-sm btn-outline-warning">
                                 Toggle Role
                             </button>
                         </form>
+                        <a href="{{ url_for('admin.update_email', id=user.id) }}" class="btn btn-sm btn-outline-primary ms-1">Email</a>
                         <a href="{{ url_for('admin.reset_password', id=user.id) }}" class="btn btn-sm btn-outline-secondary ms-1">Reset Pwd</a>
+                        {% else %}
+                        <a href="{{ url_for('auth.change_email') }}" class="btn btn-sm btn-outline-primary">My Email</a>
+                        <a href="{{ url_for('admin.reset_password', id=user.id) }}" class="btn btn-sm btn-outline-secondary ms-1">My Pwd</a>
+                        {% endif %}
                     </div>
                 </td>
             </tr>
