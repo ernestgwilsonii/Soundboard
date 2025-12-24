@@ -21,9 +21,16 @@
 - [x] Task: Add CSS/JS for responsive sidebar behavior. fc743f2
 - [ ] Task: Conductor - User Manual Verification 'Dynamic Sidebar (Burger Menu) UI' (Protocol in workflow.md)
 
-## Phase 4: Favorites and Pinned Functionality
+## Phase 4: Favorites and Pinned Functionality [checkpoint: d3f8b9b]
 - [x] Task: Implement the "Favorite/Pin" toggle button on the soundboard view page. ecfb55c
 - [x] Task: Create the AJAX or standard route to handle the toggle action. ecfb55c
 - [x] Task: Implement the "Favorites & Pinned" section in the sidebar. ecfb55c
 - [x] Task: Verify that pinning a board instantly updates the sidebar list. 8dc3aec
-- [ ] Task: Conductor - User Manual Verification 'Favorites and Pinned Functionality' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Favorites and Pinned Functionality' (Protocol in workflow.md) d3f8b9b
+
+## Phase 5: User Account Security (Capabilities)
+- [ ] Task: Create `ChangePasswordForm` in `app/auth/forms.py`.
+- [ ] Task: Implement `/auth/change_password` route and logic.
+- [ ] Task: Create `auth/change_password.html` template.
+- [ ] Task: Add "Change Password" link to the User Profile page.
+- [ ] Task: Conductor - User Manual Verification 'User Account Security' (Protocol in workflow.md)
