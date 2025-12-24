@@ -3,7 +3,6 @@ from flask_login import login_required, current_user
 from app.admin import bp
 from app.auth.routes import admin_required
 from app.models import User, Soundboard, AdminSettings
-from app.admin.forms import FeaturedBoardForm
 
 @bp.route('/users')
 @admin_required
@@ -14,13 +13,20 @@ def users():
 @bp.route('/settings', methods=['GET', 'POST'])
 @admin_required
 def settings():
-    form = FeaturedBoardForm()
+    from app.admin.forms import PlatformSettingsForm
+    form = PlatformSettingsForm()
     if form.validate_on_submit():
         AdminSettings.set_setting('featured_soundboard_id', form.featured_soundboard_id.data)
+        AdminSettings.set_setting('announcement_message', form.announcement_message.data)
+        AdminSettings.set_setting('announcement_type', form.announcement_type.data)
+        AdminSettings.set_setting('maintenance_mode', '1' if form.maintenance_mode.data else '0')
         flash('Settings updated.')
         return redirect(url_for('admin.settings'))
     elif request.method == 'GET':
         form.featured_soundboard_id.data = AdminSettings.get_setting('featured_soundboard_id')
+        form.announcement_message.data = AdminSettings.get_setting('announcement_message')
+        form.announcement_type.data = AdminSettings.get_setting('announcement_type') or 'info'
+        form.maintenance_mode.data = (AdminSettings.get_setting('maintenance_mode') == '1')
     
     return render_template('admin/settings.html', title='Admin Settings', form=form)
 

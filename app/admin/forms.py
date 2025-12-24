@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, SubmitField, StringField
+from wtforms import PasswordField, SubmitField, StringField, SelectField, BooleanField
 from wtforms.validators import DataRequired, EqualTo, Length, Email, ValidationError
 import sqlite3
 from config import Config
@@ -25,6 +25,17 @@ class AdminUpdateEmailForm(FlaskForm):
             if cur.fetchone():
                 raise ValidationError('This email is already in use by another account.')
 
-class FeaturedBoardForm(FlaskForm):
+class PlatformSettingsForm(FlaskForm):
     featured_soundboard_id = StringField('Featured Soundboard ID')
+    
+    announcement_message = StringField('Announcement Banner Message')
+    announcement_type = SelectField('Banner Type', choices=[
+        ('info', 'Info (Blue)'),
+        ('warning', 'Warning (Yellow)'),
+        ('danger', 'Critical (Red)'),
+        ('success', 'Success (Green)')
+    ], default='info')
+    
+    maintenance_mode = BooleanField('Enable Maintenance Mode')
+    
     submit = SubmitField('Save Settings')

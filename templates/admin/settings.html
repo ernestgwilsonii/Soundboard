@@ -17,6 +17,8 @@
             <div class="card-body">
                 <form action="" method="post" novalidate>
                     {{ form.hidden_tag() }}
+                    
+                    <h6 class="border-bottom pb-2 mb-3">Content</h6>
                     <div class="mb-3">
                         {{ form.featured_soundboard_id.label(class="form-label") }}
                         {{ form.featured_soundboard_id(class="form-control", placeholder="Enter Soundboard ID (e.g. 5)") }}
@@ -27,7 +29,28 @@
                             The ID of the soundboard that will be highlighted on the home page.
                         </div>
                     </div>
-                    <div class="d-grid gap-2">
+
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Site Wide Announcement</h6>
+                    <div class="mb-3">
+                        {{ form.announcement_message.label(class="form-label") }}
+                        {{ form.announcement_message(class="form-control", placeholder="e.g. System maintenance scheduled for...") }}
+                        <div class="form-text">Leave blank to disable the banner.</div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.announcement_type.label(class="form-label") }}
+                        {{ form.announcement_type(class="form-select") }}
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">System</h6>
+                    <div class="mb-3 form-check">
+                        {{ form.maintenance_mode(class="form-check-input") }}
+                        {{ form.maintenance_mode.label(class="form-check-label") }}
+                        <div class="form-text text-danger">
+                            When enabled, only administrators can access the site. All other users will see a maintenance page.
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
                         {{ form.submit(class="btn btn-primary") }}
                     </div>
                 </form>
