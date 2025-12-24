@@ -43,6 +43,41 @@ MIGRATIONS = [
     """),
     (8, 'add_is_verified_to_users', Config.ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0;
+    """),
+    (9, 'create_playlists_table', Config.SOUNDBOARDS_DB, """
+        CREATE TABLE IF NOT EXISTS playlists (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            is_public INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+    """),
+    (10, 'create_playlist_items_table', Config.SOUNDBOARDS_DB, """
+        CREATE TABLE IF NOT EXISTS playlist_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            playlist_id INTEGER NOT NULL,
+            sound_id INTEGER NOT NULL,
+            display_order INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY (playlist_id) REFERENCES playlists (id),
+            FOREIGN KEY (sound_id) REFERENCES sounds (id)
+        );
+    """),
+    (11, 'create_tags_table', Config.SOUNDBOARDS_DB, """
+        CREATE TABLE IF NOT EXISTS tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL
+        );
+    """),
+    (12, 'create_soundboard_tags_table', Config.SOUNDBOARDS_DB, """
+        CREATE TABLE IF NOT EXISTS soundboard_tags (
+            soundboard_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            PRIMARY KEY (soundboard_id, tag_id),
+            FOREIGN KEY (soundboard_id) REFERENCES soundboards (id),
+            FOREIGN KEY (tag_id) REFERENCES tags (id)
+        );
     """)
 ]
 

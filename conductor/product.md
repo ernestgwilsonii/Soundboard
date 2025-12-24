@@ -20,14 +20,34 @@ The Soundboard Website is a professional and intuitive platform that empowers us
 
 - **Dynamic Soundboards:** Interactive grids where icons trigger high-quality audio playback.
 
-- **Personalized Management:** Secure user accounts with the ability to create, edit (including drag-and-drop reordering), delete, and favorite soundboards.
+- **Personalized Management:** Secure user accounts with verified email addresses, password recovery, and the ability to create, edit (including drag-and-drop reordering and advanced playback settings), delete, and favorite soundboards.
+
+- **Custom Playlists:** Create and manage ordered collections of sounds from any soundboard, with support for sequential, shuffled, and looped playback.
 
 - **Administrative Control:** Advanced tools for user role management, account moderation, featured content curation, global announcements, and system maintenance mode.
+
+
 
 - **Enhanced Discovery:** A dynamic sidebar and "Featured" section to easily find personal favorites and explore community content.
 
 - **Social Engagement:** Quick-share capability for public soundboards.
 
+- **Community Interaction:** Integrated star-rating system and comments for public soundboards, fostering user feedback and content discovery.
+
+- **Intelligent Organization:** Comprehensive tagging system for soundboards, enabling users to categorize content and discover popular themes via tag-based search and navigation.
+
+- **Advanced Playback Control:** Per-sound customization including volume normalization, looping, and virtual trimming (start/end points).
+
+
+
+- **Enhanced Security:** Mandatory email verification for new accounts and secure, token-based password reset functionality.
+
 - **Responsive Design:** A polished, professional UI that adapts perfectly to desktop and mobile environments.
+
+
+
+
+
+
 
 

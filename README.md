@@ -441,3 +441,26 @@ sqlite3 accounts.sqlite3 "UPDATE users SET role='admin' WHERE username='your_use
 ```
 Replace `your_username` with the actual username of the account you wish to promote.
 
+## Email Configuration
+
+For account verification and password resets to work, you must configure SMTP settings in your `.env` file.
+
+**Example for Gmail:**
+1. Generate an "App Password" in your Google Account security settings.
+2. Update your `.env` with the following:
+```env
+MAIL_SERVER=smtp.googlemail.com
+MAIL_PORT=587
+MAIL_USE_TLS=1
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=noreply@yourdomain.com
+```
+
+## Database Migrations
+
+This project uses a custom migration utility to manage schema updates. After pulling new changes, run:
+```bash
+PYTHONPATH=. venv/bin/python3 migrate.py
+```
+

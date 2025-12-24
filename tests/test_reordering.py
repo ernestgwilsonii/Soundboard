@@ -112,3 +112,23 @@ def test_reorder_api(app_context):
         assert sounds[1].id == s1_id
         assert sounds[0].display_order == 1
         assert sounds[1].display_order == 2
+
+def test_playback_fields_persistence(app_context):
+    with app_context.app_context():
+        u = User(username='pb', email='pb@example.com')
+        u.set_password('p')
+        u.save()
+        sb = Soundboard(name='PB Board', user_id=u.id, is_public=True)
+        sb.save()
+        
+        s = Sound(soundboard_id=sb.id, name='S', file_path='1/1.mp3',
+                  volume=0.5, is_loop=True, start_time=1.5, end_time=10.0)
+        s.save()
+        sid = s.id
+        
+    with app_context.app_context():
+        s = Sound.get_by_id(sid)
+        assert s.volume == 0.5
+        assert s.is_loop == True
+        assert s.start_time == 1.5
+        assert s.end_time == 10.0
