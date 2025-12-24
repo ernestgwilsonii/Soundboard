@@ -1,10 +1,10 @@
 # Track Plan: Featured Soundboard and Dynamic Sidebar
 
-## Phase 1: Database and Model for Favorites
-- [ ] Task: Create a `favorites` table in `app/schema_accounts.sql` (linking users to soundboards).
-- [ ] Task: Update the `User` model to include methods for adding, removing, and listing favorites.
-- [ ] Task: Create unit tests for the favorites relationship.
-- [ ] Task: Conductor - User Manual Verification 'Database and Model for Favorites' (Protocol in workflow.md)
+## Phase 1: Database and Model for Favorites [checkpoint: 1294de3]
+- [x] Task: Create a `favorites` table in `app/schema_accounts.sql` (linking users to soundboards). e9e68f7
+- [x] Task: Update the `User` model to include methods for adding, removing, and listing favorites. f43f44e
+- [x] Task: Create unit tests for the favorites relationship. f43f44e
+- [x] Task: Conductor - User Manual Verification 'Database and Model for Favorites' (Protocol in workflow.md) 1294de3
 
 ## Phase 2: Administrative Control for Featured Board
 - [ ] Task: Create an `admin_settings` table or a simple config entry for the featured board ID.
