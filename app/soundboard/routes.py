@@ -22,9 +22,36 @@ def view(id):
         if not current_user.is_authenticated or s.user_id != current_user.id:
             flash('This soundboard is private.')
             return redirect(url_for('main.index'))
+    
+    is_favorite = False
+    if current_user.is_authenticated:
+        favorites = current_user.get_favorites()
+        if s.id in favorites:
+            is_favorite = True
             
     sounds = s.get_sounds()
-    return render_template('soundboard/view.html', title=s.name, soundboard=s, sounds=sounds)
+    return render_template('soundboard/view.html', title=s.name, soundboard=s, sounds=sounds, is_favorite=is_favorite)
+
+@bp.route('/<int:id>/favorite', methods=['POST'])
+@login_required
+def toggle_favorite(id):
+    from flask import jsonify
+    s = Soundboard.get_by_id(id)
+    if s is None:
+        return jsonify({'error': 'Soundboard not found'}), 404
+    
+    if not s.is_public:
+        return jsonify({'error': 'Cannot favorite private soundboards'}), 403
+        
+    favorites = current_user.get_favorites()
+    if s.id in favorites:
+        current_user.remove_favorite(s.id)
+        is_favorite = False
+    else:
+        current_user.add_favorite(s.id)
+        is_favorite = True
+        
+    return jsonify({'is_favorite': is_favorite})
 
 @bp.route('/gallery')
 def gallery():
