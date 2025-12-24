@@ -1,7 +1,14 @@
 from flask import render_template, jsonify
 from flask_login import current_user
 from app.main import bp
-from app.models import Soundboard, User
+from app.models import Soundboard, User, AdminSettings
+
+@bp.app_context_processor
+def inject_announcement():
+    return {
+        'announcement_message': AdminSettings.get_setting('announcement_message'),
+        'announcement_type': AdminSettings.get_setting('announcement_type') or 'info'
+    }
 
 @bp.route('/')
 @bp.route('/index')

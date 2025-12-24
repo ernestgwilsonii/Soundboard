@@ -24,6 +24,9 @@ def app_context(monkeypatch):
         with sqlite3.connect(accounts_db) as conn:
             with open('app/schema_accounts.sql', 'r') as f:
                 conn.executescript(f.read())
+        with sqlite3.connect(soundboards_db) as conn:
+            with open('app/schema_soundboards.sql', 'r') as f:
+                conn.executescript(f.read())
         yield app
         
     for db_path in [accounts_db, soundboards_db]:
@@ -80,5 +83,26 @@ def test_settings_route_updates(app_context):
         'submit': 'Save Settings'
     }, follow_redirects=True)
     
+    
     with app_context.app_context():
         assert AdminSettings.get_setting('maintenance_mode') == '0'
+
+def test_announcement_banner_visibility(app_context):
+    client = app_context.test_client()
+    from app.models import AdminSettings
+    
+    with app_context.app_context():
+        # No banner initially
+        AdminSettings.set_setting('announcement_message', '')
+        
+    response = client.get('/')
+    assert b'alert-' not in response.data
+    
+    with app_context.app_context():
+        # Set banner
+        AdminSettings.set_setting('announcement_message', 'Global Alert Test')
+        AdminSettings.set_setting('announcement_type', 'danger')
+        
+    response = client.get('/')
+    assert b'Global Alert Test' in response.data
+    assert b'alert-danger' in response.data
