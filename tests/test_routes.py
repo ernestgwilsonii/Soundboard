@@ -48,6 +48,8 @@ def test_auth_blueprint_registered(client):
     with client.application.test_request_context():
         login_url = url_for('auth.login')
         assert login_url == '/auth/login'
+        profile_url = url_for('auth.update_profile')
+        assert profile_url == '/auth/update_profile'
 
 def test_registration_flow(client):
     # Registration flow should redirect to login upon success
@@ -351,7 +353,7 @@ def test_admin_password_reset_flow(client):
     response = client.post('/auth/login', data={'username': 'resetuser', 'password': 'newpassword', 'submit': 'Sign In'}, follow_redirects=True)
     assert b'Logout' in response.data
 
-def test_change_email_flow(client):
+def test_update_profile_flow(client):
     from app.models import User
     with client.application.app_context():
         u = User(username='mailuser', email='mail@old.com')
@@ -361,13 +363,13 @@ def test_change_email_flow(client):
         
     client.post('/auth/login', data={'username': 'mailuser', 'password': 'cat', 'submit': 'Sign In'})
     
-    response = client.post('/auth/change_email', data={
+    response = client.post('/auth/update_profile', data={
         'email': 'mail@new.com',
-        'submit': 'Update Email'
+        'submit': 'Update Profile'
     }, follow_redirects=True)
     
     assert response.status_code == 200
-    assert b'Your email has been updated.' in response.data
+    assert b'Your profile has been updated.' in response.data
     
     with client.application.app_context():
         u_updated = User.get_by_id(user_id)

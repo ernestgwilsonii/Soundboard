@@ -320,6 +320,8 @@ class Soundboard:
     def get_sounds(self):
         db = get_soundboards_db()
         cur = db.cursor()
+        cur.execute("SELECT * FROM sounds WHERE soundboard_id = ? ORDER BY display_order ASC, name ASC", (self.id,))
+        rows = cur.fetchall()
         return [Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
                       file_path=row['file_path'], icon=row['icon'], display_order=row['display_order'],
                       volume=row['volume'], is_loop=row['is_loop'], 

@@ -52,7 +52,7 @@
                         <a href="{{ url_for('admin.update_email', id=user.id) }}" class="btn btn-sm btn-outline-primary ms-1">Email</a>
                         <a href="{{ url_for('admin.reset_password', id=user.id) }}" class="btn btn-sm btn-outline-secondary ms-1">Reset Pwd</a>
                         {% else %}
-                        <a href="{{ url_for('auth.change_email') }}" class="btn btn-sm btn-outline-primary">My Email</a>
+                        <a href="{{ url_for('auth.update_profile') }}" class="btn btn-sm btn-outline-primary">My Email</a>
                         <a href="{{ url_for('admin.reset_password', id=user.id) }}" class="btn btn-sm btn-outline-secondary ms-1">My Pwd</a>
                         {% endif %}
                     </div>
