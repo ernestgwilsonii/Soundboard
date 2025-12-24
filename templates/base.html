@@ -10,8 +10,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    {% include "_sidebar.html" %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
+            <button class="btn btn-dark me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
+                <i class="fas fa-bars"></i>
+            </button>
             <a class="navbar-brand" href="{{ url_for('main.index') }}">Soundboard</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>

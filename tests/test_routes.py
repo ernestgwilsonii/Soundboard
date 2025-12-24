@@ -351,6 +351,55 @@ def test_admin_password_reset_flow(client):
     response = client.post('/auth/login', data={'username': 'resetuser', 'password': 'newpassword', 'submit': 'Sign In'}, follow_redirects=True)
     assert b'Logout' in response.data
 
+def test_change_email_flow(client):
+    from app.models import User
+    with client.application.app_context():
+        u = User(username='mailuser', email='mail@old.com')
+        u.set_password('cat')
+        u.save()
+        user_id = u.id
+        
+    client.post('/auth/login', data={'username': 'mailuser', 'password': 'cat', 'submit': 'Sign In'})
+    
+    response = client.post('/auth/change_email', data={
+        'email': 'mail@new.com',
+        'submit': 'Update Email'
+    }, follow_redirects=True)
+    
+    assert response.status_code == 200
+    assert b'Your email has been updated.' in response.data
+    
+    with client.application.app_context():
+        u_updated = User.get_by_id(user_id)
+        assert u_updated.email == 'mail@new.com'
+
+def test_admin_update_email_flow(client):
+    from app.models import User
+    with client.application.app_context():
+        u = User(username='targetuser', email='target@old.com')
+        u.set_password('cat')
+        u.save()
+        user_id = u.id
+        
+        a = User(username='admin_boss', email='boss@test.com', role='admin')
+        a.set_password('cat')
+        a.save()
+        
+    client.post('/auth/login', data={'username': 'admin_boss', 'password': 'cat', 'submit': 'Sign In'})
+    
+    # Update user's email as admin
+    response = client.post(f'/admin/user/{user_id}/update_email', data={
+        'email': 'target@new.com',
+        'submit': 'Update Email'
+    }, follow_redirects=True)
+    
+    assert response.status_code == 200
+    assert b'Email for targetuser has been updated.' in response.data
+    
+    with client.application.app_context():
+        u_updated = User.get_by_id(user_id)
+        assert u_updated.email == 'target@new.com'
+
 def test_soundboard_edit_flow(client):
     from app.models import User, Soundboard
     with client.application.app_context():
@@ -457,4 +506,21 @@ def test_soundboard_view_route(client):
     assert response.status_code == 200
     assert b'View Board' in response.data
     assert b'View Sound' in response.data
+
+def test_sidebar_data_route(client):
+    from app.models import User, Soundboard
+    with client.application.app_context():
+        u = User(username='sidebaruser', email='sidebar@example.com')
+        u.set_password('cat')
+        u.save()
+        
+        sb = Soundboard(name='My Sidebar Board', user_id=u.id, is_public=True)
+        sb.save()
+        
+    client.post('/auth/login', data={'username': 'sidebaruser', 'password': 'cat', 'submit': 'Sign In'})
+    response = client.get('/sidebar-data')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data['my_boards']) == 1
+    assert data['my_boards'][0]['name'] == 'My Sidebar Board'
         
