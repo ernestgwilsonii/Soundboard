@@ -379,11 +379,10 @@ Here's a professional and detailed list of requirements formatted to be suitable
 This comprehensive list of requirements should serve as a detailed guide for a team of developers to build the soundboard website. 
 
 
-Python Coding Requirements:
+# Python Coding Requirements
 
-*The Platinum Rule:
-
-"Code readability is paramount, ensuring its maintainability for future developers. Every component—functions, classes, file names, and variables—must be designed with clarity as the guiding principle. The goal is to create a codebase that is intuitive and accessible, facilitating easy modifications and understanding without relying on extensive comments."
+## The Platinum Rule
+> "Code readability is paramount, ensuring its maintainability for future developers. Every component—functions, classes, file names, and variables—must be designed with clarity as the guiding principle. The goal is to create a codebase that is intuitive and accessible, facilitating easy modifications and understanding without relying on extensive comments."
 
 **Use Descriptive Names**: Opt for names that immediately convey purpose, making the code self-explanatory, shorter is not always better.
 
@@ -395,28 +394,28 @@ Python Coding Requirements:
 
 **Document with Purpose**: Use documentation to succinctly describe the behavior and purpose of components, making the code comprehensible on its own.
 
-# Golden Rules for Python Development
+## Golden Rules for Python Development
 
-**Always Follow the Platinum Rule**: Making code readable is paramount and the highest priority. Ensuring that code is accessible and understandable to future developers is the guiding principle of all  coding and documentation practices.
-**Embrace Pythonic Idioms and Constructs**: Utilize Python-specific enhancements such as list comprehensions, generator expressions, and unpacking for cleaner, more efficient code.
-**Structure Code for Reusability and Modularity**: Design functions, classes, and modules with single, focused purposes and organize code into packages for scalability and ease of navigation.
-**Type Annotations for Clarity and Safety**: Enhance code readability and facilitate static type checking through the use of type hints.
-**Comprehensive Docstrings for Documentation**: Follow PEP 257 to ensure that all modules, classes, functions, and methods include docstrings that provide clear and concise documentation of their purpose and behavior. Docstrings should be formatted according to PEP 8 guidelines, making them an integral part of the code's documentation strategy.
-**Error Handling and Resource Management**: Implement robust error handling using `try-except` blocks and manage resources efficiently with context managers.
-**Performance and Optimization with Prudence**: Optimize code based on profiling results and consider asynchronous programming for IO-bound tasks, prioritizing readability and maintainability.
-**Consistent Style and Formatting**: Follow PEP 8 guidelines for style and formatting, using auto-formatting and linting tools like `black` and `flake8` to maintain consistency.
-**Security and Safety in Code Practices**: Emphasize secure coding practices, validate inputs, and keep dependencies updated to safeguard against vulnerabilities.
-**Prefer Pure Functions for Predictability**: Design functions to be pure, aiming for immutability to enhance testability and maintainability.
-**Function Over Class for Simplicity**: Opt for functions over classes for simplicity and clarity, unless object-oriented features significantly enhance the code's organization and readability.
-**Design Functions for Testability**: Facilitate easy unit testing by employing inversion of control and dependency injection to decouple dependencies.
-**Apply Functional Programming Principles**: Incorporate functional programming concepts to minimize mutable state and side effects.
-**Clear Object-Oriented Design for Classes**: When employing classes, ensure they have clear interfaces, documenting behavior and practicing careful inheritance and composition.
-**Utilize Python Logging Over Print Statements**: Replace `print` statements with configured Python logging, using appropriate logging levels to provide valuable and concise runtime information.
-**Prefer Built-in Modules and Libraries**: Favor Python's built-in modules and libraries, resorting to open-source libraries only when they offer substantial improvements in functionality or robustness
-**Leverage Decorators for Readability and Reusability**: Use decorators to enhance the readability and reusability of code, including implementing a standard logging decorator for function calls.
-**Facilitate Debugging with `debugpy`**: Integrate the ability to attach a remote debugger, such as `debugpy`, for easy debugging and provide mechanisms to easily switch logging levels as needed.
-**Meticulous Management of Dependencies**: Maintain a properly formatted `requirements.txt` file that lists all project dependencies, ensuring it's always up-to-date with the tested and verified versions.
-**Comprehensive and Clear Documentation**: Each project includes a `README.md` file in markdown format detailing how to install, run, and use the main program, along with any additional useful information about the project. All of the codes snippets in the this file should be in a code block, specifically designed for easy copy and paste and includes the specific commands to install the requirements.txt as well as any other specific commands needed within this project.
+1. **Always Follow the Platinum Rule**: Making code readable is paramount and the highest priority. Ensuring that code is accessible and understandable to future developers is the guiding principle of all coding and documentation practices.
+2. **Embrace Pythonic Idioms and Constructs**: Utilize Python-specific enhancements such as list comprehensions, generator expressions, and unpacking for cleaner, more efficient code.
+3. **Structure Code for Reusability and Modularity**: Design functions, classes, and modules with single, focused purposes and organize code into packages for scalability and ease of navigation.
+4. **Type Annotations for Clarity and Safety**: Enhance code readability and facilitate static type checking through the use of type hints.
+5. **Comprehensive Docstrings for Documentation**: Follow PEP 257 to ensure that all modules, classes, functions, and methods include docstrings that provide clear and concise documentation of their purpose and behavior. Docstrings should be formatted according to PEP 8 guidelines, making them an integral part of the code's documentation strategy.
+6. **Error Handling and Resource Management**: Implement robust error handling using `try-except` blocks and manage resources efficiently with context managers.
+7. **Performance and Optimization with Prudence**: Optimize code based on profiling results and consider asynchronous programming for IO-bound tasks, prioritizing readability and maintainability.
+8. **Consistent Style and Formatting**: Follow PEP 8 guidelines for style and formatting, using auto-formatting and linting tools like `black` and `flake8` to maintain consistency.
+9. **Security and Safety in Code Practices**: Emphasize secure coding practices, validate inputs, and keep dependencies updated to safeguard against vulnerabilities.
+10. **Prefer Pure Functions for Predictability**: Design functions to be pure, aiming for immutability to enhance testability and maintainability.
+11. **Function Over Class for Simplicity**: Opt for functions over classes for simplicity and clarity, unless object-oriented features significantly enhance the code's organization and readability.
+12. **Design Functions for Testability**: Facilitate easy unit testing by employing inversion of control and dependency injection to decouple dependencies.
+13. **Apply Functional Programming Principles**: Incorporate functional programming concepts to minimize mutable state and side effects.
+14. **Clear Object-Oriented Design for Classes**: When employing classes, ensure they have clear interfaces, documenting behavior and practicing careful inheritance and composition.
+15. **Utilize Python Logging Over Print Statements**: Replace `print` statements with configured Python logging, using appropriate logging levels to provide valuable and concise runtime information.
+16. **Prefer Built-in Modules and Libraries**: Favor Python's built-in modules and libraries, resorting to open-source libraries only when they offer substantial improvements in functionality or robustness.
+17. **Leverage Decorators for Readability and Reusability**: Use decorators to enhance the readability and reusability of code, including implementing a standard logging decorator for function calls.
+18. **Facilitate Debugging with `debugpy`**: Integrate the ability to attach a remote debugger, such as `debugpy`, for easy debugging and provide mechanisms to easily switch logging levels as needed.
+19. **Meticulous Management of Dependencies**: Maintain a properly formatted `requirements.txt` file that lists all project dependencies, ensuring it's always up-to-date with the tested and verified versions.
+20. **Comprehensive and Clear Documentation**: Each project includes a `README.md` file in markdown format detailing how to install, run, and use the main program, along with any additional useful information about the project. All of the codes snippets in the this file should be in a code block, specifically designed for easy copy and paste and includes the specific commands to install the requirements.txt as well as any other specific commands needed within this project.
 
 ## Prerequisites
 
