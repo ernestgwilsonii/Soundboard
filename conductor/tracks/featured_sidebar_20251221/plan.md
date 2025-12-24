@@ -22,8 +22,8 @@
 - [ ] Task: Conductor - User Manual Verification 'Dynamic Sidebar (Burger Menu) UI' (Protocol in workflow.md)
 
 ## Phase 4: Favorites and Pinned Functionality
-- [ ] Task: Implement the "Favorite/Pin" toggle button on the soundboard view page.
-- [ ] Task: Create the AJAX or standard route to handle the toggle action.
+- [x] Task: Implement the "Favorite/Pin" toggle button on the soundboard view page. ecfb55c
+- [x] Task: Create the AJAX or standard route to handle the toggle action. ecfb55c
 - [ ] Task: Implement the "Favorites & Pinned" section in the sidebar.
 - [ ] Task: Verify that pinning a board instantly updates the sidebar list.
 - [ ] Task: Conductor - User Manual Verification 'Favorites and Pinned Functionality' (Protocol in workflow.md)
