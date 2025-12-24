@@ -29,7 +29,7 @@
 - [x] Task: Conductor - User Manual Verification 'Favorites and Pinned Functionality' (Protocol in workflow.md) d3f8b9b
 
 ## Phase 5: User Account Security (Capabilities)
-- [ ] Task: Create `ChangePasswordForm` in `app/auth/forms.py`.
+- [x] Task: Create `ChangePasswordForm` in `app/auth/forms.py`. 468081e
 - [ ] Task: Implement `/auth/change_password` route and logic.
 - [ ] Task: Create `auth/change_password.html` template.
 - [ ] Task: Add "Change Password" link to the User Profile page.
