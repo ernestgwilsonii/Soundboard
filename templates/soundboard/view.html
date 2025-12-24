@@ -36,13 +36,13 @@
     </div>
 </div>
 
-<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-4">
+<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2 g-md-4">
     {% for sound in sounds %}
     <div class="col">
-        <div class="card h-100 sound-card text-center p-3" 
+        <div class="card h-100 sound-card text-center p-2 p-md-3" 
              onclick="playSound('{{ url_for('static', filename='uploads/' + sound.file_path) }}')"
-             style="cursor: pointer; transition: transform 0.1s;">
-            <div class="card-body p-0">
+             style="cursor: pointer; transition: transform 0.1s; min-height: 120px;">
+            <div class="card-body p-0 d-flex flex-column justify-content-center">
                 {% if sound.icon and '/' in sound.icon %}
                 <img src="{{ url_for('static', filename='uploads/' + sound.icon) }}" alt="{{ sound.name }}" class="mb-2" style="width: 64px; height: 64px; object-fit: contain;">
                 {% else %}
