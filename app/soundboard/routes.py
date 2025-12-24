@@ -353,3 +353,82 @@ def delete(id):
     s.delete()
     flash('Soundboard deleted.')
     return redirect(url_for('soundboard.dashboard'))
+
+# Playlist Routes
+@bp.route('/playlists')
+@login_required
+def playlists():
+    from app.models import Playlist
+    user_playlists = Playlist.get_by_user_id(current_user.id)
+    return render_template('soundboard/playlists.html', title='My Playlists', playlists=user_playlists)
+
+@bp.route('/playlist/create', methods=['GET', 'POST'])
+@login_required
+def create_playlist():
+    from app.soundboard.forms import PlaylistForm
+    from app.models import Playlist
+    form = PlaylistForm()
+    if form.validate_on_submit():
+        pl = Playlist(user_id=current_user.id, name=form.name.data, 
+                      description=form.description.data, is_public=form.is_public.data)
+        pl.save()
+        flash(f'Playlist "{pl.name}" created!')
+        return redirect(url_for('soundboard.playlists'))
+    return render_template('soundboard/create_playlist.html', title='Create Playlist', form=form)
+
+@bp.route('/playlist/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_playlist(id):
+    from app.models import Playlist
+    pl = Playlist.get_by_id(id)
+    if pl is None:
+        flash('Playlist not found.')
+        return redirect(url_for('soundboard.playlists'))
+    
+    if pl.user_id != current_user.id and current_user.role != 'admin':
+        flash('Permission denied.')
+        return redirect(url_for('soundboard.playlists'))
+        
+    pl.delete()
+    flash('Playlist deleted.')
+    return redirect(url_for('soundboard.playlists'))
+
+@bp.route('/playlist/<int:playlist_id>/add/<int:sound_id>', methods=['POST'])
+@login_required
+def add_to_playlist(playlist_id, sound_id):
+    from flask import jsonify
+    from app.models import Playlist, Sound
+    pl = Playlist.get_by_id(playlist_id)
+    if pl is None:
+        return jsonify({'error': 'Playlist not found'}), 404
+        
+    if pl.user_id != current_user.id and current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+        
+    sound = Sound.get_by_id(sound_id)
+    if sound is None:
+        return jsonify({'error': 'Sound not found'}), 404
+        
+    # Check if sound is accessible (own board or public)
+    s = Soundboard.get_by_id(sound.soundboard_id)
+    if not s.is_public and s.user_id != current_user.id and current_user.role != 'admin':
+        return jsonify({'error': 'Sound is private'}), 403
+        
+    pl.add_sound(sound.id)
+    return jsonify({'status': 'success'})
+
+@bp.route('/playlist/<int:id>')
+def view_playlist(id):
+    from app.models import Playlist
+    pl = Playlist.get_by_id(id)
+    if pl is None:
+        flash('Playlist not found.')
+        return redirect(url_for('main.index'))
+    
+    if not pl.is_public:
+        if not current_user.is_authenticated or pl.user_id != current_user.id:
+            flash('This playlist is private.')
+            return redirect(url_for('main.index'))
+            
+    sounds = pl.get_sounds()
+    return render_template('soundboard/view_playlist.html', title=pl.name, playlist=pl, sounds=sounds)

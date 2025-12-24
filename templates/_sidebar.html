@@ -21,6 +21,12 @@
                 <div class="px-3 py-2 text-muted small italic">Loading...</div>
             </div>
 
+            <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">My Playlists</div>
+            <div id="sidebar-playlists">
+                <!-- Placeholder for dynamic list -->
+                <div class="px-3 py-2 text-muted small italic">No playlists yet.</div>
+            </div>
+
             <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">Favorites & Pinned</div>
             <div id="sidebar-favorites">
                 <!-- Placeholder for dynamic list -->
@@ -55,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const myBoardsContainer = document.getElementById('sidebar-my-boards');
                 const favoritesContainer = document.getElementById('sidebar-favorites');
                 const exploreContainer = document.getElementById('sidebar-explore');
+                const playlistsContainer = document.getElementById('sidebar-playlists');
                 
                 if (myBoardsContainer) {
                     if (data.my_boards.length > 0) {
@@ -66,6 +73,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         `).join('');
                     } else {
                         myBoardsContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No soundboards yet.</div>';
+                    }
+                }
+
+                if (playlistsContainer) {
+                    if (data.my_playlists.length > 0) {
+                        playlistsContainer.innerHTML = data.my_playlists.map(pl => `
+                            <a href="/soundboard/playlist/${pl.id}" class="list-group-item list-group-item-action py-2 border-0">
+                                <i class="fas fa-list me-2 small"></i>
+                                ${pl.name}
+                            </a>
+                        `).join('');
+                    } else {
+                        playlistsContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No playlists yet.</div>';
                     }
                 }
 

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center mb-4">
+        <h1><i class="fas fa-list me-2"></i> {{ playlist.name }}</h1>
+        <p class="text-muted">{{ playlist.description or 'Custom collection of sounds.' }}</p>
+        
+        <div class="mt-3">
+            <button class="btn btn-primary btn-lg px-5" onclick="playQueue()">
+                <i class="fas fa-play"></i> Play All
+            </button>
+            <button class="btn btn-outline-danger ms-2" onclick="stopAllSounds()">
+                <i class="fas fa-stop"></i> Stop
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2 g-md-4">
+    {% for sound in sounds %}
+    <div class="col">
+        <div class="card h-100 sound-card text-center p-2 p-md-3" 
+             onclick="playSound('{{ url_for('static', filename='uploads/' + sound.file_path) }}', {
+                 volume: {{ sound.volume }},
+                 loop: {{ 'true' if sound.is_loop else 'false' }},
+                 startTime: {{ sound.start_time }},
+                 endTime: {{ sound.end_time or 'null' }}
+             })"
+             style="cursor: pointer; transition: transform 0.1s; min-height: 120px;">
+            <div class="card-body p-0 d-flex flex-column justify-content-center">
+                {% if sound.icon and '/' in sound.icon %}
+                <img src="{{ url_for('static', filename='uploads/' + sound.icon) }}" alt="{{ sound.name }}" class="mb-2 mx-auto" style="width: 48px; height: 48px; object-fit: contain;">
+                {% else %}
+                <i class="{{ sound.icon or 'fas fa-volume-up' }} fa-3x mb-2"></i>
+                {% endif %}
+                <h6 class="card-title mb-0">{{ sound.name }}</h6>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center">
+        <p class="text-muted">This playlist is currently empty.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let activeSounds = [];
+let queue = [];
+let queueIndex = 0;
+
+function playSound(url, settings = {}, onEnded = null) {
+    const audio = new Audio(url);
+    audio.volume = settings.volume !== undefined ? settings.volume : 1.0;
+    audio.loop = settings.loop === true;
+    
+    if (settings.startTime) audio.currentTime = settings.startTime;
+    
+    if (settings.endTime) {
+        audio.ontimeupdate = function() {
+            if (audio.currentTime >= settings.endTime) {
+                if (audio.loop) {
+                    audio.currentTime = settings.startTime || 0;
+                } else {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    activeSounds = activeSounds.filter(s => s !== audio);
+                    if (onEnded) onEnded();
+                }
+            }
+        };
+    }
+
+    activeSounds.push(audio);
+    audio.play();
+    
+    audio.onended = () => {
+        activeSounds = activeSounds.filter(s => s !== audio);
+        if (onEnded) onEnded();
+    };
+}
+
+function stopAllSounds() {
+    activeSounds.forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+    });
+    activeSounds = [];
+    queue = [];
+}
+
+function playQueue() {
+    stopAllSounds();
+    queue = [
+        {% for sound in sounds %}
+        {
+            url: '{{ url_for("static", filename="uploads/" + sound.file_path) }}',
+            settings: {
+                volume: {{ sound.volume }},
+                startTime: {{ sound.start_time }},
+                endTime: {{ sound.end_time or 'null' }}
+            }
+        },
+        {% endfor %}
+    ];
+    queueIndex = 0;
+    playNext();
+}
+
+function playNext() {
+    if (queueIndex < queue.length) {
+        const item = queue[queueIndex];
+        queueIndex++;
+        playSound(item.url, item.settings, playNext);
+    }
+}
+</script>
+{% endblock %}

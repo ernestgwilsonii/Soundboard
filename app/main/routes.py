@@ -46,8 +46,10 @@ def index():
 def sidebar_data():
     my_boards = []
     favorites = []
+    my_playlists = []
     
     if current_user.is_authenticated:
+        from app.models import Playlist
         my_boards = [
             {'id': sb.id, 'name': sb.name, 'icon': sb.icon} 
             for sb in Soundboard.get_by_user_id(current_user.id)
@@ -58,18 +60,16 @@ def sidebar_data():
             sb = Soundboard.get_by_id(fid)
             if sb:
                 favorites.append({'id': sb.id, 'name': sb.name, 'icon': sb.icon})
+
+        my_playlists = [
+            {'id': pl.id, 'name': pl.name} 
+            for pl in Playlist.get_by_user_id(current_user.id)
+        ]
     
-    # Explore section: All public boards grouped by user
-    public_boards = Soundboard.get_public()
-    explore = {}
-    for sb in public_boards:
-        creator = sb.get_creator_username()
-        if creator not in explore:
-            explore[creator] = []
-        explore[creator].append({'id': sb.id, 'name': sb.name, 'icon': sb.icon})
-                
+    # ...
     return jsonify({
         'my_boards': my_boards,
         'favorites': favorites,
+        'my_playlists': my_playlists,
         'explore': explore
     })

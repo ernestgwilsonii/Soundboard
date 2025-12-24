@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 d-flex justify-content-between align-items-center mb-4">
+        <h1>My Playlists</h1>
+        <a href="{{ url_for('soundboard.create_playlist') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Playlist
+        </a>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for pl in playlists %}
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ pl.name }}</h5>
+                <p class="card-text text-muted small">{{ pl.description or 'No description.' }}</p>
+                <div class="mt-3 d-flex justify-content-between">
+                    <div>
+                        <a href="{{ url_for('soundboard.view_playlist', id=pl.id) }}" class="btn btn-sm btn-outline-primary">Open</a>
+                    </div>
+                    <form action="{{ url_for('soundboard.delete_playlist', id=pl.id) }}" method="post" onsubmit="return confirm('Delete this playlist?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <p class="text-center text-muted">You haven't created any playlists yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

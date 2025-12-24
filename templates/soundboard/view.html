@@ -74,6 +74,13 @@
                 <i class="{{ sound.icon or 'fas fa-volume-up' }} fa-3x mb-2"></i>
                 {% endif %}
                 <h6 class="card-title mb-0">{{ sound.name }}</h6>
+                
+                {% if current_user.is_authenticated %}
+                <button class="btn btn-sm btn-link text-muted position-absolute top-0 end-0 p-1" 
+                        onclick="event.stopPropagation(); openAddToPlaylistModal({{ sound.id }}, '{{ sound.name }}')">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -132,6 +139,24 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Add to Playlist Modal -->
+<div class="modal fade" id="addToPlaylistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add to Playlist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-2">Add "<span id="modal-sound-name-pl"></span>" to:</p>
+                <div id="playlist-options" class="list-group">
+                    <!-- Dynamic playlist list -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 let activeSounds = [];
@@ -279,6 +304,52 @@ document.getElementById('star-rating')?.addEventListener('mouseleave', () => {
     // Reset to current selection if we track it? 
     // For now simple reset
 });
+
+function openAddToPlaylistModal(soundId, soundName) {
+    document.getElementById('modal-sound-name-pl').textContent = soundName;
+    const container = document.getElementById('playlist-options');
+    container.innerHTML = '<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+    
+    fetch('{{ url_for("main.sidebar_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.my_playlists.length > 0) {
+                container.innerHTML = data.my_playlists.map(pl => `
+                    <button class="list-group-item list-group-item-action py-2" onclick="addSoundToPlaylist(${soundId}, ${pl.id})">
+                        <i class="fas fa-list me-2 small"></i> ${pl.name}
+                    </button>
+                `).join('');
+            } else {
+                container.innerHTML = `
+                    <p class="text-center small text-muted p-2">No playlists found.</p>
+                    <a href="{{ url_for('soundboard.create_playlist') }}" class="btn btn-sm btn-primary w-100">Create One</a>
+                `;
+            }
+        });
+        
+    const modal = new bootstrap.Modal(document.getElementById('addToPlaylistModal'));
+    modal.show();
+}
+
+function addSoundToPlaylist(soundId, playlistId) {
+    fetch(`/soundboard/playlist/${playlistId}/add/${soundId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to add to playlist');
+        return response.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('addToPlaylistModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+        alert('Added to playlist!');
+    })
+    .catch(err => alert(err.message));
+}
 </script>
 
 <style>

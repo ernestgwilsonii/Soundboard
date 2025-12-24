@@ -27,3 +27,9 @@ class SoundForm(FlaskForm):
 class CommentForm(FlaskForm):
     text = StringField('Comment', validators=[DataRequired(), Length(max=500)])
     submit = SubmitField('Post Comment')
+
+class PlaylistForm(FlaskForm):
+    name = StringField('Playlist Name', validators=[DataRequired(), Length(min=1, max=64)])
+    description = StringField('Description', validators=[Length(max=255)])
+    is_public = BooleanField('Public (Shared with everyone)')
+    submit = SubmitField('Save Playlist')
