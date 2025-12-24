@@ -15,14 +15,14 @@
 - [x] Task: Add toast/tooltip notification for success. 8f7383a
 - [x] Task: Conductor - User Manual Verification 'Social Sharing' (Protocol in workflow.md) 4e79841
 
-## Phase 3: Drag-and-Drop Reordering
-- [ ] Task: Add `display_order` column to `sounds` table (requires migration script/SQL).
-- [ ] Task: Update `Sound` model to include `display_order` and default sorting.
-- [ ] Task: Update `Sound.save()` to handle default order (e.g., max order + 1).
-- [ ] Task: Implement drag-and-drop UI in `templates/soundboard/edit.html`.
-- [ ] Task: Create API endpoint `/soundboard/<id>/reorder` to accept new order.
-- [ ] Task: Connect UI to API to save new order.
-- [ ] Task: Conductor - User Manual Verification 'Drag-and-Drop Reordering' (Protocol in workflow.md)
+## Phase 3: Drag-and-Drop Reordering [checkpoint: 0d65a25]
+- [x] Task: Add `display_order` column to `sounds` table (requires migration script/SQL). 17e0491
+- [x] Task: Update `Sound` model to include `display_order` and default sorting. 0d65a25
+- [x] Task: Update `Sound.save()` to handle default order (e.g., max order + 1). 0d65a25
+- [x] Task: Implement drag-and-drop UI in `templates/soundboard/edit.html`. 0d65a25
+- [x] Task: Create API endpoint `/soundboard/<id>/reorder` to accept new order. 0d65a25
+- [x] Task: Connect UI to API to save new order. 0d65a25
+- [x] Task: Conductor - User Manual Verification 'Drag-and-Drop Reordering' (Protocol in workflow.md) 0d65a25
 
 ## Phase 4: Mobile Responsiveness Polish
 - [ ] Task: Audit `soundboard/view.html` grid on mobile widths.
