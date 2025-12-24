@@ -1,6 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    :root {
+        --theme-color: {{ soundboard.theme_color or '#0d6efd' }};
+    }
+    .btn-primary {
+        background-color: var(--theme-color) !important;
+        border-color: var(--theme-color) !important;
+    }
+    .btn-outline-primary {
+        color: var(--theme-color) !important;
+        border-color: var(--theme-color) !important;
+    }
+    .btn-outline-primary:hover {
+        background-color: var(--theme-color) !important;
+        color: white !important;
+    }
+    .sound-card:hover {
+        border-color: var(--theme-color) !important;
+    }
+    .badge.bg-primary {
+        background-color: var(--theme-color) !important;
+    }
+</style>
+
 <div class="row">
     <div class="col-12 text-center mb-4">
         <h1>

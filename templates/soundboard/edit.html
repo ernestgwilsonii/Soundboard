@@ -36,6 +36,10 @@
                 {{ form.tags(class="form-control") }}
                 <div class="form-text">Separate tags with commas.</div>
             </div>
+            <div class="mb-3">
+                {{ form.theme_color.label(class="form-label") }}
+                {{ form.theme_color(class="form-control form-control-color", type="color", title="Choose a theme color") }}
+            </div>
             <div class="d-grid gap-2">
                 {{ form.submit(class="btn btn-primary") }}
                 <a href="{{ url_for('soundboard.dashboard') }}" class="btn btn-secondary">Cancel</a>

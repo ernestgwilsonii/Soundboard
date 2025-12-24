@@ -11,6 +11,7 @@ class SoundboardForm(FlaskForm):
     ])
     is_public = BooleanField('Public (Shared with everyone)')
     tags = StringField('Tags (comma separated)', validators=[Length(max=255)])
+    theme_color = StringField('Theme Color', default='#0d6efd')
     submit = SubmitField('Save')
 
 class SoundForm(FlaskForm):

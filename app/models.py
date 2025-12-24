@@ -170,26 +170,27 @@ class User(UserMixin):
         return True
 
 class Soundboard:
-    def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False):
+    def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False, theme_color='#0d6efd'):
         self.id = id
         self.name = name
         self.user_id = user_id
         self.icon = icon
         self.is_public = bool(is_public)
+        self.theme_color = theme_color
 
     def save(self):
         db = get_soundboards_db()
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO soundboards (name, user_id, icon, is_public) VALUES (?, ?, ?, ?)",
-                (self.name, self.user_id, self.icon, int(self.is_public))
+                "INSERT INTO soundboards (name, user_id, icon, is_public, theme_color) VALUES (?, ?, ?, ?, ?)",
+                (self.name, self.user_id, self.icon, int(self.is_public), self.theme_color)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE soundboards SET name=?, user_id=?, icon=?, is_public=? WHERE id=?",
-                (self.name, self.user_id, self.icon, int(self.is_public), self.id)
+                "UPDATE soundboards SET name=?, user_id=?, icon=?, is_public=?, theme_color=? WHERE id=?",
+                (self.name, self.user_id, self.icon, int(self.is_public), self.theme_color, self.id)
             )
         db.commit()
 
@@ -210,7 +211,7 @@ class Soundboard:
         row = cur.fetchone()
         if row:
             return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                             icon=row['icon'], is_public=row['is_public'])
+                             icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'])
         return None
 
     @staticmethod
@@ -220,7 +221,7 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards ORDER BY name ASC")
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
 
     @staticmethod
     def get_by_user_id(user_id):
@@ -229,7 +230,7 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards WHERE user_id = ? ORDER BY name ASC", (user_id,))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
 
     @staticmethod
     def get_public():
@@ -238,7 +239,7 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY name ASC")
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
 
     @staticmethod
     def get_by_tag(tag_name):
@@ -253,7 +254,7 @@ class Soundboard:
         """, (tag_name.lower().strip(),))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
 
     @staticmethod
     def get_recent_public(limit=6):
@@ -262,7 +263,7 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY created_at DESC, id DESC LIMIT ?", (limit,))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
 
     @staticmethod
     def get_featured():
@@ -324,7 +325,7 @@ class Soundboard:
         sb_cur.execute(search_query, params)
         rows = sb_cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
 
     def get_sounds(self):
         db = get_soundboards_db()

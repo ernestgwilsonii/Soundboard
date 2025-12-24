@@ -198,7 +198,7 @@ def create():
             f.save(full_path)
             icon = icon_path
             
-        s = Soundboard(name=form.name.data, user_id=current_user.id, icon=icon, is_public=form.is_public.data)
+        s = Soundboard(name=form.name.data, user_id=current_user.id, icon=icon, is_public=form.is_public.data, theme_color=form.theme_color.data)
         s.save()
         
         # Process tags
@@ -235,6 +235,7 @@ def edit(id):
     if form.validate_on_submit():
         s.name = form.name.data
         s.is_public = form.is_public.data
+        s.theme_color = form.theme_color.data
         if form.icon_image.data:
             f = form.icon_image.data
             filename = secure_filename(f.filename)
@@ -266,6 +267,7 @@ def edit(id):
         form.name.data = s.name
         form.icon.data = s.icon
         form.is_public.data = s.is_public
+        form.theme_color.data = s.theme_color
         form.tags.data = ", ".join([t.name for t in s.get_tags()])
     
     # Get sounds for this board

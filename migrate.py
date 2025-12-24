@@ -111,6 +111,9 @@ MIGRATIONS = [
     """),
     (21, 'add_social_website_to_users', Config.ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN social_website TEXT;
+    """),
+    (22, 'add_theme_color_to_soundboards', Config.SOUNDBOARDS_DB, """
+        ALTER TABLE soundboards ADD COLUMN theme_color TEXT DEFAULT '#0d6efd';
     """)
 ]
 
