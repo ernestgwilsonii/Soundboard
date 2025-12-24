@@ -30,7 +30,7 @@
 
 ## Phase 5: User Account Security (Capabilities)
 - [x] Task: Create `ChangePasswordForm` in `app/auth/forms.py`. 468081e
-- [ ] Task: Implement `/auth/change_password` route and logic.
-- [ ] Task: Create `auth/change_password.html` template.
-- [ ] Task: Add "Change Password" link to the User Profile page.
+- [x] Task: Implement `/auth/change_password` route and logic. 722fadf
+- [x] Task: Create `auth/change_password.html` template. 722fadf
+- [x] Task: Add "Change Password" link to the User Profile page. 722fadf
 - [ ] Task: Conductor - User Manual Verification 'User Account Security' (Protocol in workflow.md)
