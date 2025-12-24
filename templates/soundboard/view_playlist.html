@@ -10,6 +10,12 @@
             <button class="btn btn-primary btn-lg px-5" onclick="playQueue()">
                 <i class="fas fa-play"></i> Play All
             </button>
+            <button id="shuffle-btn" class="btn btn-outline-secondary ms-2" onclick="toggleShuffle()">
+                <i class="fas fa-random"></i> Shuffle: <span id="shuffle-status">OFF</span>
+            </button>
+            <button id="loop-pl-btn" class="btn btn-outline-secondary ms-2" onclick="toggleLoopPlaylist()">
+                <i class="fas fa-redo"></i> Loop: <span id="loop-pl-status">OFF</span>
+            </button>
             <button class="btn btn-outline-danger ms-2" onclick="stopAllSounds()">
                 <i class="fas fa-stop"></i> Stop
             </button>
@@ -51,7 +57,10 @@
 <script>
 let activeSounds = [];
 let queue = [];
+let originalQueue = [];
 let queueIndex = 0;
+let isShuffle = false;
+let isLoopPlaylist = false;
 
 function playSound(url, settings = {}, onEnded = null) {
     const audio = new Audio(url);
@@ -69,6 +78,7 @@ function playSound(url, settings = {}, onEnded = null) {
                     audio.pause();
                     audio.currentTime = 0;
                     activeSounds = activeSounds.filter(s => s !== audio);
+                    audio.ontimeupdate = null; // Clean up
                     if (onEnded) onEnded();
                 }
             }
@@ -90,12 +100,24 @@ function stopAllSounds() {
         audio.currentTime = 0;
     });
     activeSounds = [];
-    queue = [];
+    // Don't clear queue settings, just the active index if needed
+}
+
+function toggleShuffle() {
+    isShuffle = !isShuffle;
+    document.getElementById('shuffle-status').textContent = isShuffle ? 'ON' : 'OFF';
+    document.getElementById('shuffle-btn').classList.toggle('active', isShuffle);
+}
+
+function toggleLoopPlaylist() {
+    isLoopPlaylist = !isLoopPlaylist;
+    document.getElementById('loop-pl-status').textContent = isLoopPlaylist ? 'ON' : 'OFF';
+    document.getElementById('loop-pl-btn').classList.toggle('active', isLoopPlaylist);
 }
 
 function playQueue() {
     stopAllSounds();
-    queue = [
+    originalQueue = [
         {% for sound in sounds %}
         {
             url: '{{ url_for("static", filename="uploads/" + sound.file_path) }}',
@@ -107,6 +129,13 @@ function playQueue() {
         },
         {% endfor %}
     ];
+    
+    if (isShuffle) {
+        queue = [...originalQueue].sort(() => Math.random() - 0.5);
+    } else {
+        queue = [...originalQueue];
+    }
+    
     queueIndex = 0;
     playNext();
 }
@@ -116,6 +145,12 @@ function playNext() {
         const item = queue[queueIndex];
         queueIndex++;
         playSound(item.url, item.settings, playNext);
+    } else if (isLoopPlaylist && queue.length > 0) {
+        queueIndex = 0;
+        if (isShuffle) {
+            queue = [...originalQueue].sort(() => Math.random() - 0.5);
+        }
+        playNext();
     }
 }
 </script>
