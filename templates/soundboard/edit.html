@@ -135,6 +135,16 @@
         </div>
 
         <hr class="my-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Portability</h5>
+                <p class="card-text text-muted small">Download this entire soundboard (including all audio files and settings) as a portable Soundboard Pack (.sbp) file.</p>
+                <a href="{{ url_for('soundboard.export_soundboard', id=soundboard.id) }}" class="btn btn-outline-info">
+                    <i class="fas fa-file-archive"></i> Export Soundboard Pack
+                </a>
+            </div>
+        </div>
+
         <div class="card border-danger">
             <div class="card-body">
                 <h5 class="card-title text-danger">Danger Zone</h5>

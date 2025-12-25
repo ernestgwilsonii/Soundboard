@@ -467,7 +467,59 @@ def delete_playlist(id):
     return redirect(url_for('soundboard.playlists'))
 
 @bp.route('/tag/<tag_name>')
+
 def tag_search(tag_name):
+
     from app.models import Tag, Soundboard
+
     sbs = Soundboard.get_by_tag(tag_name)
+
     return render_template('soundboard/search.html', title=f'Tag: {tag_name}', soundboards=sbs, query=tag_name)
+
+
+
+@bp.route('/<int:id>/export')
+
+@login_required
+
+def export_soundboard(id):
+
+    from flask import send_file
+
+    from app.utils.packager import Packager
+
+    s = Soundboard.get_by_id(id)
+
+    if s is None:
+
+        flash('Soundboard not found.')
+
+        return redirect(url_for('soundboard.dashboard'))
+
+        
+
+    if s.user_id != current_user.id and current_user.role != 'admin':
+
+        flash('Permission denied.')
+
+        return redirect(url_for('soundboard.dashboard'))
+
+        
+
+    pack_data = Packager.create_soundboard_pack(s)
+
+    safe_name = "".join([c for c in s.name if c.isalnum() or c in (' ', '_')]).strip().replace(' ', '_')
+
+    
+
+    return send_file(
+
+        pack_data,
+
+        mimetype='application/zip',
+
+        as_attachment=True,
+
+        download_name=f"{safe_name}.sbp"
+
+    )
