@@ -512,14 +512,100 @@ def export_soundboard(id):
 
     
 
-    return send_file(
+        return send_file(
 
-        pack_data,
+    
 
-        mimetype='application/zip',
+            pack_data,
 
-        as_attachment=True,
+    
 
-        download_name=f"{safe_name}.sbp"
+            mimetype='application/zip',
 
-    )
+    
+
+            as_attachment=True,
+
+    
+
+            download_name=f"{safe_name}.sbp"
+
+    
+
+        )
+
+    
+
+    
+
+    
+
+    @bp.route('/import', methods=['GET', 'POST'])
+
+    
+
+    @verification_required
+
+    
+
+    def import_soundboard():
+
+    
+
+        from app.soundboard.forms import ImportPackForm
+
+    
+
+        from app.utils.importer import Importer
+
+    
+
+        from app.models import Activity
+
+    
+
+        form = ImportPackForm()
+
+    
+
+        if form.validate_on_submit():
+
+    
+
+            try:
+
+    
+
+                new_sb = Importer.import_soundboard_pack(form.pack_file.data, current_user.id)
+
+    
+
+                Activity.record(current_user.id, 'import_soundboard', f'Imported soundboard: "{new_sb.name}"')
+
+    
+
+                flash(f'Soundboard "{new_sb.name}" successfully imported!')
+
+    
+
+                return redirect(url_for('soundboard.dashboard'))
+
+    
+
+            except Exception as e:
+
+    
+
+                flash(f'Error importing soundboard: {e}')
+
+    
+
+                
+
+    
+
+        return render_template('soundboard/import.html', title='Import Soundboard', form=form)
+
+    
+
+    

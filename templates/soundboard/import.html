@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-file-import me-2"></i> Import Soundboard</h4>
+            </div>
+            <div class="card-body py-4">
+                <p class="text-muted small mb-4">Upload a <strong>.sbp</strong> or <strong>.zip</strong> file created using the Export feature. This will recreate the soundboard, all its sounds, and settings in your account.</p>
+                
+                <form action="" method="post" enctype="multipart/form-data" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        {{ form.pack_file.label(class="form-label fw-bold") }}
+                        {{ form.pack_file(class="form-control") }}
+                        {% for error in form.pack_file.errors %}
+                        <span class="text-danger">[{{ error }}]</span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-info text-white") }}
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer bg-light text-center">
+                <a href="{{ url_for('soundboard.dashboard') }}" class="text-decoration-none small text-muted">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

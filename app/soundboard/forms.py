@@ -35,3 +35,10 @@ class PlaylistForm(FlaskForm):
     description = StringField('Description', validators=[Length(max=255)])
     is_public = BooleanField('Public (Shared with everyone)')
     submit = SubmitField('Save Playlist')
+
+class ImportPackForm(FlaskForm):
+    pack_file = FileField('Soundboard Pack (.sbp)', validators=[
+        FileRequired(),
+        FileAllowed(['sbp', 'zip'], 'Soundboard Pack files only!')
+    ])
+    submit = SubmitField('Import Soundboard')
