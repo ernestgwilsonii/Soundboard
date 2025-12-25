@@ -207,3 +207,17 @@ def change_password():
         flash('Your password has been updated.')
         return redirect(url_for('auth.profile'))
     return render_template('auth/change_password.html', title='Change Password', form=form)
+
+@bp.route('/delete_account', methods=['GET', 'POST'])
+@login_required
+def delete_account():
+    from app.auth.forms import DeleteAccountForm
+    from flask_login import logout_user
+    form = DeleteAccountForm()
+    if form.validate_on_submit():
+        user = current_user
+        logout_user()
+        user.delete()
+        flash('Your account and all associated data have been permanently deleted.')
+        return redirect(url_for('main.index'))
+    return render_template('auth/delete_account.html', title='Delete Account', form=form)

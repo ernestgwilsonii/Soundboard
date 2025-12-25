@@ -47,6 +47,46 @@ class User(UserMixin):
             )
         db.commit()
 
+    def delete(self):
+        """
+        Permanently deletes the user and all associated data (boards, sounds, playlists, etc.).
+        """
+        if not self.id:
+            return
+            
+        db_ac = get_accounts_db()
+        db_sb = get_soundboards_db()
+        
+        # 1. Delete Soundboards (this handles sounds and files via Soundboard.delete)
+        sbs = Soundboard.get_by_user_id(self.id)
+        for sb in sbs:
+            sb.delete()
+            
+        # 2. Delete Playlists
+        pls = Playlist.get_by_user_id(self.id)
+        for pl in pls:
+            pl.delete()
+            
+        # 3. Cleanup social records
+        db_sb.execute("DELETE FROM ratings WHERE user_id = ?", (self.id,))
+        db_sb.execute("DELETE FROM comments WHERE user_id = ?", (self.id,))
+        db_sb.execute("DELETE FROM activities WHERE user_id = ?", (self.id,))
+        db_sb.commit()
+        
+        # 4. Cleanup account records
+        db_ac.execute("DELETE FROM favorites WHERE user_id = ?", (self.id,))
+        db_ac.execute("DELETE FROM notifications WHERE user_id = ?", (self.id,))
+        db_ac.execute("DELETE FROM users WHERE id = ?", (self.id,))
+        db_ac.commit()
+        
+        # 5. Delete avatar file if exists
+        if self.avatar_path:
+            import os
+            from flask import current_app
+            full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], self.avatar_path)
+            if os.path.exists(full_path):
+                os.remove(full_path)
+
     def add_favorite(self, soundboard_id):
         db = get_accounts_db()
         cur = db.cursor()

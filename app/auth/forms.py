@@ -69,3 +69,11 @@ class ResetPasswordForm(FlaskForm):
     password_confirm = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Reset Password')
+
+class DeleteAccountForm(FlaskForm):
+    confirmation = StringField('Type "DELETE" to confirm', validators=[DataRequired()])
+    submit = SubmitField('Permanently Delete My Account')
+    
+    def validate_confirmation(self, field):
+        if field.data != "DELETE":
+            raise ValidationError('You must type DELETE to confirm.')
