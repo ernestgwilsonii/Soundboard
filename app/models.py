@@ -273,10 +273,27 @@ class Soundboard:
                           icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
 
     @staticmethod
-    def get_public():
+    def get_public(order_by='recent'):
         db = get_soundboards_db()
         cur = db.cursor()
-        cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY name ASC")
+        
+        sql = "SELECT * FROM soundboards WHERE is_public = 1"
+        if order_by == 'top':
+            # Order by average rating
+            sql = """
+                SELECT s.*, AVG(r.score) as avg_score 
+                FROM soundboards s 
+                LEFT JOIN ratings r ON s.id = r.soundboard_id 
+                WHERE s.is_public = 1 
+                GROUP BY s.id 
+                ORDER BY avg_score DESC, s.name ASC
+            """
+        elif order_by == 'name':
+            sql += " ORDER BY name ASC"
+        else: # recent
+            sql += " ORDER BY created_at DESC, id DESC"
+            
+        cur.execute(sql)
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
                           icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
@@ -318,7 +335,7 @@ class Soundboard:
         return recent[0] if recent else None
 
     @staticmethod
-    def search(query):
+    def search(query, order_by='recent'):
         from app.db import get_accounts_db, get_soundboards_db
         from config import Config
         
@@ -361,9 +378,25 @@ class Soundboard:
             search_query += f" OR id IN ({placeholders})"
             params.extend(tag_sb_ids)
             
-        search_query += ") ORDER BY name ASC"
+        search_query += ")"
         
-        sb_cur.execute(search_query, params)
+        if order_by == 'top':
+            # Join with ratings for search
+            final_query = f"""
+                SELECT results.*, AVG(r.score) as avg_score 
+                FROM ({search_query}) as results 
+                LEFT JOIN ratings r ON results.id = r.soundboard_id 
+                GROUP BY results.id 
+                ORDER BY avg_score DESC, results.name ASC
+            """
+            sb_cur.execute(final_query, params)
+        elif order_by == 'name':
+            search_query += " ORDER BY name ASC"
+            sb_cur.execute(search_query, params)
+        else: # recent
+            search_query += " ORDER BY created_at DESC, id DESC"
+            sb_cur.execute(search_query, params)
+            
         rows = sb_cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
                           icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]

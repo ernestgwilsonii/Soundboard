@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-from flask import Flask
+from flask import Flask, render_template
 from config import Config
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
@@ -51,6 +51,17 @@ def create_app(config_class=Config):
 
     from app.admin import bp as admin_bp
     app.register_blueprint(admin_bp)
+    
+    # Error Handlers
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        from app.db import close_db
+        close_db() # Ensure DB connection is closed on error
+        return render_template('500.html'), 500
     
     # Configure logging
     if not app.debug and not app.testing:

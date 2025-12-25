@@ -8,6 +8,22 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-end align-items-center">
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-sort-amount-down me-1"></i> 
+                Sort by: {% if current_sort == 'top' %}Highest Rated{% elif current_sort == 'name' %}Alphabetical{% else %}Most Recent{% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                <li><a class="dropdown-item {% if current_sort == 'recent' %}active{% endif %}" href="{{ url_for('soundboard.gallery', sort='recent') }}">Most Recent</a></li>
+                <li><a class="dropdown-item {% if current_sort == 'top' %}active{% endif %}" href="{{ url_for('soundboard.gallery', sort='top') }}">Highest Rated</a></li>
+                <li><a class="dropdown-item {% if current_sort == 'name' %}active{% endif %}" href="{{ url_for('soundboard.gallery', sort='name') }}">Alphabetical</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
 <div class="row row-cols-1 row-cols-md-3 g-4">
     {% for sb in soundboards %}
     <div class="col">

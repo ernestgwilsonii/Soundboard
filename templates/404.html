@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center py-5">
+        <h1 class="display-1 fw-bold text-muted">404</h1>
+        <h2 class="mb-4">Oops! Page Not Found</h2>
+        <p class="lead text-muted mb-5">The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg px-4 gap-3">Return Home</a>
+            <a href="{{ url_for('soundboard.gallery') }}" class="btn btn-outline-secondary btn-lg px-4">Browse Gallery</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

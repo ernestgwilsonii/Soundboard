@@ -181,17 +181,19 @@ def reorder_sounds(id):
 
 @bp.route('/gallery')
 def gallery():
-    sbs = Soundboard.get_public()
-    return render_template('soundboard/gallery.html', title='Public Gallery', soundboards=sbs)
+    sort = request.args.get('sort', 'recent')
+    sbs = Soundboard.get_public(order_by=sort)
+    return render_template('soundboard/gallery.html', title='Public Gallery', soundboards=sbs, current_sort=sort)
 
 @bp.route('/search')
 def search():
     query = request.args.get('q', '')
+    sort = request.args.get('sort', 'recent')
     if query:
-        sbs = Soundboard.search(query)
+        sbs = Soundboard.search(query, order_by=sort)
     else:
         sbs = []
-    return render_template('soundboard/search.html', title='Search Results', soundboards=sbs, query=query)
+    return render_template('soundboard/search.html', title='Search Results', soundboards=sbs, query=query, current_sort=sort)
 
 @bp.route('/create', methods=['GET', 'POST'])
 @verification_required
