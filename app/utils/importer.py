@@ -6,6 +6,15 @@ import uuid
 from flask import current_app
 from app.models import Soundboard, Sound, Tag
 
+class AudioProcessor:
+    @staticmethod
+    def process_audio(file_bytes, filename):
+        """
+        Placeholder for AI-powered audio normalization and processing.
+        Currently returns the original bytes and filename.
+        """
+        return file_bytes, filename
+
 class Importer:
     @staticmethod
     def import_soundboard_pack(zip_stream, user_id):
@@ -60,13 +69,16 @@ class Importer:
                 for s_data in manifest.get('sounds', []):
                     zip_audio_path = f"sounds/{s_data['file_name']}"
                     if zip_audio_path in zf.namelist():
-                        # Save audio file
-                        unique_filename = f"{uuid.uuid4().hex}_{s_data['file_name']}"
+                        # Read and Process audio file
+                        audio_bytes = zf.read(zip_audio_path)
+                        processed_bytes, processed_name = AudioProcessor.process_audio(audio_bytes, s_data['file_name'])
+                        
+                        unique_filename = f"{uuid.uuid4().hex}_{processed_name}"
                         audio_path = os.path.join(str(new_sb.id), unique_filename)
                         full_audio_path = os.path.join(current_app.config['UPLOAD_FOLDER'], audio_path)
                         
                         with open(full_audio_path, 'wb') as f:
-                            f.write(zf.read(zip_audio_path))
+                            f.write(processed_bytes)
                             
                         # Handle custom sound icon
                         sound_icon = s_data.get('icon', 'fas fa-volume-up')
