@@ -291,7 +291,8 @@ class Soundboard:
         soundboards_db = get_soundboards_db()
         sb_cur = soundboards_db.cursor()
         
-        search_query = "SELECT DISTINCT id, name, user_id, icon, is_public FROM soundboards WHERE is_public = 1 AND (name LIKE ?"
+        # Build query for soundboards
+        search_query = "SELECT DISTINCT id, name, user_id, icon, is_public, theme_color FROM soundboards WHERE is_public = 1 AND (name LIKE ?"
         params = [f'%{query}%']
         
         if user_ids:

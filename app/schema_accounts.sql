@@ -15,6 +15,10 @@ CREATE TABLE users (
     avatar_path TEXT,
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
     lockout_until TIMESTAMP,
+    bio TEXT,
+    social_x TEXT,
+    social_youtube TEXT,
+    social_website TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

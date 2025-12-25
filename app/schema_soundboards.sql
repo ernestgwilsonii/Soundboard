@@ -7,6 +7,7 @@ CREATE TABLE soundboards (
     user_id INTEGER NOT NULL,
     icon TEXT,
     is_public INTEGER NOT NULL DEFAULT 0,
+    theme_color TEXT DEFAULT '#0d6efd',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -5,7 +5,7 @@
 - **Web Framework:** Flask
 - **Form Handling:** Flask-WTF
 - **Email Service:** Flask-Mail for SMTP integration.
-- **Security:** CSRFProtect for site-wide protection against cross-site request forgery.
+- **Security:** CSRFProtect for CSRF defense and **Flask-Limiter** for rate limiting and brute-force protection.
 - **Authentication:** Custom session-based authentication with secure password hashing (using a library like `werkzeug.security`).
 - **Logging:** Python's built-in `logging` module, configured with separate handlers for account and user activity.
 
