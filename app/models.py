@@ -718,6 +718,43 @@ class Activity:
     def get_user(self):
         return User.get_by_id(self.user_id)
 
+class Notification:
+    def __init__(self, id=None, user_id=None, type=None, message=None, link=None, is_read=False, created_at=None):
+        self.id = id
+        self.user_id = user_id
+        self.type = type
+        self.message = message
+        self.link = link
+        self.is_read = bool(is_read)
+        self.created_at = created_at
+
+    @staticmethod
+    def add(user_id, type, message, link=None):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute(
+            "INSERT INTO notifications (user_id, type, message, link) VALUES (?, ?, ?, ?)",
+            (user_id, type, message, link)
+        )
+        db.commit()
+
+    @staticmethod
+    def get_unread_for_user(user_id):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC", (user_id,))
+        rows = cur.fetchall()
+        return [Notification(id=row['id'], user_id=row['user_id'], type=row['type'],
+                            message=row['message'], link=row['link'], is_read=row['is_read'],
+                            created_at=row['created_at']) for row in rows]
+
+    @staticmethod
+    def mark_all_read(user_id):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ?", (user_id,))
+        db.commit()
+
 class AdminSettings:
     @staticmethod
     def get_setting(key, default=None):

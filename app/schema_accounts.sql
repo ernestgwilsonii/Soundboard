@@ -35,4 +35,15 @@ CREATE TABLE admin_settings (
     value TEXT
 );
 
+CREATE TABLE notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    message TEXT NOT NULL,
+    link TEXT,
+    is_read INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
 INSERT INTO admin_settings (key, value) VALUES ('featured_soundboard_id', NULL);

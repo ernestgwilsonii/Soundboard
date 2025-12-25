@@ -80,6 +80,13 @@ def rate_board(id):
     rating = Rating(user_id=current_user.id, soundboard_id=s.id, score=score)
     rating.save()
     
+    # Notify owner (if not same person)
+    if s.user_id != current_user.id:
+        from app.models import Notification
+        Notification.add(s.user_id, 'rating',
+                         f'{current_user.username} rated your soundboard "{s.name}" {score} stars.',
+                         url_for('soundboard.view', id=s.id))
+    
     stats = s.get_average_rating()
     return jsonify({
         'status': 'success',
@@ -106,6 +113,14 @@ def post_comment(id):
     if form.validate_on_submit():
         comment = Comment(user_id=current_user.id, soundboard_id=s.id, text=form.text.data)
         comment.save()
+        
+        # Notify owner (if not the same person)
+        if s.user_id != current_user.id:
+            from app.models import Notification
+            Notification.add(s.user_id, 'comment', 
+                             f'{current_user.username} commented on your soundboard: "{s.name}"',
+                             url_for('soundboard.view', id=s.id))
+        
         flash('Comment posted!')
     
     return redirect(url_for('soundboard.view', id=s.id))

@@ -114,6 +114,18 @@ MIGRATIONS = [
     """),
     (22, 'add_theme_color_to_soundboards', Config.SOUNDBOARDS_DB, """
         ALTER TABLE soundboards ADD COLUMN theme_color TEXT DEFAULT '#0d6efd';
+    """),
+    (23, 'create_notifications_table', Config.ACCOUNTS_DB, """
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            message TEXT NOT NULL,
+            link TEXT,
+            is_read INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        );
     """)
 ]
 

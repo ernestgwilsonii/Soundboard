@@ -5,9 +5,23 @@ from app.models import Soundboard, User, AdminSettings, Activity
 
 @bp.app_context_processor
 def inject_announcement():
+    from app.models import Notification
+    unread_notifications = []
+    unread_count = 0
+    if current_user.is_authenticated:
+        unread_notifications = Notification.get_unread_for_user(current_user.id)[:5]
+        # Count all unread
+        from app.db import get_accounts_db
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0", (current_user.id,))
+        unread_count = cur.fetchone()[0]
+
     return {
         'announcement_message': AdminSettings.get_setting('announcement_message'),
-        'announcement_type': AdminSettings.get_setting('announcement_type') or 'info'
+        'announcement_type': AdminSettings.get_setting('announcement_type') or 'info',
+        'unread_notifications': unread_notifications,
+        'unread_count': unread_count
     }
 
 @bp.before_app_request

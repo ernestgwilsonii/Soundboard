@@ -92,20 +92,16 @@ def register():
 
 @bp.route('/verify/<token>')
 def verify_email(token):
-    from app.models import User
-    user = User.verify_token(token, salt='email-verify')
-    if not user:
-        flash('The verification link is invalid or has expired.')
-        return redirect(url_for('main.index'))
-    
-    if user.is_verified:
-        flash('Account already verified.')
-    else:
-        user.is_verified = True
-        user.save()
-        flash('Your account has been verified!')
-    
+...
     return redirect(url_for('auth.login'))
+
+@bp.route('/notifications/mark_read', methods=['POST'])
+@login_required
+def mark_notifications_read():
+    from app.models import Notification
+    from flask import jsonify
+    Notification.mark_all_read(current_user.id)
+    return jsonify({'status': 'success'})
 
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
