@@ -129,3 +129,25 @@ def test_members_list_route(client):
     assert response.status_code == 200
     assert b'member1' in response.data
     assert b'member2' in response.data
+
+def test_follower_following_lists(client):
+    with client.application.app_context():
+        u1 = User(username='user_a', email='a@test.com', is_verified=True)
+        u1.set_password('pass')
+        u1.save()
+        u2 = User(username='user_b', email='b@test.com', is_verified=True)
+        u2.set_password('pass')
+        u2.save()
+        u1.follow(u2.id)
+        
+    client.post('/auth/login', data={'username': 'user_a', 'password': 'pass'})
+    
+    # Check following list for user_a
+    response = client.get('/auth/user/user_a/following')
+    assert response.status_code == 200
+    assert b'user_b' in response.data
+    
+    # Check followers list for user_b
+    response = client.get('/auth/user/user_b/followers')
+    assert response.status_code == 200
+    assert b'user_a' in response.data

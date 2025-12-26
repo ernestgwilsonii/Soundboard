@@ -161,6 +161,28 @@ def members():
     users_list = User.get_all()
     return render_template('auth/members.html', title='Browse Members', users=users_list)
 
+@bp.route('/user/<username>/followers')
+@login_required
+def followers(username):
+    from app.models import User
+    user = User.get_by_username(username)
+    if user is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('main.index'))
+    users_list = user.get_followers()
+    return render_template('auth/members.html', title=f'Followers of {username}', users=users_list, heading=f'Followers of {username}')
+
+@bp.route('/user/<username>/following')
+@login_required
+def following(username):
+    from app.models import User
+    user = User.get_by_username(username)
+    if user is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('main.index'))
+    users_list = user.get_following()
+    return render_template('auth/members.html', title=f'Users {username} Follows', users=users_list, heading=f'Users {username} Follows')
+
 @bp.route('/user/<username>')
 def public_profile(username):
     from app.models import User, Soundboard

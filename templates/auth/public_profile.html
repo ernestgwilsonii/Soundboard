@@ -18,14 +18,14 @@
                 <h1 class="display-6 fw-bold mb-2">{{ user.username }}</h1>
                 
                 <div class="d-flex justify-content-center mb-4">
-                    <div class="px-3 border-end">
+                    <a href="{{ url_for('auth.followers', username=user.username) }}" class="text-decoration-none text-dark px-3 border-end">
                         <div class="fw-bold fs-5">{{ user.get_follower_count() }}</div>
                         <div class="text-muted small">Followers</div>
-                    </div>
-                    <div class="px-3">
+                    </a>
+                    <a href="{{ url_for('auth.following', username=user.username) }}" class="text-decoration-none text-dark px-3">
                         <div class="fw-bold fs-5">{{ user.get_following_count() }}</div>
                         <div class="text-muted small">Following</div>
-                    </div>
+                    </a>
                 </div>
 
                 {% if current_user.is_authenticated and current_user.id != user.id %}
