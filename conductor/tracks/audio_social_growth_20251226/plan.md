@@ -5,6 +5,8 @@
 - [x] Task: Update `User` model with `follow()`, `unfollow()`, and relationship methods. b982c95
 - [x] Task: Implement `/auth/follow/<username>` and `/auth/unfollow/<username>` routes. 04ef265
 - [x] Task: Add "Follow" button and social counters to the Public Profile template. 1cd5ba2
+- [x] Task: Implement `/auth/members` route and template for browsing registered users. 9104b93
+- [ ] Task: Add "Browse Members" link to the sidebar for verified users.
 - [ ] Task: Conductor - User Manual Verification 'Social Following'
 
 ## Phase 2: Visual Audio Tools (WaveSurfer.js)
