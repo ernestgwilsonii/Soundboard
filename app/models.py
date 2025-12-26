@@ -210,27 +210,28 @@ class User(UserMixin):
         return True
 
 class Soundboard:
-    def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False, theme_color='#0d6efd'):
+    def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False, theme_color='#0d6efd', theme_preset='default'):
         self.id = id
         self.name = name
         self.user_id = user_id
         self.icon = icon
         self.is_public = bool(is_public)
         self.theme_color = theme_color
+        self.theme_preset = theme_preset
 
     def save(self):
         db = get_soundboards_db()
         cur = db.cursor()
         if self.id is None:
             cur.execute(
-                "INSERT INTO soundboards (name, user_id, icon, is_public, theme_color) VALUES (?, ?, ?, ?, ?)",
-                (self.name, self.user_id, self.icon, int(self.is_public), self.theme_color)
+                "INSERT INTO soundboards (name, user_id, icon, is_public, theme_color, theme_preset) VALUES (?, ?, ?, ?, ?, ?)",
+                (self.name, self.user_id, self.icon, int(self.is_public), self.theme_color, self.theme_preset)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE soundboards SET name=?, user_id=?, icon=?, is_public=?, theme_color=? WHERE id=?",
-                (self.name, self.user_id, self.icon, int(self.is_public), self.theme_color, self.id)
+                "UPDATE soundboards SET name=?, user_id=?, icon=?, is_public=?, theme_color=?, theme_preset=? WHERE id=?",
+                (self.name, self.user_id, self.icon, int(self.is_public), self.theme_color, self.theme_preset, self.id)
             )
         db.commit()
 
@@ -251,7 +252,8 @@ class Soundboard:
         row = cur.fetchone()
         if row:
             return Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                             icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'])
+                             icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                             theme_preset=row['theme_preset'])
         return None
 
     @staticmethod
@@ -261,7 +263,8 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards ORDER BY name ASC")
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                          theme_preset=row['theme_preset']) for row in rows]
 
     @staticmethod
     def get_by_user_id(user_id):
@@ -270,7 +273,8 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards WHERE user_id = ? ORDER BY name ASC", (user_id,))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                          theme_preset=row['theme_preset']) for row in rows]
 
     @staticmethod
     def get_public(order_by='recent'):
@@ -296,7 +300,8 @@ class Soundboard:
         cur.execute(sql)
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                          theme_preset=row['theme_preset']) for row in rows]
 
     @staticmethod
     def get_by_tag(tag_name):
@@ -311,7 +316,8 @@ class Soundboard:
         """, (tag_name.lower().strip(),))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                          theme_preset=row['theme_preset']) for row in rows]
 
     @staticmethod
     def get_recent_public(limit=6):
@@ -320,7 +326,8 @@ class Soundboard:
         cur.execute("SELECT * FROM soundboards WHERE is_public = 1 ORDER BY created_at DESC, id DESC LIMIT ?", (limit,))
         rows = cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                          theme_preset=row['theme_preset']) for row in rows]
 
     @staticmethod
     def get_featured():
@@ -349,7 +356,7 @@ class Soundboard:
         sb_cur = soundboards_db.cursor()
         
         # Build query for soundboards
-        search_query = "SELECT DISTINCT id, name, user_id, icon, is_public, theme_color FROM soundboards WHERE is_public = 1 AND (name LIKE ?"
+        search_query = "SELECT DISTINCT id, name, user_id, icon, is_public, theme_color, theme_preset FROM soundboards WHERE is_public = 1 AND (name LIKE ?"
         params = [f'%{query}%']
         
         if user_ids:
@@ -399,7 +406,8 @@ class Soundboard:
             
         rows = sb_cur.fetchall()
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
-                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color']) for row in rows]
+                          icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                          theme_preset=row['theme_preset']) for row in rows]
 
     def get_sounds(self):
         db = get_soundboards_db()

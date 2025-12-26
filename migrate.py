@@ -126,6 +126,9 @@ MIGRATIONS = [
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         );
+    """),
+    (24, 'add_theme_preset_to_soundboards', Config.SOUNDBOARDS_DB, """
+        ALTER TABLE soundboards ADD COLUMN theme_preset TEXT DEFAULT 'default';
     """)
 ]
 
