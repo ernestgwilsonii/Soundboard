@@ -3,7 +3,7 @@
 ## Phase 1: Social Connectivity (Following System)
 - [x] Task: Create `follows` table via `migrate.py`. 4f64811
 - [x] Task: Update `User` model with `follow()`, `unfollow()`, and relationship methods. b982c95
-- [ ] Task: Implement `/auth/follow/<username>` and `/auth/unfollow/<username>` routes.
+- [x] Task: Implement `/auth/follow/<username>` and `/auth/unfollow/<username>` routes. 04ef265
 - [ ] Task: Add "Follow" button and social counters to the Public Profile template.
 - [ ] Task: Conductor - User Manual Verification 'Social Following'
 
