@@ -92,7 +92,19 @@ def register():
 
 @bp.route('/verify/<token>')
 def verify_email(token):
-...
+    from app.models import User
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    user = User.verify_token(token, salt='email-verify')
+    if user:
+        if user.is_verified:
+            flash('Account already verified.')
+        else:
+            user.is_verified = True
+            user.save()
+            flash('Your account has been verified!')
+    else:
+        flash('The confirmation link is invalid or has expired.')
     return redirect(url_for('auth.login'))
 
 @bp.route('/notifications/mark_read', methods=['POST'])
