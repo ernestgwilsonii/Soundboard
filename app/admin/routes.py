@@ -69,6 +69,20 @@ def toggle_user_role(id):
     flash(f'User {u.username} role changed to {u.role}.')
     return redirect(url_for('admin.users'))
 
+@bp.route('/user/<int:id>/toggle_verified', methods=['POST'])
+@admin_required
+def toggle_user_verified(id):
+    u = User.get_by_id(id)
+    if u is None:
+        flash('User not found.')
+        return redirect(url_for('admin.users'))
+    
+    u.is_verified = not u.is_verified
+    u.save()
+    status = "verified" if u.is_verified else "unverified"
+    flash(f'User {u.username} is now {status}.')
+    return redirect(url_for('admin.users'))
+
 @bp.route('/user/<int:id>/reset_password', methods=['GET', 'POST'])
 @admin_required
 def reset_password(id):
