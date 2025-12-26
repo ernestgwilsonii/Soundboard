@@ -22,7 +22,11 @@
             </div>
             <div class="mb-3">
                 {{ form.icon.label(class="form-label") }}
-                {{ form.icon(class="form-control", placeholder="e.g. fas fa-bomb") }}
+                <div class="input-group">
+                    <span class="input-group-text"><i id="icon-preview" class="fas fa-volume-up"></i></span>
+                    {{ form.icon(class="form-control", id="icon-input", data_toggle="icon-picker", data_preview="icon-preview", placeholder="Click to select or type FontAwesome class") }}
+                    <button class="btn btn-outline-secondary icon-picker-trigger" type="button">Select</button>
+                </div>
                 {% for error in form.icon.errors %}
                 <span class="text-danger">[{{ error }}]</span>
                 {% endfor %}
