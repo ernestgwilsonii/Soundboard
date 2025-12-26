@@ -4,7 +4,7 @@
 - [x] Task: Create `follows` table via `migrate.py`. 4f64811
 - [x] Task: Update `User` model with `follow()`, `unfollow()`, and relationship methods. b982c95
 - [x] Task: Implement `/auth/follow/<username>` and `/auth/unfollow/<username>` routes. 04ef265
-- [ ] Task: Add "Follow" button and social counters to the Public Profile template.
+- [x] Task: Add "Follow" button and social counters to the Public Profile template. 1cd5ba2
 - [ ] Task: Conductor - User Manual Verification 'Social Following'
 
 ## Phase 2: Visual Audio Tools (WaveSurfer.js)
