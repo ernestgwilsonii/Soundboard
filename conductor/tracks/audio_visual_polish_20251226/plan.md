@@ -15,7 +15,7 @@
 - [x] Task: Conductor - User Manual Verification 'Dynamic Icon Picker' 6cf560d
 
 ## Phase 3: Enhanced Theming
-- [ ] Task: Add `theme_preset` column to the `soundboards` table.
+- [x] Task: Add `theme_preset` column to the `soundboards` table. cc8917b
 - [ ] Task: Create a theme-specific CSS file with at least 3 presets.
 - [ ] Task: Update the soundboard view page to apply the selected preset.
 - [ ] Task: Conductor - User Manual Verification 'Visual Themes'
