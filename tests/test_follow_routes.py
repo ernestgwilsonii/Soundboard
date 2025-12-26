@@ -109,3 +109,23 @@ def test_follow_button_rendering(client):
     client.post('/auth/follow/user2')
     response = client.get('/auth/user/user2')
     assert b'btn-outline-danger px-4">Unfollow</button>' in response.data
+
+def test_members_list_route(client):
+    with client.application.app_context():
+        u1 = User(username='member1', email='m1@test.com', is_verified=True)
+        u1.set_password('pass')
+        u1.save()
+        u2 = User(username='member2', email='m2@test.com', is_verified=True)
+        u2.set_password('pass')
+        u2.save()
+        
+    # Unauthenticated
+    response = client.get('/auth/members', follow_redirects=True)
+    assert b'Sign In' in response.data
+    
+    # Authenticated
+    client.post('/auth/login', data={'username': 'member1', 'password': 'pass'})
+    response = client.get('/auth/members')
+    assert response.status_code == 200
+    assert b'member1' in response.data
+    assert b'member2' in response.data

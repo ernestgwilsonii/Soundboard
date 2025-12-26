@@ -154,6 +154,13 @@ def reset_password(token):
 def profile():
     return render_template('auth/profile.html', title='Profile')
 
+@bp.route('/members')
+@login_required
+def members():
+    from app.models import User
+    users_list = User.get_all()
+    return render_template('auth/members.html', title='Browse Members', users=users_list)
+
 @bp.route('/user/<username>')
 def public_profile(username):
     from app.models import User, Soundboard
