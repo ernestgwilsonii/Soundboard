@@ -209,6 +209,79 @@ class User(UserMixin):
             return False
         return True
 
+    def follow(self, user_id):
+        if self.id == user_id:
+            return
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute(
+            "INSERT OR IGNORE INTO follows (follower_id, followed_id) VALUES (?, ?)",
+            (self.id, user_id)
+        )
+        db.commit()
+
+    def unfollow(self, user_id):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute(
+            "DELETE FROM follows WHERE follower_id = ? AND followed_id = ?",
+            (self.id, user_id)
+        )
+        db.commit()
+
+    def is_following(self, user_id):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute(
+            "SELECT 1 FROM follows WHERE follower_id = ? AND followed_id = ?",
+            (self.id, user_id)
+        )
+        return cur.fetchone() is not None
+
+    def get_followers(self):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT u.* FROM users u
+            JOIN follows f ON u.id = f.follower_id
+            WHERE f.followed_id = ?
+            ORDER BY u.username ASC
+        """, (self.id,))
+        rows = cur.fetchall()
+        return [User(id=row['id'], username=row['username'], email=row['email'], 
+                     password_hash=row['password_hash'], role=row['role'], active=row['active'],
+                     is_verified=row['is_verified'], avatar_path=row['avatar_path'],
+                     failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'],
+                     bio=row['bio'], social_x=row['social_x'], social_youtube=row['social_youtube'], social_website=row['social_website']) for row in rows]
+
+    def get_following(self):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT u.* FROM users u
+            JOIN follows f ON u.id = f.followed_id
+            WHERE f.follower_id = ?
+            ORDER BY u.username ASC
+        """, (self.id,))
+        rows = cur.fetchall()
+        return [User(id=row['id'], username=row['username'], email=row['email'], 
+                     password_hash=row['password_hash'], role=row['role'], active=row['active'],
+                     is_verified=row['is_verified'], avatar_path=row['avatar_path'],
+                     failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'],
+                     bio=row['bio'], social_x=row['social_x'], social_youtube=row['social_youtube'], social_website=row['social_website']) for row in rows]
+
+    def get_follower_count(self):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT COUNT(*) FROM follows WHERE followed_id = ?", (self.id,))
+        return cur.fetchone()[0]
+
+    def get_following_count(self):
+        db = get_accounts_db()
+        cur = db.cursor()
+        cur.execute("SELECT COUNT(*) FROM follows WHERE follower_id = ?", (self.id,))
+        return cur.fetchone()[0]
+
 class Soundboard:
     def __init__(self, id=None, name=None, user_id=None, icon=None, is_public=False, theme_color='#0d6efd', theme_preset='default'):
         self.id = id
