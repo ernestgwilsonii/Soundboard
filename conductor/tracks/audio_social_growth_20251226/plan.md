@@ -9,11 +9,11 @@
 - [x] Task: Add "Browse Members" link to the sidebar for verified users. 9c98e52
 - [x] Task: Create Followers and Following list templates and routes. ded21a7
 - [x] Task: Add pagination (10/50), sorting, and search to the "Browse Members" page. 684dbfe
-- [ ] Task: Conductor - User Manual Verification 'Social Following'
+- [x] Task: Conductor - User Manual Verification 'Social Following' 053c8d4
 
 ## Phase 2: Visual Audio Tools (WaveSurfer.js)
-- [ ] Task: Integrate `WaveSurfer.js` CDN in `base.html`.
-- [ ] Task: Create `app/static/js/waveform_editor.js`.
+- [x] Task: Integrate `WaveSurfer.js` CDN in `base.html`. 04ef265
+- [~] Task: Create `app/static/js/waveform_editor.js`.
 - [ ] Task: Update the "Sound Settings" modal to display the interactive waveform.
 - [ ] Task: Sync waveform selection with the existing start/end time form fields.
 - [ ] Task: Conductor - User Manual Verification 'Visual Trimming'
