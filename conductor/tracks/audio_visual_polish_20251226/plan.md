@@ -12,7 +12,7 @@
 - [x] Task: Update `app/static/js/icon_picker.js` to dynamically fetch the full FontAwesome 6 Free icon set from a reliable metadata source. 3f2c511
 - [x] Task: Enhance the Icon Picker UI with categories and high-performance filtering for the larger icon set. 3f2c511
 - [x] Task: Update Soundboard and Sound forms to use the dynamic picker. 3f2c511
-- [~] Task: Conductor - User Manual Verification 'Dynamic Icon Picker'
+- [x] Task: Conductor - User Manual Verification 'Dynamic Icon Picker' 6cf560d
 
 ## Phase 3: Enhanced Theming
 - [ ] Task: Add `theme_preset` column to the `soundboards` table.
