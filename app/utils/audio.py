@@ -18,7 +18,7 @@ class AudioProcessor:
                 return None
             
             return {
-                'duration': audio.info.length,
+                'duration': round(audio.info.length, 3),
                 'sample_rate': getattr(audio.info, 'sample_rate', 0)
             }
         except Exception as e:

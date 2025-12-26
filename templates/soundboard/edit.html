@@ -56,14 +56,16 @@
         <div id="sounds-list" class="list-group mb-4">
             {% for sound in sounds %}
             <div class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ sound.id }}">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-grip-vertical text-muted me-3 drag-handle" style="cursor: grab;"></i>
+                <div class="d-flex align-items-center preview-trigger" 
+                     onclick="previewSound('{{ url_for('static', filename='uploads/' + sound.file_path) }}')"
+                     style="cursor: pointer;" title="Click to preview">
+                    <i class="fas fa-grip-vertical text-muted me-3 drag-handle" style="cursor: grab;" onclick="event.stopPropagation()"></i>
                     {% if sound.icon and '/' in sound.icon %}
                     <img src="{{ url_for('static', filename='uploads/' + sound.icon) }}" alt="{{ sound.name }}" class="me-2" style="width: 24px; height: 24px; object-fit: contain;">
                     {% else %}
-                    <i class="{{ sound.icon or 'fas fa-volume-up' }} me-2"></i>
+                    <i class="{{ sound.icon or 'fas fa-volume-up' }} me-2 text-primary"></i>
                     {% endif %}
-                    {{ sound.name }}
+                    <span class="sound-name-text">{{ sound.name }}</span>
                 </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-outline-primary btn-sm" 
@@ -210,6 +212,16 @@ function openSoundSettings(id, name, volume, loop, start, end, hotkey) {
     
     const modal = new bootstrap.Modal(document.getElementById('soundSettingsModal'));
     modal.show();
+}
+
+let currentPreview = null;
+function previewSound(url) {
+    if (currentPreview) {
+        currentPreview.pause();
+        currentPreview.currentTime = 0;
+    }
+    currentPreview = new Audio(url);
+    currentPreview.play().catch(err => console.error("Preview failed:", err));
 }
 
 function saveSoundSettings() {
