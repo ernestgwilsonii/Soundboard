@@ -8,7 +8,7 @@
 - [x] Task: Implement `/auth/members` route and template. 9104b93
 - [x] Task: Add "Browse Members" link to the sidebar for verified users. 9c98e52
 - [x] Task: Create Followers and Following list templates and routes. ded21a7
-- [ ] Task: Add pagination (10/50), sorting, and search to the "Browse Members" page.
+- [x] Task: Add pagination (10/50), sorting, and search to the "Browse Members" page. 684dbfe
 - [ ] Task: Conductor - User Manual Verification 'Social Following'
 
 ## Phase 2: Visual Audio Tools (WaveSurfer.js)
