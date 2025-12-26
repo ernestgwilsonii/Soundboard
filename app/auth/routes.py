@@ -158,8 +158,21 @@ def profile():
 @login_required
 def members():
     from app.models import User
-    users_list = User.get_all()
-    return render_template('auth/members.html', title='Browse Members', users=users_list)
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 10, type=int)
+    sort = request.args.get('sort', 'newest')
+    query = request.args.get('q', '')
+    
+    offset = (page - 1) * limit
+    users_list = User.get_all(limit=limit, offset=offset, sort_by=sort, search_query=query)
+    total_users = User.count_all(search_query=query)
+    
+    total_pages = (total_users + limit - 1) // limit
+    
+    return render_template('auth/members.html', title='Browse Members', 
+                           users=users_list, 
+                           page=page, limit=limit, sort=sort, q=query,
+                           total_pages=total_pages, total_users=total_users)
 
 @bp.route('/user/<username>/followers')
 @login_required

@@ -7,7 +7,8 @@ from app.models import User, Soundboard, AdminSettings
 @bp.route('/users')
 @admin_required
 def users():
-    users_list = User.get_all()
+    # Admin view still shows all users, but sorted alphabetically by default
+    users_list = User.get_all(limit=1000, sort_by='alpha')
     return render_template('admin/users.html', title='User Management', users=users_list)
 
 @bp.route('/settings', methods=['GET', 'POST'])

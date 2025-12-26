@@ -160,16 +160,56 @@ class User(UserMixin):
         return None
 
     @staticmethod
-    def get_all():
+    def get_all(limit=10, offset=0, sort_by='newest', search_query=None):
         db = get_accounts_db()
         cur = db.cursor()
-        cur.execute("SELECT * FROM users ORDER BY username ASC")
+        
+        sql = "SELECT * FROM users WHERE 1=1"
+        params = []
+        
+        if search_query:
+            sql += " AND username LIKE ?"
+            params.append(f'%{search_query}%')
+            
+        if sort_by == 'popular':
+            # This is complex because follows table is in accounts DB now (correct)
+            # We can join with a subquery of follow counts
+            sql = f"""
+                SELECT u.*, COUNT(f.follower_id) as follower_count 
+                FROM ({sql}) u
+                LEFT JOIN follows f ON u.id = f.followed_id
+                GROUP BY u.id
+                ORDER BY follower_count DESC, u.username ASC
+            """
+        elif sort_by == 'oldest':
+            sql += " ORDER BY created_at ASC"
+        elif sort_by == 'alpha':
+            sql += " ORDER BY username ASC"
+        else: # newest
+            sql += " ORDER BY created_at DESC"
+            
+        sql += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        
+        cur.execute(sql, params)
         rows = cur.fetchall()
         return [User(id=row['id'], username=row['username'], email=row['email'], 
                      password_hash=row['password_hash'], role=row['role'], active=row['active'],
                      is_verified=row['is_verified'], avatar_path=row['avatar_path'],
                      failed_login_attempts=row['failed_login_attempts'], lockout_until=row['lockout_until'],
                      bio=row['bio'], social_x=row['social_x'], social_youtube=row['social_youtube'], social_website=row['social_website']) for row in rows]
+
+    @staticmethod
+    def count_all(search_query=None):
+        db = get_accounts_db()
+        cur = db.cursor()
+        sql = "SELECT COUNT(*) FROM users WHERE 1=1"
+        params = []
+        if search_query:
+            sql += " AND username LIKE ?"
+            params.append(f'%{search_query}%')
+        cur.execute(sql, params)
+        return cur.fetchone()[0]
 
     def __repr__(self):
         return f'<User {self.username}>'

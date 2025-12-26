@@ -8,7 +8,44 @@
     </div>
 </div>
 
-<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+{% if not heading %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <form action="{{ url_for('auth.members') }}" method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                            <input type="text" name="q" class="form-control border-start-0" placeholder="Search by username..." value="{{ q or '' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="sort" class="form-select" onchange="this.form.submit()">
+                            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Recently Joined</option>
+                            <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                            <option value="alpha" {% if sort == 'alpha' %}selected{% endif %}>Alphabetical</option>
+                            <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest Members</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="limit" class="form-select" onchange="this.form.submit()">
+                            <option value="10" {% if limit == 10 %}selected{% endif %}>10 per page</option>
+                            <option value="20" {% if limit == 20 %}selected{% endif %}>20 per page</option>
+                            <option value="50" {% if limit == 50 %}selected{% endif %}>50 per page</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
     {% for user in users %}
     <div class="col">
         <div class="card h-100 shadow-sm border-0 hover-lift text-center p-3">
@@ -35,10 +72,28 @@
     </div>
     {% else %}
     <div class="col-12 text-center">
-        <p class="text-muted italic">The community is quiet... for now.</p>
+        <p class="text-muted italic">No community members found matching your search.</p>
     </div>
     {% endfor %}
 </div>
+
+{% if total_pages and total_pages > 1 %}
+<nav aria-label="Member pagination">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('auth.members', page=page-1, limit=limit, sort=sort, q=q) }}">Previous</a>
+        </li>
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('auth.members', page=p, limit=limit, sort=sort, q=q) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('auth.members', page=page+1, limit=limit, sort=sort, q=q) }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
 
 <style>
 .hover-lift {

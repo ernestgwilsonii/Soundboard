@@ -130,6 +130,30 @@ def test_members_list_route(client):
     assert b'member1' in response.data
     assert b'member2' in response.data
 
+def test_members_search_and_pagination(client):
+    with client.application.app_context():
+        u1 = User(username='alice', email='a@test.com', is_verified=True)
+        u1.set_password('pass')
+        u1.save()
+        u2 = User(username='bob', email='b@test.com', is_verified=True)
+        u2.set_password('pass')
+        u2.save()
+        
+    client.post('/auth/login', data={'username': 'alice', 'password': 'pass'})
+    
+    # Search for 'bob'
+    response = client.get('/auth/members?q=bob')
+    # Use card-title to be sure we are looking at the result grid, not navbar
+    assert b'card-title mb-1">bob</h5>' in response.data
+    assert b'card-title mb-1">alice</h5>' not in response.data
+    
+    # Pagination test (limit 1)
+    response = client.get('/auth/members?limit=1')
+    assert response.status_code == 200
+    # Should only show one user (plus stats/nav)
+    # Check if there's a link to page 2
+    assert b'page=2' in response.data
+
 def test_follower_following_lists(client):
     with client.application.app_context():
         u1 = User(username='user_a', email='a@test.com', is_verified=True)
