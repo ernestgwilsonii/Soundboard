@@ -16,7 +16,7 @@
 
 ## Phase 3: Enhanced Theming
 - [x] Task: Add `theme_preset` column to the `soundboards` table. cc8917b
-- [ ] Task: Create a theme-specific CSS file with at least 3 presets.
+- [x] Task: Create a theme-specific CSS file with at least 3 presets. 7d701e3
 - [ ] Task: Update the soundboard view page to apply the selected preset.
 - [ ] Task: Conductor - User Manual Verification 'Visual Themes'
 
