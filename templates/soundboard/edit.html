@@ -44,6 +44,11 @@
                 {{ form.theme_color.label(class="form-label") }}
                 {{ form.theme_color(class="form-control form-control-color", type="color", title="Choose a theme color") }}
             </div>
+            <div class="mb-3">
+                {{ form.theme_preset.label(class="form-label") }}
+                {{ form.theme_preset(class="form-select") }}
+                <div class="form-text">This will change the overall look and feel of the board.</div>
+            </div>
             <div class="d-grid gap-2">
                 {{ form.submit(class="btn btn-primary") }}
                 <a href="{{ url_for('soundboard.dashboard') }}" class="btn btn-secondary">Cancel</a>

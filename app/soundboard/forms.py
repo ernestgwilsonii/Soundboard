@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, SubmitField, BooleanField
+from wtforms import StringField, SubmitField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Length
 
 class SoundboardForm(FlaskForm):
@@ -12,6 +12,12 @@ class SoundboardForm(FlaskForm):
     is_public = BooleanField('Public (Shared with everyone)')
     tags = StringField('Tags (comma separated)', validators=[Length(max=255)])
     theme_color = StringField('Theme Color', default='#0d6efd')
+    theme_preset = SelectField('Theme Style', choices=[
+        ('default', 'Classic (Bootstrap)'),
+        ('dark', 'Dark Mode'),
+        ('neon', 'Cyber Neon'),
+        ('minimalist', 'Minimalist')
+    ], default='default')
     submit = SubmitField('Save')
 
 class SoundForm(FlaskForm):
