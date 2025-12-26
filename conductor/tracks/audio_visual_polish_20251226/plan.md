@@ -14,7 +14,7 @@
 - [x] Task: Update Soundboard and Sound forms to use the dynamic picker. 3f2c511
 - [x] Task: Conductor - User Manual Verification 'Dynamic Icon Picker' 6cf560d
 
-## Phase 3: Enhanced Theming
+## Phase 3: Enhanced Theming [checkpoint: 74af13e]
 - [x] Task: Add `theme_preset` column to the `soundboards` table. cc8917b
 - [x] Task: Create a theme-specific CSS file with at least 3 presets. 7d701e3
 - [x] Task: Update the soundboard view page to apply the selected preset. 29974d2
