@@ -17,8 +17,8 @@
 ## Phase 3: Enhanced Theming
 - [x] Task: Add `theme_preset` column to the `soundboards` table. cc8917b
 - [x] Task: Create a theme-specific CSS file with at least 3 presets. 7d701e3
-- [ ] Task: Update the soundboard view page to apply the selected preset.
-- [ ] Task: Conductor - User Manual Verification 'Visual Themes'
+- [x] Task: Update the soundboard view page to apply the selected preset. 29974d2
+- [~] Task: Conductor - User Manual Verification 'Visual Themes'
 
 ## Phase 4: Site-Wide UX Polish (Modern Dialogs)
 - [ ] Task: Implement a global "Confirm" and "Alert" system using Bootstrap Modals or a library like SweetAlert2.
