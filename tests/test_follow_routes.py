@@ -86,3 +86,26 @@ def test_follow_self_fails(client):
     
     response = client.post('/auth/follow/self', follow_redirects=True)
     assert b'You cannot follow yourself' in response.data
+
+def test_follow_button_rendering(client):
+    with client.application.app_context():
+        u1 = User(username='user1', email='u1@test.com', is_verified=True)
+        u1.set_password('pass')
+        u1.save()
+        u2 = User(username='user2', email='u2@test.com', is_verified=True)
+        u2.set_password('pass')
+        u2.save()
+        
+    # Not logged in - no button
+    response = client.get('/auth/user/user2')
+    assert b'btn-primary px-4">Follow</button>' not in response.data
+    
+    # Logged in as user1
+    client.post('/auth/login', data={'username': 'user1', 'password': 'pass'})
+    response = client.get('/auth/user/user2')
+    assert b'btn-primary px-4">Follow</button>' in response.data
+    
+    # Follow user2
+    client.post('/auth/follow/user2')
+    response = client.get('/auth/user/user2')
+    assert b'btn-outline-danger px-4">Unfollow</button>' in response.data
