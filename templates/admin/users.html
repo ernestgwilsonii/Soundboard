@@ -45,17 +45,20 @@
                 <td>
                     <div class="btn-group" role="group">
                         <form action="{{ url_for('admin.toggle_user_verified', id=user.id) }}" method="post" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-outline-info">
                                 {% if user.is_verified %}Unverify{% else %}Verify{% endif %}
                             </button>
                         </form>
                         {% if user.id != current_user.id %}
                         <form action="{{ url_for('admin.toggle_user_active', id=user.id) }}" method="post" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm {% if user.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
                                 {% if user.active %}Disable{% else %}Enable{% endif %}
                             </button>
                         </form>
                         <form action="{{ url_for('admin.toggle_user_role', id=user.id) }}" method="post" class="d-inline ms-1">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-outline-warning">
                                 Toggle Role
                             </button>
