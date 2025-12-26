@@ -148,6 +148,7 @@
     <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
     <script src="{{ url_for('static', filename='js/icon_picker.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ux_utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/waveform_editor.js') }}"></script>
     <script>
     function markAllRead() {
         fetch('{{ url_for("auth.mark_notifications_read") }}', {
