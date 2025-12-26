@@ -25,7 +25,8 @@
     }
 </style>
 
-<div class="theme-container theme-{{ soundboard.theme_preset or 'default' }} p-3 p-md-5">
+<div class="theme-container theme-{{ soundboard.theme_preset or 'default' }} px-3 px-md-5 py-4" style="margin-left: -12px; margin-right: -12px; margin-top: -24px; min-height: 100vh;">
+<div class="container-fluid">
 <div class="row">
     <div class="col-12 text-center mb-4">
         <h1>
@@ -137,6 +138,7 @@
     {% endfor %}
 </div>
 </div>
+</div>
 
 {% if soundboard.is_public %}
 <hr class="my-5">
@@ -180,9 +182,9 @@
                         </div>
                         
                         {% if comment.user_id == current_user.id or soundboard.user_id == current_user.id or current_user.role == 'admin' %}
-                        <form action="{{ url_for('soundboard.delete_comment', id=comment.id) }}" method="post" onsubmit="return confirm('Delete this comment?');">
+                        <form id="delete-comment-{{ comment.id }}" action="{{ url_for('soundboard.delete_comment', id=comment.id) }}" method="post" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm text-danger p-0" title="Delete comment">
+                            <button type="button" class="btn btn-sm text-danger p-0" title="Delete comment" onclick="confirmDeleteComment({{ comment.id }})">
                                 <i class="fas fa-times"></i>
                             </button>
                         </form>
@@ -251,12 +253,18 @@ function playSound(url, settings = {}) {
     
     audio.play().catch(error => {
         console.error("Error playing sound:", error);
-        alert("Failed to play sound. Please check the file format or try again.");
+        ux.alert("Playback Failed", "Failed to play sound. Please check the file format or try again.", "error");
     });
     
     audio.onended = () => {
         activeSounds = activeSounds.filter(s => s !== audio);
     };
+}
+
+async function confirmDeleteComment(id) {
+    if (await ux.confirm('Delete Comment?', 'Remove this comment?')) {
+        document.getElementById(`delete-comment-${id}`).submit();
+    }
 }
 
 function stopAllSounds() {
@@ -307,12 +315,10 @@ function toggleFavorite(boardId) {
 
 function shareBoard() {
     navigator.clipboard.writeText(window.location.href).then(() => {
-        const toastEl = document.getElementById('share-toast');
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();
+        ux.toast('Link copied to clipboard!');
     }).catch(err => {
         console.error('Failed to copy: ', err);
-        alert('Failed to copy link. Please copy the URL from your browser address bar.');
+        ux.alert('Copy Failed', 'Failed to copy link. Please copy the URL from your browser address bar.', 'error');
     });
 }
 
@@ -321,6 +327,7 @@ function submitRating(score) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
         },
         body: JSON.stringify({ score: score })
     })
@@ -332,10 +339,11 @@ function submitRating(score) {
         document.getElementById('avg-rating').textContent = data.average;
         document.getElementById('rating-count').textContent = data.count;
         highlightStars(score);
+        ux.toast('Rating submitted!');
     })
     .catch(err => {
         console.error(err);
-        alert('Failed to submit rating. Please try again.');
+        ux.alert('Rating Failed', 'Failed to submit rating. Please try again.', 'error');
     });
 }
 
@@ -434,9 +442,9 @@ function addSoundToPlaylist(soundId, playlistId) {
         const modalEl = document.getElementById('addToPlaylistModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
-        alert('Added to playlist!');
+        ux.toast('Added to playlist!');
     })
-    .catch(err => alert(err.message));
+    .catch(err => ux.alert('Error', err.message, 'error'));
 }
 </script>
 

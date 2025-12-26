@@ -81,9 +81,9 @@
                             onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }}, '{{ sound.hotkey or '' }}', '{{ sound.icon or 'fas fa-volume-up' }}')">
                         <i class="fas fa-cog"></i>
                     </button>
-                    <form action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
+                    <form id="delete-sound-{{ sound.id }}" action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDeleteSound({{ sound.id }})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -170,8 +170,9 @@
             <div class="card-body">
                 <h5 class="card-title text-danger">Danger Zone</h5>
                 <p class="card-text">Deleting a soundboard is permanent and cannot be undone.</p>
-                <form action="{{ url_for('soundboard.delete', id=soundboard.id) }}" method="post" onsubmit="return confirm('Are you sure?');">
-                    <button type="submit" class="btn btn-danger">Delete Soundboard</button>
+                <form id="delete-board-form" action="{{ url_for('soundboard.delete', id=soundboard.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="button" class="btn btn-danger" onclick="confirmDeleteBoard()">Delete Soundboard</button>
                 </form>
             </div>
         </div>
@@ -212,12 +213,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(err => {
                     console.error(err);
-                    alert('Failed to save new order. Please refresh and try again.');
+                    ux.alert('Order Not Saved', 'Failed to save new order. Please refresh and try again.', 'error');
                 });
             }
         });
     }
 });
+
+async function confirmDeleteSound(id) {
+    if (await ux.confirm('Delete Sound?', 'Are you sure you want to permanently delete this sound?')) {
+        document.getElementById(`delete-sound-${id}`).submit();
+    }
+}
+
+async function confirmDeleteBoard() {
+    if (await ux.confirm('Delete Soundboard?', 'This action is PERMANENT and cannot be undone. All sounds will be lost.', 'Delete Everything')) {
+        document.getElementById('delete-board-form').submit();
+    }
+}
 
 function openSoundSettings(id, name, volume, loop, start, end, hotkey, icon) {
     document.getElementById('modal-sound-id').value = id;
@@ -275,7 +288,7 @@ function saveSoundSettings() {
     })
     .catch(err => {
         console.error(err);
-        alert('Error saving settings: ' + err.message);
+        ux.alert('Save Failed', 'Error saving settings: ' + err.message, 'error');
     });
 }
 </script>
