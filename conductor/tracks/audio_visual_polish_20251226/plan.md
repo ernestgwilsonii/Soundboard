@@ -7,7 +7,7 @@
 - [x] Task: Verify that audio duration is automatically extracted and saved. f5b8ee2
 - [x] Task: Conductor - User Manual Verification 'Audio Processing' 33f1268
 
-## Phase 2: Dynamic Icon Picker (Full Library)
+## Phase 2: Dynamic Icon Picker (Full Library) [checkpoint: 1ff68e8]
 - [x] Task: Remove the manual `app/static/icons.json`. 15135
 - [x] Task: Update `app/static/js/icon_picker.js` to dynamically fetch the full FontAwesome 6 Free icon set from a reliable metadata source. 3f2c511
 - [x] Task: Enhance the Icon Picker UI with categories and high-performance filtering for the larger icon set. 3f2c511
