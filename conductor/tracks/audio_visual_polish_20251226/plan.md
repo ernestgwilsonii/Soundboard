@@ -2,7 +2,7 @@
 
 ## Phase 1: Audio Processing Architecture
 - [x] Task: Install `mutagen` and update `requirements.txt`. 3924b23
-- [ ] Task: Create `app/utils/audio.py` with an `AudioProcessor` utility class.
+- [x] Task: Create `app/utils/audio.py` with an `AudioProcessor` utility class. efdd6e4
 - [ ] Task: Integrate the processing hook into the sound upload route.
 - [ ] Task: Verify that audio duration is automatically extracted and saved.
 - [ ] Task: Conductor - User Manual Verification 'Audio Processing'
