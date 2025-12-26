@@ -73,7 +73,7 @@
                 </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-outline-primary btn-sm" 
-                            onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }}, '{{ sound.hotkey or '' }}')">
+                            onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }}, '{{ sound.hotkey or '' }}', '{{ sound.icon or 'fas fa-volume-up' }}')">
                         <i class="fas fa-cog"></i>
                     </button>
                     <form action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
@@ -126,6 +126,15 @@
                                 </div>
                             </div>
                             
+                            <div class="mb-3">
+                                <label for="modal-icon" class="form-label">Sound Icon</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i id="modal-icon-preview" class="fas fa-volume-up"></i></span>
+                                    <input type="text" class="form-control" id="modal-icon" data-toggle="icon-picker" data-preview="modal-icon-preview" placeholder="Click to select icon">
+                                    <button class="btn btn-outline-secondary icon-picker-trigger" type="button">Select</button>
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label for="modal-hotkey" class="form-label">Keyboard Hotkey</label>
                                 <input type="text" class="form-control" id="modal-hotkey" maxlength="1" placeholder="e.g. A, 1, X">
@@ -205,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function openSoundSettings(id, name, volume, loop, start, end, hotkey) {
+function openSoundSettings(id, name, volume, loop, start, end, hotkey, icon) {
     document.getElementById('modal-sound-id').value = id;
     document.getElementById('modal-sound-name').textContent = name;
     document.getElementById('modal-volume').value = volume;
@@ -215,6 +224,8 @@ function openSoundSettings(id, name, volume, loop, start, end, hotkey) {
     // Format end to 3 decimal places if it exists
     document.getElementById('modal-end').value = end ? parseFloat(end).toFixed(3) : '';
     document.getElementById('modal-hotkey').value = hotkey || '';
+    document.getElementById('modal-icon').value = icon || 'fas fa-volume-up';
+    document.getElementById('modal-icon-preview').className = icon || 'fas fa-volume-up';
     
     const modal = new bootstrap.Modal(document.getElementById('soundSettingsModal'));
     modal.show();
@@ -237,7 +248,8 @@ function saveSoundSettings() {
         is_loop: document.getElementById('modal-loop').checked,
         start_time: parseFloat(document.getElementById('modal-start').value) || 0,
         end_time: parseFloat(document.getElementById('modal-end').value) || null,
-        hotkey: document.getElementById('modal-hotkey').value.trim().toUpperCase() || null
+        hotkey: document.getElementById('modal-hotkey').value.trim().toUpperCase() || null,
+        icon: document.getElementById('modal-icon').value.trim() || 'fas fa-volume-up'
     };
     
     fetch(`/soundboard/sound/${id}/settings`, {

@@ -392,6 +392,8 @@ def update_sound_settings(id):
     sound.is_loop = data.get('is_loop', sound.is_loop)
     sound.start_time = data.get('start_time', sound.start_time)
     sound.end_time = data.get('end_time', sound.end_time)
+    sound.hotkey = data.get('hotkey', sound.hotkey)
+    sound.icon = data.get('icon', sound.icon)
     
     sound.save()
     return jsonify({'status': 'success'})
