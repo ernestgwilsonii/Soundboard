@@ -20,7 +20,7 @@
 - [x] Task: Update the soundboard view page to apply the selected preset. 29974d2
 - [x] Task: Conductor - User Manual Verification 'Visual Themes' e909901
 
-## Phase 4: Site-Wide UX Polish (Modern Dialogs)
+## Phase 4: Site-Wide UX Polish (Modern Dialogs) [checkpoint: 67a9936]
 - [x] Task: Implement a global "Confirm" and "Alert" system using Bootstrap Modals or a library like SweetAlert2. 2abc6c6
 - [x] Task: Replace all native browser `confirm()` and `alert()` calls with the new modern dialogs. f426c7a
 - [x] Task: Conductor - User Manual Verification 'UX Polish' fadf9e2
