@@ -9,9 +9,9 @@
 
 ## Phase 2: Visual Icon Picker
 - [x] Task: Create a JSON configuration of supported FontAwesome icons. 6da7a16
-- [ ] Task: Build a reusable JavaScript icon picker modal.
-- [ ] Task: Update Soundboard and Sound forms to use the icon picker.
-- [ ] Task: Conductor - User Manual Verification 'Icon Picker UI'
+- [x] Task: Build a reusable JavaScript icon picker modal. 4ff1327
+- [x] Task: Update Soundboard and Sound forms to use the icon picker. 4ff1327
+- [~] Task: Conductor - User Manual Verification 'Icon Picker UI'
 
 ## Phase 3: Enhanced Theming
 - [ ] Task: Add `theme_preset` column to the `soundboards` table.
