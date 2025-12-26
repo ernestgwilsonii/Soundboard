@@ -7,14 +7,20 @@
 - [x] Task: Verify that audio duration is automatically extracted and saved. f5b8ee2
 - [x] Task: Conductor - User Manual Verification 'Audio Processing' 33f1268
 
-## Phase 2: Visual Icon Picker
-- [x] Task: Create a JSON configuration of supported FontAwesome icons. 6da7a16
-- [x] Task: Build a reusable JavaScript icon picker modal. 4ff1327
-- [x] Task: Update Soundboard and Sound forms to use the icon picker. 4ff1327
-- [~] Task: Conductor - User Manual Verification 'Icon Picker UI'
+## Phase 2: Dynamic Icon Picker (Full Library)
+- [x] Task: Remove the manual `app/static/icons.json`. 15135
+- [x] Task: Update `app/static/js/icon_picker.js` to dynamically fetch the full FontAwesome 6 Free icon set from a reliable metadata source. 3f2c511
+- [x] Task: Enhance the Icon Picker UI with categories and high-performance filtering for the larger icon set. 3f2c511
+- [x] Task: Update Soundboard and Sound forms to use the dynamic picker. 3f2c511
+- [~] Task: Conductor - User Manual Verification 'Dynamic Icon Picker'
 
 ## Phase 3: Enhanced Theming
 - [ ] Task: Add `theme_preset` column to the `soundboards` table.
 - [ ] Task: Create a theme-specific CSS file with at least 3 presets.
 - [ ] Task: Update the soundboard view page to apply the selected preset.
 - [ ] Task: Conductor - User Manual Verification 'Visual Themes'
+
+## Phase 4: Site-Wide UX Polish (Modern Dialogs)
+- [ ] Task: Implement a global "Confirm" and "Alert" system using Bootstrap Modals or a library like SweetAlert2.
+- [ ] Task: Replace all native browser `confirm()` and `alert()` calls with the new modern dialogs.
+- [ ] Task: Conductor - User Manual Verification 'UX Polish'
