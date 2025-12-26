@@ -129,6 +129,16 @@ MIGRATIONS = [
     """),
     (24, 'add_theme_preset_to_soundboards', Config.SOUNDBOARDS_DB, """
         ALTER TABLE soundboards ADD COLUMN theme_preset TEXT DEFAULT 'default';
+    """),
+    (25, 'create_follows_table', Config.ACCOUNTS_DB, """
+        CREATE TABLE IF NOT EXISTS follows (
+            follower_id INTEGER NOT NULL,
+            followed_id INTEGER NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (follower_id, followed_id),
+            FOREIGN KEY (follower_id) REFERENCES users (id),
+            FOREIGN KEY (followed_id) REFERENCES users (id)
+        );
     """)
 ]
 
