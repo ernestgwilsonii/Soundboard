@@ -1,6 +1,6 @@
 # Track Plan: Version 2.5 - Audio Intelligence & Visual Polish
 
-## Phase 1: Audio Processing Architecture
+## Phase 1: Audio Processing Architecture [checkpoint: da5c3fa]
 - [x] Task: Install `mutagen` and update `requirements.txt`. 3924b23
 - [x] Task: Create `app/utils/audio.py` with an `AudioProcessor` utility class. efdd6e4
 - [x] Task: Integrate the processing hook into the sound upload route. f5b8ee2
