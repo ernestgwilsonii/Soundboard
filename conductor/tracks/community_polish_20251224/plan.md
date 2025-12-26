@@ -15,7 +15,7 @@
 - [x] Task: Add "Delete Account" button to the Profile page. 576b307
 - [x] Task: Conductor - User Manual Verification 'Account Deactivation' (Protocol in workflow.md) 576b307
 
-## Phase 3: Advanced Discovery & Errors
+## Phase 3: Advanced Discovery & Errors [checkpoint: 2bdc853]
 - [x] Task: Update `Soundboard.get_public()` and `search()` to support dynamic ordering. 106b08f
 - [x] Task: Add "Sort By" dropdown to Gallery and Search templates. 106b08f
 - [x] Task: Create `templates/404.html` and `templates/500.html`. 106b08f
