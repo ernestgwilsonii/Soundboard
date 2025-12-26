@@ -126,7 +126,7 @@
         </div>
     </nav>
 
-    <div class="container{% if 'view' in request.endpoint or 'edit' in request.endpoint %}-fluid px-0{% endif %} mt-4">
+    <div class="container{% if request.endpoint and ('view' in request.endpoint or 'edit' in request.endpoint) %}-fluid px-0{% endif %} mt-4">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for message in messages %}

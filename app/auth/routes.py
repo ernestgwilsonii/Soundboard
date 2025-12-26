@@ -233,3 +233,33 @@ def delete_account():
         flash('Your account and all associated data have been permanently deleted.')
         return redirect(url_for('main.index'))
     return render_template('auth/delete_account.html', title='Delete Account', form=form)
+
+@bp.route('/follow/<username>', methods=['POST'])
+@login_required
+def follow(username):
+    from app.models import User
+    user = User.get_by_username(username)
+    if user is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('main.index'))
+    if user.id == current_user.id:
+        flash('You cannot follow yourself!')
+        return redirect(url_for('auth.public_profile', username=username))
+    current_user.follow(user.id)
+    flash(f'You are now following {username}!')
+    return redirect(url_for('auth.public_profile', username=username))
+
+@bp.route('/unfollow/<username>', methods=['POST'])
+@login_required
+def unfollow(username):
+    from app.models import User
+    user = User.get_by_username(username)
+    if user is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('main.index'))
+    if user.id == current_user.id:
+        flash('You cannot unfollow yourself!')
+        return redirect(url_for('auth.public_profile', username=username))
+    current_user.unfollow(user.id)
+    flash(f'You have unfollowed {username}.')
+    return redirect(url_for('auth.public_profile', username=username))

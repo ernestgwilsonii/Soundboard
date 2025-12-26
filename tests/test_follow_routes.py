@@ -1,0 +1,88 @@
+import pytest
+import os
+import sqlite3
+from app import create_app
+from app.models import User
+from config import Config
+
+@pytest.fixture
+def client(monkeypatch):
+    accounts_db = os.path.abspath('test_accounts_follow_routes.sqlite3')
+    soundboards_db = os.path.abspath('test_soundboards_follow_routes.sqlite3')
+    
+    monkeypatch.setattr(Config, 'ACCOUNTS_DB', accounts_db)
+    monkeypatch.setattr(Config, 'SOUNDBOARDS_DB', soundboards_db)
+    
+    app = create_app()
+    app.config['TESTING'] = True
+    app.config['WTF_CSRF_ENABLED'] = False
+    
+    for db_path in [accounts_db, soundboards_db]:
+        if os.path.exists(db_path): os.remove(db_path)
+        
+    with app.app_context():
+        with sqlite3.connect(accounts_db) as conn:
+            with open('app/schema_accounts.sql', 'r') as f:
+                conn.executescript(f.read())
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS follows (
+                    follower_id INTEGER NOT NULL,
+                    followed_id INTEGER NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (follower_id, followed_id),
+                    FOREIGN KEY (follower_id) REFERENCES users (id),
+                    FOREIGN KEY (followed_id) REFERENCES users (id)
+                );
+            """)
+        with sqlite3.connect(soundboards_db) as conn:
+            with open('app/schema_soundboards.sql', 'r') as f:
+                conn.executescript(f.read())
+                
+    with app.test_client() as client:
+        yield client
+        
+    for db_path in [accounts_db, soundboards_db]:
+        if os.path.exists(db_path): os.remove(db_path)
+
+def test_follow_unfollow_routes(client):
+    with client.application.app_context():
+        u1 = User(username='follower', email='f@test.com', is_verified=True)
+        u1.set_password('pass')
+        u1.save()
+        u2 = User(username='followed', email='d@test.com', is_verified=True)
+        u2.set_password('pass')
+        u2.save()
+        
+    # Login
+    client.post('/auth/login', data={'username': 'follower', 'password': 'pass'})
+    
+    # Follow
+    response = client.post('/auth/follow/followed', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'You are now following followed' in response.data
+    
+    with client.application.app_context():
+        u1_obj = User.get_by_username('follower')
+        u2_obj = User.get_by_username('followed')
+        assert u1_obj.is_following(u2_obj.id) is True
+        
+    # Unfollow
+    response = client.post('/auth/unfollow/followed', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'You have unfollowed followed' in response.data
+    
+    with client.application.app_context():
+        u1_obj = User.get_by_username('follower')
+        u2_obj = User.get_by_username('followed')
+        assert u1_obj.is_following(u2_obj.id) is False
+
+def test_follow_self_fails(client):
+    with client.application.app_context():
+        u1 = User(username='self', email='s@test.com', is_verified=True)
+        u1.set_password('pass')
+        u1.save()
+        
+    client.post('/auth/login', data={'username': 'self', 'password': 'pass'})
+    
+    response = client.post('/auth/follow/self', follow_redirects=True)
+    assert b'You cannot follow yourself' in response.data
