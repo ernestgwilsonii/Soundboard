@@ -3,11 +3,11 @@
  */
 
 /* Theme: Dark */
-.theme-dark {
+.theme-dark.theme-container {
     background-color: #121212 !important;
     color: #e0e0e0 !important;
 }
-.theme-dark .card {
+.theme-dark .card, .theme-dark .sound-card {
     background-color: #1e1e1e !important;
     border-color: #333 !important;
     color: #e0e0e0 !important;
@@ -23,33 +23,57 @@
 }
 
 /* Theme: Neon */
-.theme-neon {
-    background-color: #050505 !important;
-    color: #fff !important;
+.theme-neon.theme-container {
+    background-color: #0a0a0f !important;
+    background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0f 100%) !important;
+    color: #00f2ff !important;
 }
 .theme-neon .sound-card {
-    background-color: #000 !important;
-    border: 2px solid var(--theme-color, #0d6efd) !important;
-    box-shadow: 0 0 5px var(--theme-color, #0d6efd);
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    border: 2px solid #ff00ff !important;
+    box-shadow: 0 0 10px #ff00ff, inset 0 0 5px #ff00ff;
+    color: #00f2ff !important;
+    text-shadow: 0 0 5px #00f2ff;
 }
 .theme-neon .sound-card:hover {
-    box-shadow: 0 0 15px var(--theme-color, #0d6efd);
-    transform: translateY(-2px);
+    box-shadow: 0 0 20px #00f2ff, inset 0 0 10px #00f2ff;
+    border-color: #00f2ff !important;
+    transform: scale(1.05);
+    background-color: #000 !important;
+}
+.theme-neon h1, .theme-neon h2, .theme-neon h3 {
+    color: #ff00ff !important;
+    text-shadow: 0 0 15px #ff00ff, 0 0 30px #ff00ff;
+    font-family: 'Courier New', Courier, monospace;
+    text-transform: uppercase;
+    letter-spacing: 3px;
 }
 .theme-neon .badge {
-    box-shadow: 0 0 5px var(--theme-color, #0d6efd);
+    background-color: #ff00ff !important;
+    box-shadow: 0 0 10px #ff00ff;
+    color: #fff !important;
+}
+.theme-neon .btn-outline-secondary {
+    color: #ff00ff !important;
+    border-color: #ff00ff !important;
+    box-shadow: 0 0 5px #ff00ff;
+}
+.theme-neon .btn-outline-secondary:hover {
+    background-color: #ff00ff !important;
+    color: #000 !important;
 }
 
 /* Theme: Minimalist */
-.theme-minimalist {
-    background-color: #fff !important;
+.theme-minimalist.theme-container {
+    background-color: #ffffff !important;
     color: #333 !important;
 }
-.theme-minimalist .card {
+.theme-minimalist .card, .theme-minimalist .sound-card {
     border: none !important;
     border-bottom: 1px solid #eee !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    background-color: transparent !important;
 }
 .theme-minimalist .sound-card:hover {
     background-color: #fafafa !important;
@@ -65,5 +89,6 @@
 .theme-container {
     transition: all 0.3s ease;
     min-height: 100vh;
-    padding-bottom: 3rem;
+    width: 100%;
+    margin: 0;
 }

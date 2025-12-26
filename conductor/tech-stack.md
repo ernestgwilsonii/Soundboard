@@ -8,6 +8,7 @@
 - **Security:** CSRFProtect for CSRF defense and **Flask-Limiter** for rate limiting and brute-force protection.
 - **Authentication:** Custom session-based authentication with secure password hashing (using a library like `werkzeug.security`).
 - **Logging:** Python's built-in `logging` module, configured with separate handlers for account and user activity.
+- **Audio Processing:** **Mutagen** for server-side audio metadata extraction (duration, sample rate).
 
 ## Data Storage
 - **Database:** SQLite (two distinct database files for isolation: `accounts.sqlite3` and `soundboards.sqlite3`).
@@ -18,6 +19,7 @@
 - **Styling:** Bootstrap CSS for a responsive, grid-based layout.
 - **Icons:** Font Awesome (CDN or local integration).
 - **Interactivity:** Vanilla JavaScript and **SortableJS** for drag-and-drop features.
+- **UX Components:** **SweetAlert2** for modern, responsive dialogs and toasts.
 - **Data Fetching:** Fetch API for asynchronous sidebar loading and sound reordering.
 
 ## Development and Deployment

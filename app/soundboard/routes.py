@@ -283,7 +283,7 @@ def edit(id):
                 s.remove_tag(ct)
                 
         flash(f'Soundboard "{s.name}" updated!')
-        return redirect(url_for('soundboard.dashboard'))
+        return redirect(url_for('soundboard.view', id=s.id))
     elif request.method == 'GET':
         form.name.data = s.name
         form.icon.data = s.icon
