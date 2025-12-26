@@ -73,6 +73,7 @@
                         <i class="fas fa-cog"></i>
                     </button>
                     <form action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this sound?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-outline-danger btn-sm">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -207,7 +208,8 @@ function openSoundSettings(id, name, volume, loop, start, end, hotkey) {
     document.getElementById('volume-val').textContent = Math.round(volume * 100);
     document.getElementById('modal-loop').checked = loop;
     document.getElementById('modal-start').value = start;
-    document.getElementById('modal-end').value = end || '';
+    // Format end to 3 decimal places if it exists
+    document.getElementById('modal-end').value = end ? parseFloat(end).toFixed(3) : '';
     document.getElementById('modal-hotkey').value = hotkey || '';
     
     const modal = new bootstrap.Modal(document.getElementById('soundSettingsModal'));

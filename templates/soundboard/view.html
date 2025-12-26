@@ -46,20 +46,31 @@
 
         <p class="text-muted">Click an icon to play the sound.</p>
         
-        {% if current_user.is_authenticated and soundboard.is_public %}
-        <button id="favorite-btn" class="btn btn-outline-warning {% if is_favorite %}active{% endif %}" onclick="toggleFavorite({{ soundboard.id }})">
-            <i class="fas fa-star {% if is_favorite %}text-white{% else %}text-warning{% endif %}"></i>
-            <span id="favorite-text">{% if is_favorite %}Pinned{% else %}Pin to Sidebar{% endif %}</span>
-        </button>
-        {% endif %}
-        
+        <div class="mb-4">
+            {% if current_user.is_authenticated and (soundboard.user_id == current_user.id or current_user.role == 'admin') %}
+            <a href="{{ url_for('soundboard.edit', id=soundboard.id) }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-edit"></i> Edit Board
+            </a>
+            {% endif %}
+
+            {% if current_user.is_authenticated and soundboard.is_public %}
+            <button id="favorite-btn" class="btn btn-outline-warning {% if is_favorite %}active{% endif %}" onclick="toggleFavorite({{ soundboard.id }})">
+                <i class="fas fa-star {% if is_favorite %}text-white{% else %}text-warning{% endif %}"></i>
+                <span id="favorite-text">{% if is_favorite %}Pinned{% else %}Pin to Sidebar{% endif %}</span>
+            </button>
+            {% endif %}
+            
+            {% if soundboard.is_public %}
+            <button id="share-btn" class="btn btn-outline-primary ms-2" onclick="shareBoard()">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
+            <button class="btn btn-outline-danger ms-2" onclick="stopAllSounds()">
+                <i class="fas fa-stop"></i> Stop All
+            </button>
+            {% endif %}
+        </div>
+
         {% if soundboard.is_public %}
-        <button id="share-btn" class="btn btn-outline-primary ms-2" onclick="shareBoard()">
-            <i class="fas fa-share-alt"></i> Share
-        </button>
-        <button class="btn btn-outline-danger ms-2" onclick="stopAllSounds()">
-            <i class="fas fa-stop"></i> Stop All
-        </button>
         <div id="share-toast" class="toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
@@ -98,7 +109,7 @@
                  volume: {{ sound.volume }},
                  loop: {{ 'true' if sound.is_loop else 'false' }},
                  startTime: {{ sound.start_time }},
-                 endTime: {{ sound.end_time or 'null' }}
+                 endTime: {{ (sound.end_time|round(3)) if sound.end_time else 'null' }}
              })"
              style="cursor: pointer; transition: transform 0.1s; min-height: 120px;">
             <div class="card-body p-0 d-flex flex-column justify-content-center">
