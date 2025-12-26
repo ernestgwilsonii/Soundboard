@@ -4,6 +4,7 @@ from app.soundboard import bp
 from app.models import Soundboard, Sound
 from app.db import get_soundboards_db
 from app.auth.routes import verification_required
+from app.utils.audio import AudioProcessor
 from app import limiter
 
 @bp.route('/dashboard')
@@ -335,6 +336,14 @@ def upload_sound(id):
             icon = icon_path
             
         sound = Sound(soundboard_id=s.id, name=form.name.data, file_path=file_path, icon=icon)
+        
+        # Audio Processing Hooks
+        metadata = AudioProcessor.get_metadata(full_path)
+        if metadata:
+            sound.end_time = metadata.get('duration')
+        
+        AudioProcessor.normalize(full_path)
+        
         sound.save()
         
         from app.models import Activity
