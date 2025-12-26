@@ -78,7 +78,7 @@
                 </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-outline-primary btn-sm" 
-                            onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }}, '{{ sound.hotkey or '' }}', '{{ sound.icon or 'fas fa-volume-up' }}')">
+                            onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }}, '{{ sound.hotkey or '' }}', '{{ sound.icon or 'fas fa-volume-up' }}', '{{ url_for('static', filename='uploads/' + sound.file_path) }}')">
                         <i class="fas fa-cog"></i>
                     </button>
                     <form id="delete-sound-{{ sound.id }}" action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline">
@@ -106,6 +106,20 @@
                         <form id="sound-settings-form">
                             <input type="hidden" id="modal-sound-id">
                             
+                            <!-- Visual Waveform Container -->
+                            <div class="mb-4">
+                                <label class="form-label d-flex justify-content-between">
+                                    Visual Trimming
+                                    <span class="text-muted small">Drag edges to trim</span>
+                                </label>
+                                <div id="waveform-container" class="bg-light border rounded mb-2"></div>
+                                <div class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="modal-play-segment-btn" onclick="waveformEditor.playPause()">
+                                        <i class="fas fa-play me-1"></i> Play Segment
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label for="modal-volume" class="form-label">Volume: <span id="volume-val">100</span>%</label>
                                 <input type="range" class="form-range" id="modal-volume" min="0" max="1" step="0.05">
@@ -232,7 +246,14 @@ async function confirmDeleteBoard() {
     }
 }
 
-function openSoundSettings(id, name, volume, loop, start, end, hotkey, icon) {
+let waveformEditor = null;
+function initWaveformEditor() {
+    if (!waveformEditor) {
+        waveformEditor = new WaveformEditor('waveform-container');
+    }
+}
+
+function openSoundSettings(id, name, volume, loop, start, end, hotkey, icon, fileUrl) {
     document.getElementById('modal-sound-id').value = id;
     document.getElementById('modal-sound-name').textContent = name;
     document.getElementById('modal-volume').value = volume;
@@ -245,7 +266,20 @@ function openSoundSettings(id, name, volume, loop, start, end, hotkey, icon) {
     document.getElementById('modal-icon').value = icon || 'fas fa-volume-up';
     document.getElementById('modal-icon-preview').className = icon || 'fas fa-volume-up';
     
-    const modal = new bootstrap.Modal(document.getElementById('soundSettingsModal'));
+    // Initialize and load waveform
+    initWaveformEditor();
+    if (fileUrl) {
+        waveformEditor.load(fileUrl, start, end);
+    }
+
+    const modalEl = document.getElementById('soundSettingsModal');
+    const modal = new bootstrap.Modal(modalEl);
+    
+    // Ensure we stop audio when closing
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        if (waveformEditor) waveformEditor.stop();
+    }, { once: true });
+
     modal.show();
 }
 
