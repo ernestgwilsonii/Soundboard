@@ -58,6 +58,7 @@ def sidebar_data():
     my_boards = []
     favorites = []
     my_playlists = []
+    following = []
     popular_tags = []
     
     if current_user.is_authenticated:
@@ -76,6 +77,11 @@ def sidebar_data():
         my_playlists = [
             {'id': pl.id, 'name': pl.name} 
             for pl in Playlist.get_by_user_id(current_user.id)
+        ]
+
+        following = [
+            {'username': u.username, 'avatar': u.avatar_path}
+            for u in current_user.get_following()
         ]
         
         popular_tags = [
@@ -100,6 +106,7 @@ def sidebar_data():
         'my_boards': my_boards,
         'favorites': favorites,
         'my_playlists': my_playlists,
+        'following': following,
         'popular_tags': popular_tags,
         'explore': explore
     })

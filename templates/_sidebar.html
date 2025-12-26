@@ -32,6 +32,12 @@
                 <!-- Placeholder for dynamic list -->
                 <div class="px-3 py-2 text-muted small italic">No favorites yet.</div>
             </div>
+
+            <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">People I Follow</div>
+            <div id="sidebar-following">
+                <!-- Placeholder for dynamic list -->
+                <div class="px-3 py-2 text-muted small italic">Not following anyone yet.</div>
+            </div>
             {% endif %}
 
             <div class="bg-light px-3 py-2 small fw-bold text-uppercase border-top border-bottom">Explore community</div>
@@ -71,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const favoritesContainer = document.getElementById('sidebar-favorites');
                 const exploreContainer = document.getElementById('sidebar-explore');
                 const playlistsContainer = document.getElementById('sidebar-playlists');
+                const followingContainer = document.getElementById('sidebar-following');
                 
                 if (myBoardsContainer) {
                     if (data.my_boards.length > 0) {
@@ -95,6 +102,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         `).join('');
                     } else {
                         playlistsContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">No playlists yet.</div>';
+                    }
+                }
+
+                if (followingContainer) {
+                    if (data.following.length > 0) {
+                        followingContainer.innerHTML = data.following.map(u => `
+                            <a href="/auth/user/${u.username}" class="list-group-item list-group-item-action py-2 border-0">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle me-2 small text-info"></i>
+                                    <span>${u.username}</span>
+                                </div>
+                            </a>
+                        `).join('');
+                    } else {
+                        followingContainer.innerHTML = '<div class="px-3 py-2 text-muted small italic">Not following anyone yet.</div>';
                     }
                 }
 
