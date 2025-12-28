@@ -338,6 +338,13 @@ function submitRating(score) {
     .then(data => {
         document.getElementById('avg-rating').textContent = data.average;
         document.getElementById('rating-count').textContent = data.count;
+        
+        // Update the stored user rating so it persists after mouseleave
+        const starRatingDiv = document.getElementById('star-rating');
+        if (starRatingDiv) {
+            starRatingDiv.dataset.userRating = score;
+        }
+        
         highlightStars(score);
         ux.toast('Rating submitted!');
     })
