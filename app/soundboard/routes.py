@@ -191,6 +191,20 @@ def gallery():
     sbs = Soundboard.get_public(order_by=sort)
     return render_template('soundboard/gallery.html', title='Public Gallery', soundboards=sbs, current_sort=sort)
 
+@bp.route('/check-name')
+@login_required
+def check_name():
+    from flask import jsonify
+    name = request.args.get('name')
+    if not name:
+        return jsonify({'error': 'Name required'}), 400
+    
+    # Check if this user already has a board with this name
+    from app.models import Soundboard
+    user_boards = Soundboard.get_by_user_id(current_user.id)
+    exists = any(sb.name.lower() == name.lower() for sb in user_boards)
+    return jsonify({'available': not exists})
+
 @bp.route('/search')
 def search():
     query = request.args.get('q', '')

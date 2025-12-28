@@ -131,6 +131,21 @@ def unread_notifications_count():
     } for n in unread[:5]]
     return jsonify({'count': len(unread), 'notifications': data})
 
+@bp.route('/check-availability')
+def check_availability():
+    from app.models import User
+    username = request.args.get('username')
+    email = request.args.get('email')
+    
+    if username:
+        user = User.get_by_username(username)
+        return jsonify({'available': user is None})
+    if email:
+        user = User.get_by_email(email)
+        return jsonify({'available': user is None})
+    
+    return jsonify({'error': 'No field provided'}), 400
+
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
     from app.auth.forms import PasswordResetRequestForm
