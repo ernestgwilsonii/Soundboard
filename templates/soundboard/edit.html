@@ -114,8 +114,11 @@
                                 </label>
                                 <div id="waveform-container" class="bg-light border rounded mb-2"></div>
                                 <div class="text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" id="modal-play-segment-btn" onclick="waveformEditor.playPause()">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="modal-play-segment-btn" onclick="window.waveformEditor.playPause()">
                                         <i class="fas fa-play me-1"></i> Play Segment
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="window.waveformEditor.reset()">
+                                        <i class="fas fa-undo me-1"></i> Reset Trimming
                                     </button>
                                 </div>
                             </div>
@@ -260,24 +263,31 @@ function openSoundSettings(id, name, volume, loop, start, end, hotkey, icon, fil
     document.getElementById('volume-val').textContent = Math.round(volume * 100);
     document.getElementById('modal-loop').checked = loop;
     document.getElementById('modal-start').value = start;
-    // Format end to 3 decimal places if it exists
     document.getElementById('modal-end').value = end ? parseFloat(end).toFixed(3) : '';
     document.getElementById('modal-hotkey').value = hotkey || '';
     document.getElementById('modal-icon').value = icon || 'fas fa-volume-up';
     document.getElementById('modal-icon-preview').className = icon || 'fas fa-volume-up';
     
-    // Initialize and load waveform
-    initWaveformEditor();
-    if (fileUrl) {
-        waveformEditor.load(fileUrl, start, end);
+    const modalEl = document.getElementById('soundSettingsModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    
+    // Create editor once if needed
+    if (!window.waveformEditor) {
+        window.waveformEditor = new WaveformEditor('waveform-container');
     }
 
-    const modalEl = document.getElementById('soundSettingsModal');
-    const modal = new bootstrap.Modal(modalEl);
-    
-    // Ensure we stop audio when closing
+    // Load audio ONLY after the modal is fully visible and sized
+    const onModalShown = function () {
+        if (fileUrl) {
+            window.waveformEditor.load(fileUrl, start, end);
+        }
+        modalEl.removeEventListener('shown.bs.modal', onModalShown);
+    };
+
+    modalEl.addEventListener('shown.bs.modal', onModalShown);
+
     modalEl.addEventListener('hidden.bs.modal', function () {
-        if (waveformEditor) waveformEditor.stop();
+        if (window.waveformEditor) window.waveformEditor.stop();
     }, { once: true });
 
     modal.show();

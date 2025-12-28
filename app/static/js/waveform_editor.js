@@ -4,99 +4,126 @@
  */
 class WaveformEditor {
     constructor(containerId, options = {}) {
+        this.containerId = containerId;
         this.container = document.getElementById(containerId);
-        if (!this.container) return;
-
+        this.options = options;
+        
         this.startInput = document.getElementById(options.startInputId || 'modal-start');
         this.endInput = document.getElementById(options.endInputId || 'modal-end');
-        this.playBtn = document.getElementById(options.playBtnId || 'modal-play-btn');
         
         this.wavesurfer = null;
         this.wsRegions = null;
         this.activeRegion = null;
-        
-        this.init();
+        this.isRegionPlayback = false;
     }
 
+    /**
+     * Completely (re)initializes the WaveSurfer instance.
+     */
     init() {
-        // Initialize WaveSurfer
+        if (this.wavesurfer) {
+            try { this.wavesurfer.destroy(); } catch(e) {}
+        }
+
+        this.container.innerHTML = '';
+
         this.wavesurfer = WaveSurfer.create({
             container: this.container,
-            waveColor: '#0d6efd',
-            progressColor: '#0a58ca',
+            waveColor: '#ffcccc',
+            progressColor: '#28a745',
             cursorColor: '#ff00ff',
             barWidth: 2,
-            barRadius: 3,
-            responsive: true,
             height: 100,
-            normalize: true
+            normalize: true,
+            fillParent: true,
+            minPxPerSec: 100
         });
 
-        // Initialize Regions plugin
         this.wsRegions = this.wavesurfer.registerPlugin(WaveSurfer.Regions.create());
 
-        // Handle region updates
+        this.wsRegions.enableDragSelection({
+            color: 'rgba(40, 167, 69, 0.3)',
+        });
+
+        this.wsRegions.on('region-created', (region) => {
+            this.wsRegions.getRegions().forEach(r => {
+                if (r !== region) r.remove();
+            });
+            this.activeRegion = region;
+        });
+
         this.wsRegions.on('region-updated', (region) => {
             this.activeRegion = region;
             if (this.startInput) this.startInput.value = region.start.toFixed(3);
             if (this.endInput) this.endInput.value = region.end.toFixed(3);
         });
 
-        // Loop functionality for preview
-        this.wavesurfer.on('finish', () => {
-            if (this.wavesurfer.isPlaying()) {
-                this.wavesurfer.stop();
+        this.wavesurfer.on('timeupdate', (currentTime) => {
+            if (this.isRegionPlayback && this.activeRegion) {
+                if (currentTime >= this.activeRegion.end - 0.05) { 
+                    this.wavesurfer.pause();
+                    this.wavesurfer.setTime(this.activeRegion.start);
+                    this.isRegionPlayback = false;
+                }
             }
         });
     }
 
     async load(url, startTime = 0, endTime = null) {
-        if (!this.wavesurfer) return;
-
-        // Clear existing regions
-        this.wsRegions.clearRegions();
-
-        // Load audio
-        await this.wavesurfer.load(url);
-
+        this.init();
+        
         this.wavesurfer.once('ready', () => {
             const duration = this.wavesurfer.getDuration();
             const start = parseFloat(startTime) || 0;
-            const end = (parseFloat(endTime) && endTime > start) ? parseFloat(endTime) : duration;
-
-            // Create initial trimming region
-            this.activeRegion = this.wsRegions.addRegion({
-                start: start,
-                end: end,
-                color: 'rgba(13, 110, 253, 0.2)',
-                drag: true,
-                resize: true
-            });
-
-            // Update inputs
-            if (this.startInput) this.startInput.value = start.toFixed(3);
-            if (this.endInput) this.endInput.value = end.toFixed(3);
+            const end = (parseFloat(endTime) && endTime > start && endTime <= duration) ? parseFloat(endTime) : duration;
+            
+            this.createRegion(start, end);
+            this.wavesurfer.zoom(100);
         });
+
+        await this.wavesurfer.load(url);
+    }
+
+    createRegion(start, end) {
+        if (!this.wsRegions) return;
+        this.wsRegions.clearRegions();
+        this.activeRegion = this.wsRegions.addRegion({
+            start: start,
+            end: end,
+            color: 'rgba(40, 167, 69, 0.3)',
+            drag: true,
+            resize: true
+        });
+        
+        if (this.startInput) this.startInput.value = start.toFixed(3);
+        if (this.endInput) this.endInput.value = end.toFixed(3);
+    }
+
+    reset() {
+        if (!this.wavesurfer) return;
+        this.createRegion(0, this.wavesurfer.getDuration());
     }
 
     playPause() {
-        if (!this.wavesurfer) return;
+        if (!this.wavesurfer || !this.wavesurfer.decodedData) return;
         
-        if (this.activeRegion) {
-            this.activeRegion.play();
+        if (this.wavesurfer.isPlaying()) {
+            this.wavesurfer.pause();
         } else {
-            this.wavesurfer.playPause();
+            if (this.activeRegion) {
+                this.isRegionPlayback = true;
+                this.wavesurfer.setTime(this.activeRegion.start);
+                this.activeRegion.play();
+            } else {
+                this.wavesurfer.play();
+            }
         }
     }
 
     stop() {
-        if (this.wavesurfer) this.wavesurfer.stop();
-    }
-
-    destroy() {
         if (this.wavesurfer) {
-            this.wavesurfer.destroy();
-            this.wavesurfer = null;
+            try { this.wavesurfer.stop(); } catch(e) {}
+            this.isRegionPlayback = false;
         }
     }
 }

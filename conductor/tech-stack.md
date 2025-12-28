@@ -19,6 +19,7 @@
 - **Styling:** Bootstrap CSS for a responsive, grid-based layout.
 - **Icons:** Font Awesome (CDN or local integration).
 - **Interactivity:** Vanilla JavaScript and **SortableJS** for drag-and-drop features.
+- **Audio Visualization:** **WaveSurfer.js** for interactive waveforms and visual trimming.
 - **UX Components:** **SweetAlert2** for modern, responsive dialogs and toasts.
 - **Data Fetching:** Fetch API for asynchronous sidebar loading and sound reordering.
 
