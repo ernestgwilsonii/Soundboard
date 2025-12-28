@@ -139,7 +139,10 @@ MIGRATIONS = [
             FOREIGN KEY (follower_id) REFERENCES users (id),
             FOREIGN KEY (followed_id) REFERENCES users (id)
         );
-    """)
+    """),
+    (26, 'add_bitrate_to_sounds', Config.SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN bitrate INTEGER;"),
+    (27, 'add_file_size_to_sounds', Config.SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN file_size INTEGER;"),
+    (28, 'add_format_to_sounds', Config.SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN format TEXT;")
 ]
 
 def init_migration_table(conn):

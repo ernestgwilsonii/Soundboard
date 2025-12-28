@@ -531,7 +531,8 @@ class Soundboard:
                       file_path=row['file_path'], icon=row['icon'], display_order=row['display_order'],
                       volume=row['volume'], is_loop=row['is_loop'], 
                       start_time=row['start_time'], end_time=row['end_time'],
-                      hotkey=row['hotkey']) for row in rows]
+                      hotkey=row['hotkey'], bitrate=row['bitrate'],
+                      file_size=row['file_size'], format=row['format']) for row in rows]
 
     def get_creator_username(self):
         db = get_accounts_db()
@@ -595,7 +596,8 @@ class Soundboard:
 
 class Sound:
     def __init__(self, id=None, soundboard_id=None, name=None, file_path=None, icon=None, 
-                 display_order=0, volume=1.0, is_loop=False, start_time=0.0, end_time=None, hotkey=None):
+                 display_order=0, volume=1.0, is_loop=False, start_time=0.0, end_time=None, hotkey=None,
+                 bitrate=None, file_size=None, format=None):
         self.id = id
         self.soundboard_id = soundboard_id
         self.name = name
@@ -607,6 +609,9 @@ class Sound:
         self.start_time = start_time
         self.end_time = end_time
         self.hotkey = hotkey
+        self.bitrate = bitrate
+        self.file_size = file_size
+        self.format = format
 
     def save(self):
         db = get_soundboards_db()
@@ -619,14 +624,14 @@ class Sound:
                 self.display_order = (max_order + 1)
 
             cur.execute(
-                "INSERT INTO sounds (soundboard_id, name, file_path, icon, display_order, volume, is_loop, start_time, end_time, hotkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.volume, int(self.is_loop), self.start_time, self.end_time, self.hotkey)
+                "INSERT INTO sounds (soundboard_id, name, file_path, icon, display_order, volume, is_loop, start_time, end_time, hotkey, bitrate, file_size, format) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.volume, int(self.is_loop), self.start_time, self.end_time, self.hotkey, self.bitrate, self.file_size, self.format)
             )
             self.id = cur.lastrowid
         else:
             cur.execute(
-                "UPDATE sounds SET soundboard_id=?, name=?, file_path=?, icon=?, display_order=?, volume=?, is_loop=?, start_time=?, end_time=?, hotkey=? WHERE id=?",
-                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.volume, int(self.is_loop), self.start_time, self.end_time, self.hotkey, self.id)
+                "UPDATE sounds SET soundboard_id=?, name=?, file_path=?, icon=?, display_order=?, volume=?, is_loop=?, start_time=?, end_time=?, hotkey=?, bitrate=?, file_size=?, format=? WHERE id=?",
+                (self.soundboard_id, self.name, self.file_path, self.icon, self.display_order, self.volume, int(self.is_loop), self.start_time, self.end_time, self.hotkey, self.bitrate, self.file_size, self.format, self.id)
             )
         db.commit()
 
@@ -660,7 +665,8 @@ class Sound:
                          file_path=row['file_path'], icon=row['icon'], display_order=row['display_order'],
                          volume=row['volume'], is_loop=row['is_loop'], 
                          start_time=row['start_time'], end_time=row['end_time'],
-                         hotkey=row['hotkey'])
+                         hotkey=row['hotkey'], bitrate=row['bitrate'], 
+                         file_size=row['file_size'], format=row['format'])
         return None
 
     def __repr__(self):
@@ -811,7 +817,9 @@ class Playlist:
         return [Sound(id=row['id'], soundboard_id=row['soundboard_id'], name=row['name'], 
                       file_path=row['file_path'], icon=row['icon'], display_order=row['display_order'],
                       volume=row['volume'], is_loop=row['is_loop'], 
-                      start_time=row['start_time'], end_time=row['end_time']) for row in rows]
+                      start_time=row['start_time'], end_time=row['end_time'],
+                      bitrate=row['bitrate'], file_size=row['file_size'], 
+                      format=row['format']) for row in rows]
 
     def add_sound(self, sound_id):
         db = get_soundboards_db()
