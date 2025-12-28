@@ -41,17 +41,46 @@ def check_maintenance():
 @bp.route('/')
 @bp.route('/index')
 def index():
+    tab = request.args.get('tab', 'explore')
     featured = Soundboard.get_featured()
-    recent_all = Soundboard.get_recent_public(limit=7)
-    activities = Activity.get_recent(limit=10)
     
-    # Filter out featured from recent list to avoid duplication
-    if featured:
-        soundboards = [sb for sb in recent_all if sb.id != featured.id][:6]
+    if tab == 'following' and current_user.is_authenticated:
+        # Get boards and activity only from followed users
+        following_ids = [u.id for u in current_user.get_following()]
+        if following_ids:
+            # Soundboards from followed users
+            from app.db import get_soundboards_db
+            db = get_soundboards_db()
+            placeholders = ','.join(['?'] * len(following_ids))
+            cur = db.cursor()
+            cur.execute(f"SELECT * FROM soundboards WHERE user_id IN ({placeholders}) AND is_public = 1 ORDER BY created_at DESC", following_ids)
+            rows = cur.fetchall()
+            soundboards = [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
+                                     icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
+                                     theme_preset=row['theme_preset']) for row in rows]
+            
+            # Activities from followed users
+            cur.execute(f"SELECT * FROM activities WHERE user_id IN ({placeholders}) ORDER BY created_at DESC LIMIT 10", following_ids)
+            act_rows = cur.fetchall()
+            activities = [Activity(id=row['id'], user_id=row['user_id'], action_type=row['action_type'],
+                                  description=row['description'], created_at=row['created_at']) for row in act_rows]
+        else:
+            soundboards = []
+            activities = []
     else:
-        soundboards = recent_all[:6]
+        # Standard Explore view
+        recent_all = Soundboard.get_recent_public(limit=7)
+        activities = Activity.get_recent(limit=10)
         
-    return render_template('index.html', title='Home', featured=featured, soundboards=soundboards, activities=activities)
+        # Filter out featured from recent list to avoid duplication
+        if featured:
+            soundboards = [sb for sb in recent_all if sb.id != featured.id][:6]
+        else:
+            soundboards = recent_all[:6]
+        
+    return render_template('index.html', title='Home', featured=featured, 
+                           soundboards=soundboards, activities=activities, 
+                           current_tab=tab)
 
 @bp.route('/activities')
 def get_activities():
