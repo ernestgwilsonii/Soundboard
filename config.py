@@ -9,8 +9,8 @@ class Config:
     DEBUG = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 't']
     
     # Database paths
-    ACCOUNTS_DB = os.path.join(basedir, 'accounts.sqlite3')
-    SOUNDBOARDS_DB = os.path.join(basedir, 'soundboards.sqlite3')
+    ACCOUNTS_DB = os.environ.get('ACCOUNTS_DB') or os.path.join(basedir, 'accounts.sqlite3')
+    SOUNDBOARDS_DB = os.environ.get('SOUNDBOARDS_DB') or os.path.join(basedir, 'soundboards.sqlite3')
     
     # Email settings
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
