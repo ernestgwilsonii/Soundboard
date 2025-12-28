@@ -3,7 +3,7 @@
 ## Phase 1: Audio Intelligence (Normalization)
 - [x] Task: Install `pydub` and update `requirements.txt`. 35d223f
 - [x] Task: Implement `AudioProcessor.normalize(file_path)` using `pydub`. 4485521
-- [ ] Task: Create a test suite to verify volume leveling for different file types.
+- [x] Task: Create a test suite to verify volume leveling for different file types. abdf55d
 - [ ] Task: Conductor - User Manual Verification 'Audio Normalization'
 
 ## Phase 2: Trending Discovery Engine
