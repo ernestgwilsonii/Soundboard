@@ -1,3 +1,4 @@
+from pydub import AudioSegment
 import mutagen
 import os
 import logging
@@ -29,10 +30,24 @@ class AudioProcessor:
             return None
 
     @staticmethod
-    def normalize(file_path):
+    def normalize(file_path, target_dbfs=-20.0):
         """
-        Placeholder for audio normalization logic.
-        Future implementation could use pydub/ffmpeg.
+        Normalizes the audio volume to a target dBFS level.
+        Overwrites the original file.
         """
-        logger.info(f"Normalization requested for {file_path} (Stub - Not implemented)")
-        return True
+        try:
+            audio = AudioSegment.from_file(file_path)
+            change_in_dbfs = target_dbfs - audio.dBFS
+            normalized_audio = audio.apply_gain(change_in_dbfs)
+            
+            # Determine format from extension
+            ext = os.path.splitext(file_path)[1][1:].lower()
+            if ext == 'sbp': # Should not happen here but safety first
+                ext = 'zip'
+            
+            normalized_audio.export(file_path, format=ext)
+            logger.info(f"Normalized {file_path} to {target_dbfs} dBFS")
+            return True
+        except Exception as e:
+            logger.error(f"Error normalizing audio for {file_path}: {e}")
+            return False
