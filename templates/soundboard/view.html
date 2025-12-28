@@ -90,7 +90,7 @@
                     <small class="text-muted">(<span id="rating-count">{{ stats.count }}</span> ratings)</small>
                 </div>
                 {% if current_user.is_authenticated %}
-                <div id="star-rating" class="fs-4">
+                <div id="star-rating" class="fs-4" data-user-rating="{{ user_rating }}">
                     {% for i in range(1, 6) %}
                     <i class="far fa-star rating-star" data-score="{{ i }}" style="cursor: pointer;" onclick="submitRating({{ i }})"></i>
                     {% endfor %}
@@ -366,6 +366,21 @@ document.querySelectorAll('.rating-star').forEach(star => {
         highlightStars(parseInt(star.dataset.score));
     });
 });
+
+// Reset to user's rating on mouse leave or page load
+function initStars() {
+    const userRating = parseInt(document.getElementById('star-rating')?.dataset.userRating || 0);
+    if (userRating > 0) {
+        highlightStars(userRating);
+    }
+}
+
+document.getElementById('star-rating')?.addEventListener('mouseleave', () => {
+    initStars();
+});
+
+// Initial call
+initStars();
 
 // Keyboard Hotkey Listener
 document.addEventListener('keydown', function(event) {

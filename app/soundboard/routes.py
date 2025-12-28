@@ -28,13 +28,15 @@ def view(id):
             return redirect(url_for('main.index'))
     
     is_favorite = False
+    user_rating = 0
     if current_user.is_authenticated:
         favorites = current_user.get_favorites()
         if s.id in favorites:
             is_favorite = True
+        user_rating = s.get_user_rating(current_user.id)
             
     sounds = s.get_sounds()
-    return render_template('soundboard/view.html', title=s.name, soundboard=s, sounds=sounds, is_favorite=is_favorite)
+    return render_template('soundboard/view.html', title=s.name, soundboard=s, sounds=sounds, is_favorite=is_favorite, user_rating=user_rating)
 
 @bp.route('/<int:id>/favorite', methods=['POST'])
 @login_required

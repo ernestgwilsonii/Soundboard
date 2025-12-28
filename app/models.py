@@ -551,6 +551,13 @@ class Soundboard:
             'count': row['count']
         }
 
+    def get_user_rating(self, user_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT score FROM ratings WHERE soundboard_id = ? AND user_id = ?", (self.id, user_id))
+        row = cur.fetchone()
+        return row['score'] if row else 0
+
     def get_comments(self):
         db = get_soundboards_db()
         cur = db.cursor()

@@ -190,11 +190,13 @@
             .then(response => response.json())
             .then(data => {
                 const badge = document.querySelector('#notifDropdown .badge');
+                const list = document.querySelector('#notifDropdown + .dropdown-menu');
+                
+                // Update badge
                 if (data.count > 0) {
                     if (badge) {
                         badge.textContent = data.count < 10 ? data.count : '9+';
                     } else {
-                        // Create badge if it doesn't exist
                         const newBadge = document.createElement('span');
                         newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
                         newBadge.style.fontSize = '0.6rem';
@@ -204,11 +206,32 @@
                 } else if (badge) {
                     badge.remove();
                 }
+
+                // Update dropdown list
+                if (list) {
+                    const header = list.querySelector('.dropdown-header').parentElement.outerHTML;
+                    const divider = '<li><hr class="dropdown-divider"></li>';
+                    let itemsHtml = '';
+                    
+                    if (data.notifications && data.notifications.length > 0) {
+                        itemsHtml = data.notifications.map(n => `
+                            <li>
+                                <a class="dropdown-item py-2 border-bottom" href="${n.link}">
+                                    <div class="small text-wrap">${n.message}</div>
+                                    <div class="tiny text-muted">${n.created_at}</div>
+                                </a>
+                            </li>
+                        `).join('');
+                    } else {
+                        itemsHtml = '<li class="text-center py-3 text-muted small">No new notifications.</li>';
+                    }
+                    list.innerHTML = header + divider + itemsHtml;
+                }
             });
     }
 
-    // Poll for notifications every 60 seconds
-    setInterval(refreshNotifications, 60000);
+    // Poll for notifications every 15 seconds
+    setInterval(refreshNotifications, 15000);
 
     function markAllRead() {
         fetch('{{ url_for("auth.mark_notifications_read") }}', {
