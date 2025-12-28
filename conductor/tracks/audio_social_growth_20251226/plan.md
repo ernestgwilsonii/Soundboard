@@ -23,9 +23,9 @@
 - [x] Task: Update `AudioProcessor` to extract advanced metadata. cee4a98
 - [x] Task: Enhance the homepage "Community Activity" feed with polling and new event types. f20c591
 - [x] Task: Create a "Following" tab on the Home page. 5f89c4d
-- [~] Task: Conductor - User Manual Verification 'Advanced Feed & Stats'
+- [x] Task: Conductor - User Manual Verification 'Advanced Feed & Stats' 9db0679
 
-## Phase 4: Site-Wide UX Polish & Auth
+## Phase 4: Site-Wide UX Polish & Auth [checkpoint: 9db0679]
 - [x] Task: Update Login logic to support both Username and Email as identity. 800e7b9
-- [ ] Task: Replace all remaining native browser `confirm()` and `alert()` calls if any exist.
-- [ ] Task: Conductor - User Manual Verification 'UX & Auth Polish'
+- [x] Task: Replace all remaining native browser `confirm()` and `alert()` calls if any exist. f426c7a
+- [x] Task: Conductor - User Manual Verification 'UX & Auth Polish' 9db0679
