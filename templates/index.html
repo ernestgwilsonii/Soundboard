@@ -130,6 +130,7 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
 {% block scripts %}
 <script>
@@ -162,8 +163,7 @@ function refreshActivity() {
         });
 }
 
-// Poll every 60 seconds
-setInterval(refreshActivity, 60000);
+// Poll every 15 seconds for faster feedback
+setInterval(refreshActivity, 15000);
 </script>
-{% endblock %}
 {% endblock %}
