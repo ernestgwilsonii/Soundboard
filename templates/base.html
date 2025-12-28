@@ -209,7 +209,14 @@
 
                 // Update dropdown list
                 if (list) {
-                    const header = list.querySelector('.dropdown-header').parentElement.outerHTML;
+                    const headerHtml = `
+                        <li class="dropdown-header d-flex justify-content-between align-items-center">
+                            Notifications
+                            ${data.count > 0 ? 
+                                `<button class="btn btn-sm btn-link p-0 text-decoration-none" onclick="markAllRead()">Mark all as read</button>` : 
+                                ''
+                            }
+                        </li>`;
                     const divider = '<li><hr class="dropdown-divider"></li>';
                     let itemsHtml = '';
                     
@@ -225,7 +232,7 @@
                     } else {
                         itemsHtml = '<li class="text-center py-3 text-muted small">No new notifications.</li>';
                     }
-                    list.innerHTML = header + divider + itemsHtml;
+                    list.innerHTML = headerHtml + divider + itemsHtml;
                 }
             });
     }
