@@ -11,7 +11,7 @@
 - [x] Task: Add pagination (10/50), sorting, and search to the "Browse Members" page. 684dbfe
 - [x] Task: Conductor - User Manual Verification 'Social Following' 053c8d4
 
-## Phase 2: Visual Audio Tools (WaveSurfer.js)
+## Phase 2: Visual Audio Tools (WaveSurfer.js) [checkpoint: 3bf2b71]
 - [x] Task: Integrate `WaveSurfer.js` CDN in `base.html`. 04ef265
 - [x] Task: Create `app/static/js/waveform_editor.js`. bc6e3ab
 - [x] Task: Update the "Sound Settings" modal to display the interactive waveform. 90ad2fd
