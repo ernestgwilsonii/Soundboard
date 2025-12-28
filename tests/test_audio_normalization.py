@@ -38,3 +38,23 @@ def test_normalize_error_exporting():
     with patch('app.utils.audio.AudioSegment.from_file', return_value=mock_audio):
         result = AudioProcessor.normalize('dummy/path/bad_export.mp3')
         assert result is False
+
+@pytest.mark.parametrize("extension, expected_format", [
+    ("mp3", "mp3"),
+    ("wav", "wav"),
+    ("ogg", "ogg"),
+    ("OGG", "ogg")
+])
+def test_normalize_different_formats(extension, expected_format):
+    """Test that normalization correctly identifies and uses the file format from extension."""
+    mock_audio = MagicMock()
+    mock_audio.dBFS = -15.0
+    mock_normalized = MagicMock()
+    mock_audio.apply_gain.return_value = mock_normalized
+    
+    file_path = f'test_audio.{extension}'
+    
+    with patch('app.utils.audio.AudioSegment.from_file', return_value=mock_audio):
+        result = AudioProcessor.normalize(file_path)
+        assert result is True
+        mock_normalized.export.assert_called_once_with(file_path, format=expected_format)
