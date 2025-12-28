@@ -8,7 +8,7 @@
 
 ## Phase 2: Core User Flows (E2E)
 - [x] Task: Implement `tests/e2e/test_auth_flow.py` (Signup, Email/User Login, Logout). e0bb0f1
-- [~] Task: Implement `tests/e2e/test_board_management.py` (Create, Edit, Delete).
+- [x] Task: Implement `tests/e2e/test_board_management.py` (Create, Edit, Delete). 0bb1127
 - [ ] Task: Implement `tests/e2e/test_social_loop.py` (Follow, Rate, Real-time feed).
 
 ## Phase 3: Visual & Advanced Tools (E2E)
