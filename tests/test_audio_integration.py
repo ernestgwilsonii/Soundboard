@@ -36,8 +36,11 @@ def client(monkeypatch):
         with sqlite3.connect(soundboards_db) as conn:
             with open('app/schema_soundboards.sql', 'r') as f:
                 conn.executescript(f.read())
-            # Add theme_preset column for model compatibility
+            # Add new columns for model compatibility
             conn.execute("ALTER TABLE soundboards ADD COLUMN theme_preset TEXT DEFAULT 'default';")
+            conn.execute("ALTER TABLE sounds ADD COLUMN bitrate INTEGER;")
+            conn.execute("ALTER TABLE sounds ADD COLUMN file_size INTEGER;")
+            conn.execute("ALTER TABLE sounds ADD COLUMN format TEXT;")
                 
     with app.test_client() as client:
         yield client
@@ -67,7 +70,13 @@ def test_upload_sound_metadata_extraction(client):
     # Mock AudioProcessor
     with patch('app.soundboard.routes.AudioProcessor') as MockProcessor:
         # Configure mock to return specific metadata
-        MockProcessor.get_metadata.return_value = {'duration': 123.45, 'sample_rate': 44100}
+        MockProcessor.get_metadata.return_value = {
+            'duration': 123.45, 
+            'sample_rate': 44100,
+            'bitrate': 128,
+            'file_size': 5000,
+            'format': 'MP3'
+        }
         MockProcessor.normalize.return_value = True
         
         # Create dummy audio file
@@ -84,6 +93,9 @@ def test_upload_sound_metadata_extraction(client):
             assert s is not None, "Sound was not saved to DB"
             assert s.name == 'Test Sound'
             assert s.end_time == 123.45, f"Expected end_time 123.45, got {s.end_time}"
+            assert s.bitrate == 128
+            assert s.file_size == 5000
+            assert s.format == 'MP3'
             
         assert response.status_code == 200
         if b'uploaded!' not in response.data:

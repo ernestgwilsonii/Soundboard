@@ -345,6 +345,9 @@ def upload_sound(id):
         metadata = AudioProcessor.get_metadata(full_path)
         if metadata:
             sound.end_time = metadata.get('duration')
+            sound.bitrate = metadata.get('bitrate')
+            sound.file_size = metadata.get('file_size')
+            sound.format = metadata.get('format')
         
         AudioProcessor.normalize(full_path)
         

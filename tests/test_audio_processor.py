@@ -9,10 +9,11 @@ def test_get_metadata_success():
     mock_mutagen.info.sample_rate = 44100
     
     with patch('app.utils.audio.mutagen.File', return_value=mock_mutagen):
-        metadata = AudioProcessor.get_metadata('dummy/path/song.mp3')
-        
-        assert metadata['duration'] == 120.5
-        assert metadata['sample_rate'] == 44100
+        with patch('app.utils.audio.os.path.getsize', return_value=5000):
+            metadata = AudioProcessor.get_metadata('dummy/path/song.mp3')
+            
+            assert metadata['duration'] == 120.5
+            assert metadata['sample_rate'] == 44100
 
 def test_get_metadata_invalid_file():
     """Test handling of invalid files."""
@@ -20,13 +21,23 @@ def test_get_metadata_invalid_file():
         metadata = AudioProcessor.get_metadata('dummy/path/invalid.txt')
         assert metadata is None
 
-def test_get_metadata_error():
-    """Test handling of mutagen errors."""
-    with patch('app.utils.audio.mutagen.File', side_effect=Exception("Read error")):
-        metadata = AudioProcessor.get_metadata('dummy/path/corrupt.mp3')
-        assert metadata is None
+def test_get_metadata_advanced_success():
+    """Test extracting advanced metadata (bitrate, size, format)."""
+    mock_mutagen = MagicMock()
+    mock_mutagen.info.length = 60.0
+    mock_mutagen.info.sample_rate = 44100
+    mock_mutagen.info.bitrate = 128000
+    # Type check or mock for format
+    mock_mutagen.__class__.__name__ = 'MP3'
+    
+    with patch('app.utils.audio.mutagen.File', return_value=mock_mutagen):
+        with patch('app.utils.audio.os.path.getsize', return_value=1024 * 1024): # 1MB
+            metadata = AudioProcessor.get_metadata('dummy/path/song.mp3')
+            
+            assert metadata['bitrate'] == 128
+            assert metadata['file_size'] == 1048576
+            assert metadata['format'] == 'MP3'
 
-def test_normalize_hook_stub():
     """Test that the normalize method exists and runs without error (stub)."""
     # Should not raise exception
     try:

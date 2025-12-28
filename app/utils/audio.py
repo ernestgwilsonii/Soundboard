@@ -19,7 +19,10 @@ class AudioProcessor:
             
             return {
                 'duration': round(audio.info.length, 3),
-                'sample_rate': getattr(audio.info, 'sample_rate', 0)
+                'sample_rate': getattr(audio.info, 'sample_rate', 0),
+                'bitrate': getattr(audio.info, 'bitrate', 0) // 1000 if hasattr(audio.info, 'bitrate') else 0,
+                'file_size': os.path.getsize(file_path),
+                'format': type(audio).__name__
             }
         except Exception as e:
             logger.error(f"Error processing audio metadata for {file_path}: {e}")
