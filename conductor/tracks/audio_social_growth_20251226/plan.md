@@ -22,8 +22,8 @@
 - [x] Task: Update `migrate.py` to add `bitrate`, `file_size`, and `format` to `sounds` table. cc285a2
 - [x] Task: Update `AudioProcessor` to extract advanced metadata. cee4a98
 - [x] Task: Enhance the homepage "Community Activity" feed with polling and new event types. f20c591
-- [ ] Task: Create a "Following" tab on the Home page.
-- [ ] Task: Conductor - User Manual Verification 'Advanced Feed & Stats'
+- [x] Task: Create a "Following" tab on the Home page. 5f89c4d
+- [~] Task: Conductor - User Manual Verification 'Advanced Feed & Stats'
 
 ## Phase 4: Site-Wide UX Polish & Auth
 - [x] Task: Update Login logic to support both Username and Email as identity. 800e7b9
