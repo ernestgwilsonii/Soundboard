@@ -20,7 +20,7 @@
 
 ## Phase 3: Advanced Activity & Metadata
 - [x] Task: Update `migrate.py` to add `bitrate`, `file_size`, and `format` to `sounds` table. cc285a2
-- [ ] Task: Update `AudioProcessor` to extract advanced metadata.
+- [x] Task: Update `AudioProcessor` to extract advanced metadata. cee4a98
 - [ ] Task: Enhance the homepage "Community Activity" feed with polling and new event types.
 - [ ] Task: Create a "Following" tab on the Home page.
 - [ ] Task: Conductor - User Manual Verification 'Advanced Feed & Stats'
