@@ -36,6 +36,8 @@ def client(monkeypatch):
         with sqlite3.connect(soundboards_db) as conn:
             with open('app/schema_soundboards.sql', 'r') as f:
                 conn.executescript(f.read())
+            # Add theme_preset column for model compatibility
+            conn.execute("ALTER TABLE soundboards ADD COLUMN theme_preset TEXT DEFAULT 'default';")
                 
     with app.test_client() as client:
         yield client

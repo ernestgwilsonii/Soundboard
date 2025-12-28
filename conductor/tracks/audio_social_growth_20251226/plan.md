@@ -13,10 +13,10 @@
 
 ## Phase 2: Visual Audio Tools (WaveSurfer.js)
 - [x] Task: Integrate `WaveSurfer.js` CDN in `base.html`. 04ef265
-- [~] Task: Create `app/static/js/waveform_editor.js`.
-- [ ] Task: Update the "Sound Settings" modal to display the interactive waveform.
-- [ ] Task: Sync waveform selection with the existing start/end time form fields.
-- [ ] Task: Conductor - User Manual Verification 'Visual Trimming'
+- [x] Task: Create `app/static/js/waveform_editor.js`. bc6e3ab
+- [x] Task: Update the "Sound Settings" modal to display the interactive waveform. 90ad2fd
+- [x] Task: Sync waveform selection with the existing start/end time form fields. 90ad2fd
+- [x] Task: Conductor - User Manual Verification 'Visual Trimming' 90ad2fd
 
 ## Phase 3: Advanced Activity & Metadata
 - [ ] Task: Update `migrate.py` to add `bitrate`, `file_size`, and `format` to `sounds` table.
@@ -26,6 +26,6 @@
 - [ ] Task: Conductor - User Manual Verification 'Advanced Feed & Stats'
 
 ## Phase 4: Site-Wide UX Polish & Auth
-- [ ] Task: Update Login logic to support both Username and Email as identity.
+- [x] Task: Update Login logic to support both Username and Email as identity. 800e7b9
 - [ ] Task: Replace all remaining native browser `confirm()` and `alert()` calls if any exist.
 - [ ] Task: Conductor - User Manual Verification 'UX & Auth Polish'
