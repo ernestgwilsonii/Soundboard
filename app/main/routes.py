@@ -53,6 +53,22 @@ def index():
         
     return render_template('index.html', title='Home', featured=featured, soundboards=soundboards, activities=activities)
 
+@bp.route('/activities')
+def get_activities():
+    limit = request.args.get('limit', 10, type=int)
+    activities = Activity.get_recent(limit=limit)
+    data = []
+    for a in activities:
+        user = a.get_user()
+        data.append({
+            'username': user.username if user else 'New Member',
+            'avatar': user.avatar_path if user else None,
+            'description': a.description,
+            'created_at': a.created_at,
+            'profile_url': url_for('auth.public_profile', username=user.username) if user else '#'
+        })
+    return jsonify(data)
+
 @bp.route('/sidebar-data')
 def sidebar_data():
     my_boards = []

@@ -37,7 +37,11 @@ def login():
         return redirect(url_for('main.index'))
     form = LoginForm()
     if form.validate_on_submit():
+        # Support login by username or email
         user = User.get_by_username(form.username.data)
+        if user is None:
+            user = User.get_by_email(form.username.data)
+            
         if user is None:
             flash('Invalid username or password')
             return redirect(url_for('auth.login'))
@@ -288,6 +292,10 @@ def follow(username):
         flash('You cannot follow yourself!')
         return redirect(url_for('auth.public_profile', username=username))
     current_user.follow(user.id)
+    
+    from app.models import Activity
+    Activity.record(current_user.id, 'follow', f'Started following {username}')
+    
     flash(f'You are now following {username}!')
     return redirect(url_for('auth.public_profile', username=username))
 

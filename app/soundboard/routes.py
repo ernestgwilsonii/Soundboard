@@ -81,6 +81,9 @@ def rate_board(id):
     rating = Rating(user_id=current_user.id, soundboard_id=s.id, score=score)
     rating.save()
     
+    from app.models import Activity
+    Activity.record(current_user.id, 'rate_board', f'Rated "{s.name}" {score} stars')
+    
     # Notify owner (if not same person)
     if s.user_id != current_user.id:
         from app.models import Notification
