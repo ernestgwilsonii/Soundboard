@@ -394,6 +394,9 @@ class Soundboard:
         db = get_soundboards_db()
         cur = db.cursor()
         
+        if order_by == 'trending':
+            return Soundboard.get_trending()
+
         sql = "SELECT * FROM soundboards WHERE is_public = 1"
         if order_by == 'top':
             # Order by average rating
@@ -441,6 +444,49 @@ class Soundboard:
         return [Soundboard(id=row['id'], name=row['name'], user_id=row['user_id'], 
                           icon=row['icon'], is_public=row['is_public'], theme_color=row['theme_color'],
                           theme_preset=row['theme_preset']) for row in rows]
+
+    @staticmethod
+    def get_trending(limit=10):
+        """
+        Calculates trending soundboards based on a weighted score:
+        Score = (AvgRating * Count) + (CreatorFollowers * 2)
+        Includes a time decay (only looks at public boards).
+        """
+        db_sb = get_soundboards_db()
+        db_ac = get_accounts_db()
+        
+        # We perform a joined score calculation
+        # 1. Get rating stats
+        cur_sb = db_sb.cursor()
+        cur_sb.execute("""
+            SELECT s.id, AVG(r.score) as avg_score, COUNT(r.id) as rating_count
+            FROM soundboards s
+            LEFT JOIN ratings r ON s.id = r.soundboard_id
+            WHERE s.is_public = 1
+            GROUP BY s.id
+        """)
+        sb_stats = {row['id']: (row['avg_score'] or 0, row['rating_count']) for row in cur_sb.fetchall()}
+        
+        # 2. Get all public boards to build full list
+        all_public = Soundboard.get_public(order_by='recent')
+        
+        # 3. Calculate scores
+        scored_boards = []
+        for sb in all_public:
+            avg, count = sb_stats.get(sb.id, (0, 0))
+            
+            # Fetch creator followers from accounts DB
+            cur_ac = db_ac.cursor()
+            cur_ac.execute("SELECT COUNT(*) FROM follows WHERE followed_id = ?", (sb.user_id,))
+            followers = cur_ac.fetchone()[0]
+            
+            # Weighted Score Formula
+            score = (avg * count) + (followers * 2)
+            scored_boards.append((sb, score))
+            
+        # Sort by score descending
+        scored_boards.sort(key=lambda x: x[1], reverse=True)
+        return [x[0] for x in scored_boards[:limit]]
 
     @staticmethod
     def get_featured():

@@ -13,9 +13,10 @@
         <div class="dropdown">
             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-sort-amount-down me-1"></i> 
-                Sort by: {% if current_sort == 'top' %}Highest Rated{% elif current_sort == 'name' %}Alphabetical{% else %}Most Recent{% endif %}
+                Sort by: {% if current_sort == 'top' %}Highest Rated{% elif current_sort == 'trending' %}Trending{% elif current_sort == 'name' %}Alphabetical{% else %}Most Recent{% endif %}
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                <li><a class="dropdown-item {% if current_sort == 'trending' %}active{% endif %}" href="{{ url_for('soundboard.gallery', sort='trending') }}">Trending</a></li>
                 <li><a class="dropdown-item {% if current_sort == 'recent' %}active{% endif %}" href="{{ url_for('soundboard.gallery', sort='recent') }}">Most Recent</a></li>
                 <li><a class="dropdown-item {% if current_sort == 'top' %}active{% endif %}" href="{{ url_for('soundboard.gallery', sort='top') }}">Highest Rated</a></li>
                 <li><a class="dropdown-item {% if current_sort == 'name' %}active{% endif %}" href="{{ url_for('soundboard.gallery', sort='name') }}">Alphabetical</a></li>
