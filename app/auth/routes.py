@@ -119,6 +119,16 @@ def mark_notifications_read():
     Notification.mark_all_read(current_user.id)
     return jsonify({'status': 'success'})
 
+@bp.route('/notifications/unread_count')
+@login_required
+def unread_notifications_count():
+    from app.db import get_accounts_db
+    db = get_accounts_db()
+    cur = db.cursor()
+    cur.execute("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0", (current_user.id,))
+    count = cur.fetchone()[0]
+    return jsonify({'count': count})
+
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
     from app.auth.forms import PasswordResetRequestForm

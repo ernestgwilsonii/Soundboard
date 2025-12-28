@@ -18,6 +18,39 @@
             object-fit: cover;
             border: 1px solid rgba(255,255,255,0.2);
         }
+        /* WaveSurfer Shadow DOM Styling */
+        #waveform-container {
+            background-color: #fff5f5 !important; /* Very Light Red Discard Zone */
+            border: 1px solid #ffccd5;
+            border-radius: 4px;
+            overflow: visible !important;
+            min-height: 100px;
+        }
+
+        #waveform-container ::part(region-handle) {
+            width: 16px !important;
+            background-color: #ffc107 !important; /* Bright Yellow/Orange */
+            border: 2px solid #000 !important;
+            border-radius: 4px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: flex !important; /* Ensure it is not display: none */
+            cursor: ew-resize !important;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5) !important;
+            z-index: 1000 !important;
+            height: 100% !important;
+            top: 0 !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The 'Keep' zone (the selection) */
+        #waveform-container ::part(region) {
+            background-color: rgba(40, 167, 69, 0.3) !important; /* Green Keep Zone */
+            border: 2px solid #28a745 !important;
+            box-sizing: border-box !important;
+            visibility: visible !important;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +183,33 @@
     <script src="{{ url_for('static', filename='js/ux_utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/waveform_editor.js') }}"></script>
     <script>
+    function refreshNotifications() {
+        if (!document.getElementById('notifDropdown')) return;
+        
+        fetch('{{ url_for("auth.unread_notifications_count") }}')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.querySelector('#notifDropdown .badge');
+                if (data.count > 0) {
+                    if (badge) {
+                        badge.textContent = data.count < 10 ? data.count : '9+';
+                    } else {
+                        // Create badge if it doesn't exist
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                        newBadge.style.fontSize = '0.6rem';
+                        newBadge.textContent = data.count < 10 ? data.count : '9+';
+                        document.getElementById('notifDropdown').appendChild(newBadge);
+                    }
+                } else if (badge) {
+                    badge.remove();
+                }
+            });
+    }
+
+    // Poll for notifications every 60 seconds
+    setInterval(refreshNotifications, 60000);
+
     function markAllRead() {
         fetch('{{ url_for("auth.mark_notifications_read") }}', {
             method: 'POST',
