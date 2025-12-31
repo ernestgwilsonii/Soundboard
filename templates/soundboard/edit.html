@@ -77,13 +77,13 @@
                     <span class="sound-name-text">{{ sound.name }}</span>
                 </div>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                    <button type="button" class="btn btn-outline-primary btn-sm" title="Settings" aria-label="Settings"
                             onclick="openSoundSettings({{ sound.id }}, '{{ sound.name }}', {{ sound.volume }}, {{ 'true' if sound.is_loop else 'false' }}, {{ sound.start_time }}, {{ sound.end_time or 'null' }}, '{{ sound.hotkey or '' }}', '{{ sound.icon or 'fas fa-volume-up' }}', '{{ url_for('static', filename='uploads/' + sound.file_path) }}')">
                         <i class="fas fa-cog"></i>
                     </button>
                     <form id="delete-sound-{{ sound.id }}" action="{{ url_for('soundboard.delete_sound', id=sound.id) }}" method="post" class="d-inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDeleteSound({{ sound.id }})">
+                        <button type="button" class="btn btn-outline-danger btn-sm" title="Delete" aria-label="Delete" onclick="confirmDeleteSound({{ sound.id }})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>

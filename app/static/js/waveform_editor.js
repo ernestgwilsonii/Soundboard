@@ -72,7 +72,7 @@ class WaveformEditor {
     async load(url, startTime = 0, endTime = null) {
         this.init();
         
-        this.wavesurfer.once('ready', () => {
+        this.wavesurfer.on('ready', () => {
             const duration = this.wavesurfer.getDuration();
             const start = parseFloat(startTime) || 0;
             const end = (parseFloat(endTime) && endTime > start && endTime <= duration) ? parseFloat(endTime) : duration;
