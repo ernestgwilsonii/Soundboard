@@ -11,7 +11,7 @@
 - [x] Task: Implement `tests/e2e/test_board_management.py` (Create, Edit, Delete). 0bb1127
 - [x] Task: Implement `tests/e2e/test_social_loop.py` (Follow, Rate, Real-time feed). 92e2039
 
-## Phase 3: Visual & Advanced Tools (E2E)
-- [ ] Task: Implement `tests/e2e/test_waveform_editor.py` (Verify handles and trimming).
-- [ ] Task: Implement `tests/e2e/test_icon_picker.js` (Verify dynamic library load).
-- [ ] Task: Verify all tests pass in a single CI-style run.
+## Phase 3: Visual & Advanced Tools (E2E) [checkpoint: 83a048b]
+- [x] Task: Implement `tests/e2e/test_waveform_editor.py` (Verify handles and trimming). 34e4087
+- [x] Task: Implement `tests/e2e/test_icon_picker.py` (Verify dynamic library load). 099c5b6
+- [x] Task: Verify all tests pass in a single CI-style run.
