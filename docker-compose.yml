@@ -1,0 +1,41 @@
+services:
+  # The Main Application (Production-like)
+  app:
+    build:
+      context: .
+      target: production
+    image: soundboard-app:latest
+    ports:
+      - "5000:8000"
+    volumes:
+      # Persist SQLite Databases
+      - db_data:/app
+      # Persist User Uploads (Audio/Images)
+      - upload_data:/app/app/static/uploads
+      # Uncomment the next line for "Hot Reloading" / Live Code Editing:
+      # - .:/app
+    environment:
+      - ACCOUNTS_DB=/app/accounts.sqlite3
+      - SOUNDBOARDS_DB=/app/soundboards.sqlite3
+      - SECRET_KEY=dev-secret-key-change-in-prod
+    restart: unless-stopped
+
+  # The Test Runner (Troubleshooting & Verification)
+  # Run with: docker compose run --rm test
+  test:
+    build:
+      context: .
+      target: test
+    image: soundboard-test:latest
+    volumes:
+      # Mount code so tests run against current local changes
+      - .:/app
+      # Use a temporary DB location or memory for tests (managed by conftest)
+    environment:
+      - TESTING=true
+    # Keep container alive if you want to exec into it, or just run pytest
+    command: pytest
+
+volumes:
+  db_data:
+  upload_data:

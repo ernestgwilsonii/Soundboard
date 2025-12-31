@@ -464,3 +464,33 @@ This project uses a custom migration utility to manage schema updates. After pul
 PYTHONPATH=. venv/bin/python3 migrate.py
 ```
 
+## Docker Quick Start (Recommended)
+
+This project uses a production-ready Docker setup. We use a **Makefile** to standardize common commands.
+
+### 1. Start the Application
+To build and start the application (accessible at `http://localhost:5000`):
+```bash
+make run
+```
+*Under the hood: `docker compose up -d app`*
+
+### 2. Run Tests
+To run the full test suite (including Playwright E2E tests) inside a container:
+```bash
+make test
+```
+*Under the hood: `docker compose run --rm test pytest`*
+
+### 3. Troubleshoot / Debug
+To get a shell inside the container with all debugging tools (Playwright, FFmpeg, etc.) pre-installed:
+```bash
+make debug
+```
+Once inside, you can run `pytest` manually or inspect the environment.
+
+### 4. Clean Up
+To stop all containers and remove persistent data (reset databases):
+```bash
+make clean
+```

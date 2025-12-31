@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Database (Don't copy local DBs to image, use volumes)
+*.sqlite3
+*.db
+
+# OS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Test Artifacts
+.pytest_cache
+.coverage
+htmlcov/
+test-results/
+
+# User Uploads (Don't bake uploads into the image)
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+
+# Environment (Secrets)
+.env
