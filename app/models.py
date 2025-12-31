@@ -496,9 +496,9 @@ class Soundboard:
             if sb and sb.is_public:
                 return sb
         
-        # Fallback to most recent public board
-        recent = Soundboard.get_recent_public(limit=1)
-        return recent[0] if recent else None
+        # Fallback to most trending public board
+        trending = Soundboard.get_trending(limit=1)
+        return trending[0] if trending else None
 
     @staticmethod
     def search(query, order_by='recent'):

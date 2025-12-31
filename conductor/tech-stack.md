@@ -8,7 +8,8 @@
 - **Security:** CSRFProtect for CSRF defense and **Flask-Limiter** for rate limiting and brute-force protection.
 - **Authentication:** Custom session-based authentication with secure password hashing (using a library like `werkzeug.security`).
 - **Logging:** Python's built-in `logging` module, configured with separate handlers for account and user activity.
-- **Audio Processing:** **Mutagen** for server-side audio metadata extraction (duration, sample rate).
+- **Audio Processing:** **Mutagen** for metadata and **Pydub** for server-side audio normalization.
+- **System Dependencies:** **FFmpeg** (required for `pydub` to process MP3 and OGG formats).
 
 ## Data Storage
 - **Database:** SQLite (two distinct database files for isolation: `accounts.sqlite3` and `soundboards.sqlite3`).
@@ -26,4 +27,4 @@
 ## Development and Deployment
 - **Configuration:** Environment-based settings via `.env` or Flask configuration objects.
 - **Server:** Gunicorn for production-ready serving.
-- **Testing:** `pytest` for unit and integration testing.
+- **Testing:** **Pytest** for unit/integration testing and **Playwright** for end-to-end automation and visual verification.

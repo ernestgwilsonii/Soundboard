@@ -8,6 +8,7 @@ CREATE TABLE soundboards (
     icon TEXT,
     is_public INTEGER NOT NULL DEFAULT 0,
     theme_color TEXT DEFAULT '#0d6efd',
+    theme_preset TEXT DEFAULT 'default',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -23,6 +24,9 @@ CREATE TABLE sounds (
     start_time FLOAT NOT NULL DEFAULT 0.0,
     end_time FLOAT,
     hotkey TEXT,
+    bitrate INTEGER,
+    file_size INTEGER,
+    format TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
 );

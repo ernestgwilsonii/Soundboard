@@ -25,17 +25,6 @@ def client(monkeypatch):
         with sqlite3.connect(accounts_db) as conn:
             with open('app/schema_accounts.sql', 'r') as f:
                 conn.executescript(f.read())
-            # Also apply migration manually for test
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS follows (
-                    follower_id INTEGER NOT NULL,
-                    followed_id INTEGER NOT NULL,
-                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (follower_id, followed_id),
-                    FOREIGN KEY (follower_id) REFERENCES users (id),
-                    FOREIGN KEY (followed_id) REFERENCES users (id)
-                );
-            """)
         with sqlite3.connect(soundboards_db) as conn:
             with open('app/schema_soundboards.sql', 'r') as f:
                 conn.executescript(f.read())

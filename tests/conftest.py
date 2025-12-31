@@ -82,25 +82,9 @@ def test_db_setup(monkeypatch):
     with sqlite3.connect(test_accounts_db) as conn:
         with open('app/schema_accounts.sql', 'r') as f:
             conn.executescript(f.read())
-        # Manual migration for follows
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS follows (
-                follower_id INTEGER NOT NULL,
-                followed_id INTEGER NOT NULL,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (follower_id, followed_id),
-                FOREIGN KEY (follower_id) REFERENCES users (id),
-                FOREIGN KEY (followed_id) REFERENCES users (id)
-            );
-        """)
             
     with sqlite3.connect(test_soundboards_db) as conn:
         with open('app/schema_soundboards.sql', 'r') as f:
             conn.executescript(f.read())
-        # Manual migrations for soundboards
-        conn.execute("ALTER TABLE soundboards ADD COLUMN theme_preset TEXT DEFAULT 'default'")
-        conn.execute("ALTER TABLE sounds ADD COLUMN bitrate INTEGER")
-        conn.execute("ALTER TABLE sounds ADD COLUMN file_size INTEGER")
-        conn.execute("ALTER TABLE sounds ADD COLUMN format TEXT")
             
     return test_accounts_db, test_soundboards_db

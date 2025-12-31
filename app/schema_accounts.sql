@@ -30,6 +30,15 @@ CREATE TABLE favorites (
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
+CREATE TABLE follows (
+    follower_id INTEGER NOT NULL,
+    followed_id INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (follower_id, followed_id),
+    FOREIGN KEY (follower_id) REFERENCES users (id),
+    FOREIGN KEY (followed_id) REFERENCES users (id)
+);
+
 CREATE TABLE admin_settings (
     key TEXT PRIMARY KEY,
     value TEXT

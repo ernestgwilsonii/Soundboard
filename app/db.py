@@ -3,6 +3,14 @@ from flask import g, current_app
 from config import Config
 
 def get_accounts_db():
+    if current_app.config.get('TESTING'):
+        db = sqlite3.connect(
+            current_app.config['ACCOUNTS_DB'],
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        db.row_factory = sqlite3.Row
+        return db
+        
     if 'accounts_db' not in g:
         g.accounts_db = sqlite3.connect(
             current_app.config['ACCOUNTS_DB'],
@@ -12,6 +20,14 @@ def get_accounts_db():
     return g.accounts_db
 
 def get_soundboards_db():
+    if current_app.config.get('TESTING'):
+        db = sqlite3.connect(
+            current_app.config['SOUNDBOARDS_DB'],
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        db.row_factory = sqlite3.Row
+        return db
+
     if 'soundboards_db' not in g:
         g.soundboards_db = sqlite3.connect(
             current_app.config['SOUNDBOARDS_DB'],

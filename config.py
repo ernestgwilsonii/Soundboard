@@ -7,6 +7,7 @@ load_dotenv(os.path.join(basedir, '.env'))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     DEBUG = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 't']
+    TESTING = os.environ.get('TESTING', 'False').lower() in ['true', '1', 't']
     
     # Database paths
     ACCOUNTS_DB = os.environ.get('ACCOUNTS_DB') or os.path.join(basedir, 'accounts.sqlite3')

@@ -18,10 +18,8 @@ def client(monkeypatch):
     with app.app_context():
         with sqlite3.connect(accounts_db) as conn:
             with open('app/schema_accounts.sql', 'r') as f: conn.executescript(f.read())
-            conn.execute("CREATE TABLE IF NOT EXISTS follows (follower_id INTEGER, followed_id INTEGER)")
         with sqlite3.connect(soundboards_db) as conn:
             with open('app/schema_soundboards.sql', 'r') as f: conn.executescript(f.read())
-            conn.execute("ALTER TABLE soundboards ADD COLUMN theme_preset TEXT DEFAULT 'default'")
     with app.test_client() as client:
         yield client
     for db_path in [accounts_db, soundboards_db]:
