@@ -3,12 +3,16 @@ import os
 import sys
 from config import Config
 
+# Dynamic DB paths for container support
+ACCOUNTS_DB = os.environ.get('ACCOUNTS_DB') or Config.ACCOUNTS_DB
+SOUNDBOARDS_DB = os.environ.get('SOUNDBOARDS_DB') or Config.SOUNDBOARDS_DB
+
 # List of migrations to apply
 # Format: (id, name, db_path, sql_command)
 MIGRATIONS = [
     # Already applied manually in previous steps but added here for tracking
-    (1, 'add_display_order_to_sounds', Config.SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0;"),
-    (2, 'create_ratings_table', Config.SOUNDBOARDS_DB, """
+    (1, 'add_display_order_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0;"),
+    (2, 'create_ratings_table', SOUNDBOARDS_DB, """
         CREATE TABLE IF NOT EXISTS ratings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -19,7 +23,7 @@ MIGRATIONS = [
             FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
         );
     """),
-    (3, 'create_comments_table', Config.SOUNDBOARDS_DB, """
+    (3, 'create_comments_table', SOUNDBOARDS_DB, """
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -29,22 +33,22 @@ MIGRATIONS = [
             FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
         );
     """),
-    (4, 'add_playback_settings_to_sounds', Config.SOUNDBOARDS_DB, """
+    (4, 'add_playback_settings_to_sounds', SOUNDBOARDS_DB, """
         ALTER TABLE sounds ADD COLUMN volume FLOAT NOT NULL DEFAULT 1.0;
     """),
-    (5, 'add_loop_to_sounds', Config.SOUNDBOARDS_DB, """
+    (5, 'add_loop_to_sounds', SOUNDBOARDS_DB, """
         ALTER TABLE sounds ADD COLUMN is_loop INTEGER NOT NULL DEFAULT 0;
     """),
-    (6, 'add_trimming_to_sounds', Config.SOUNDBOARDS_DB, """
+    (6, 'add_trimming_to_sounds', SOUNDBOARDS_DB, """
         ALTER TABLE sounds ADD COLUMN start_time FLOAT NOT NULL DEFAULT 0.0;
     """),
-    (7, 'add_end_time_to_sounds', Config.SOUNDBOARDS_DB, """
+    (7, 'add_end_time_to_sounds', SOUNDBOARDS_DB, """
         ALTER TABLE sounds ADD COLUMN end_time FLOAT;
     """),
-    (8, 'add_is_verified_to_users', Config.ACCOUNTS_DB, """
+    (8, 'add_is_verified_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0;
     """),
-    (9, 'create_playlists_table', Config.SOUNDBOARDS_DB, """
+    (9, 'create_playlists_table', SOUNDBOARDS_DB, """
         CREATE TABLE IF NOT EXISTS playlists (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -54,7 +58,7 @@ MIGRATIONS = [
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
     """),
-    (10, 'create_playlist_items_table', Config.SOUNDBOARDS_DB, """
+    (10, 'create_playlist_items_table', SOUNDBOARDS_DB, """
         CREATE TABLE IF NOT EXISTS playlist_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             playlist_id INTEGER NOT NULL,
@@ -64,13 +68,13 @@ MIGRATIONS = [
             FOREIGN KEY (sound_id) REFERENCES sounds (id)
         );
     """),
-    (11, 'create_tags_table', Config.SOUNDBOARDS_DB, """
+    (11, 'create_tags_table', SOUNDBOARDS_DB, """
         CREATE TABLE IF NOT EXISTS tags (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE NOT NULL
         );
     """),
-    (12, 'create_soundboard_tags_table', Config.SOUNDBOARDS_DB, """
+    (12, 'create_soundboard_tags_table', SOUNDBOARDS_DB, """
         CREATE TABLE IF NOT EXISTS soundboard_tags (
             soundboard_id INTEGER NOT NULL,
             tag_id INTEGER NOT NULL,
@@ -79,13 +83,13 @@ MIGRATIONS = [
             FOREIGN KEY (tag_id) REFERENCES tags (id)
         );
     """),
-    (13, 'add_avatar_to_users', Config.ACCOUNTS_DB, """
+    (13, 'add_avatar_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN avatar_path TEXT;
     """),
-    (14, 'add_hotkey_to_sounds', Config.SOUNDBOARDS_DB, """
+    (14, 'add_hotkey_to_sounds', SOUNDBOARDS_DB, """
         ALTER TABLE sounds ADD COLUMN hotkey TEXT;
     """),
-    (15, 'create_activities_table', Config.SOUNDBOARDS_DB, """
+    (15, 'create_activities_table', SOUNDBOARDS_DB, """
         CREATE TABLE IF NOT EXISTS activities (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -94,28 +98,28 @@ MIGRATIONS = [
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
     """),
-    (16, 'add_lockout_to_users', Config.ACCOUNTS_DB, """
+    (16, 'add_lockout_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0;
     """),
-    (17, 'add_lockout_until_to_users', Config.ACCOUNTS_DB, """
+    (17, 'add_lockout_until_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN lockout_until TIMESTAMP;
     """),
-    (18, 'add_profile_fields_to_users', Config.ACCOUNTS_DB, """
+    (18, 'add_profile_fields_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN bio TEXT;
     """),
-    (19, 'add_social_x_to_users', Config.ACCOUNTS_DB, """
+    (19, 'add_social_x_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN social_x TEXT;
     """),
-    (20, 'add_social_youtube_to_users', Config.ACCOUNTS_DB, """
+    (20, 'add_social_youtube_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN social_youtube TEXT;
     """),
-    (21, 'add_social_website_to_users', Config.ACCOUNTS_DB, """
+    (21, 'add_social_website_to_users', ACCOUNTS_DB, """
         ALTER TABLE users ADD COLUMN social_website TEXT;
     """),
-    (22, 'add_theme_color_to_soundboards', Config.SOUNDBOARDS_DB, """
+    (22, 'add_theme_color_to_soundboards', SOUNDBOARDS_DB, """
         ALTER TABLE soundboards ADD COLUMN theme_color TEXT DEFAULT '#0d6efd';
     """),
-    (23, 'create_notifications_table', Config.ACCOUNTS_DB, """
+    (23, 'create_notifications_table', ACCOUNTS_DB, """
         CREATE TABLE IF NOT EXISTS notifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -127,10 +131,10 @@ MIGRATIONS = [
             FOREIGN KEY (user_id) REFERENCES users (id)
         );
     """),
-    (24, 'add_theme_preset_to_soundboards', Config.SOUNDBOARDS_DB, """
+    (24, 'add_theme_preset_to_soundboards', SOUNDBOARDS_DB, """
         ALTER TABLE soundboards ADD COLUMN theme_preset TEXT DEFAULT 'default';
     """),
-    (25, 'create_follows_table', Config.ACCOUNTS_DB, """
+    (25, 'create_follows_table', ACCOUNTS_DB, """
         CREATE TABLE IF NOT EXISTS follows (
             follower_id INTEGER NOT NULL,
             followed_id INTEGER NOT NULL,
@@ -140,9 +144,9 @@ MIGRATIONS = [
             FOREIGN KEY (followed_id) REFERENCES users (id)
         );
     """),
-    (26, 'add_bitrate_to_sounds', Config.SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN bitrate INTEGER;"),
-    (27, 'add_file_size_to_sounds', Config.SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN file_size INTEGER;"),
-    (28, 'add_format_to_sounds', Config.SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN format TEXT;")
+    (26, 'add_bitrate_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN bitrate INTEGER;"),
+    (27, 'add_file_size_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN file_size INTEGER;"),
+    (28, 'add_format_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN format TEXT;")
 ]
 
 def init_migration_table(conn):
@@ -158,7 +162,7 @@ def init_migration_table(conn):
 
 def run_migrations():
     # Use accounts DB to track migrations (centralized)
-    accounts_conn = sqlite3.connect(Config.ACCOUNTS_DB)
+    accounts_conn = sqlite3.connect(ACCOUNTS_DB)
     init_migration_table(accounts_conn)
     
     cur = accounts_conn.cursor()
@@ -181,7 +185,7 @@ def run_migrations():
                 print(f"Successfully applied {name}.")
             except sqlite3.OperationalError as e:
                 # Handle cases where column/table might already exist from manual runs
-                if "duplicate column name" in str(e) or "already exists" in str(e):
+                if "duplicate column name" in str(e) or "already exists" in str(e) or "already existing" in str(e):
                     print(f"Skipping {name} (already exists in schema). Recording as applied.")
                     cur.execute("INSERT INTO migrations (id, name) VALUES (?, ?)", (mid, name))
                     accounts_conn.commit()
@@ -198,3 +202,4 @@ def run_migrations():
 
 if __name__ == "__main__":
     run_migrations()
+

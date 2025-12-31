@@ -41,7 +41,7 @@ def live_server_url():
     # Start server and pipe logs
     with open('logs/test_server.log', 'w') as log_file:
         proc = subprocess.Popen(
-            ["venv/bin/python", "soundboard.py"],
+            ["python3", "soundboard.py"],
             env=env,
             stdout=log_file,
             stderr=log_file,

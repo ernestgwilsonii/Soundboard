@@ -5,8 +5,10 @@ FROM python:3.12-slim as production
 
 # Install system dependencies
 # ffmpeg: required for audio processing (pydub)
+# sqlite3: for DB initialization checks
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -15,7 +17,8 @@ WORKDIR /app
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    FLASK_APP=soundboard.py
+    FLASK_APP=soundboard.py \
+    PYTHONPATH=.
 
 # Install Python dependencies
 COPY requirements.txt .
@@ -25,18 +28,21 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN addgroup --system appgroup && adduser --system --group appuser
 
 # Create necessary directories and set permissions
-# We need write access to:
-# - app/static/uploads (for user content)
-# - logs (for app logs)
-# - . (for sqlite databases if created at runtime)
 RUN mkdir -p app/static/uploads logs && \
     chown -R appuser:appgroup /app
+
+# Copy entrypoint script first and make it executable
+COPY --chown=appuser:appgroup entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Switch to non-root user
 USER appuser
 
 # Copy application code
 COPY --chown=appuser:appgroup . .
+
+# Entrypoint script handles DB initialization
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Expose port
 EXPOSE 8000
@@ -53,9 +59,12 @@ FROM mcr.microsoft.com/playwright/python:v1.49.0-jammy as test
 
 WORKDIR /app
 
+ENV PYTHONPATH=.
+
 # Install system dependencies (FFmpeg is still needed)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
@@ -65,9 +74,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# We run as root in the test container to facilitate
-# installing extra debug tools if needed interactively.
-# (Security is less of a concern in a transient test container)
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default command: Run Tests
 CMD ["pytest", "tests/"]
