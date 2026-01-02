@@ -91,7 +91,15 @@ def register():
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
-        user.is_verified = False
+        
+        # Expert Logic: The very first user is automatically an Administrator and Verified
+        if User.count_all() == 0:
+            user.role = 'admin'
+            user.is_verified = True
+            flash('Welcome! As the first user, you have been promoted to Administrator.')
+        else:
+            user.is_verified = False
+            
         user.save()
         
         from app.models import Activity

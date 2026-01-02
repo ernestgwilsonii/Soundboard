@@ -34,14 +34,17 @@ def live_server_url():
     env["ACCOUNTS_DB"] = test_accounts_db
     env["SOUNDBOARDS_DB"] = test_soundboards_db
     env["TESTING"] = "True"
+    env["DEBUG"] = "False"
     env["WTF_CSRF_ENABLED"] = "False" # Simplify E2E forms
     
     print(f"\n[Harness] Starting server on {url}...")
     
     # Start server and pipe logs
+    import sys
+    python_exe = sys.executable
     with open('logs/test_server.log', 'w') as log_file:
         proc = subprocess.Popen(
-            ["python3", "soundboard.py"],
+            [python_exe, "soundboard.py"],
             env=env,
             stdout=log_file,
             stderr=log_file,
@@ -50,17 +53,23 @@ def live_server_url():
         
         # Poll for availability
         start_time = time.time()
-        timeout = 15
+        timeout = 60
+        connected = False
         while time.time() - start_time < timeout:
             try:
                 with socket.create_connection(("127.0.0.1", port), timeout=1):
                     print("[Harness] Server is UP!")
+                    connected = True
                     break
             except:
-                time.sleep(0.5)
-        else:
+                time.sleep(1)
+        
+        if not connected:
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            raise Exception("Timeout: Test server failed to start.")
+            # Try to read logs for error
+            with open('logs/test_server.log', 'r') as f:
+                log_tail = f.read()
+            raise Exception(f"Timeout: Test server failed to start. Logs:\n{log_tail}")
             
         yield url
         

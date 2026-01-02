@@ -88,3 +88,13 @@ CREATE TABLE activities (
     description TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE board_collaborators (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    soundboard_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    role TEXT NOT NULL DEFAULT 'editor',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(soundboard_id, user_id),
+    FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
+);

@@ -11,6 +11,7 @@ help:
 	@echo "  make test     - Run the full test suite in Docker"
 	@echo "  make debug    - Get a shell inside the test container (for troubleshooting)"
 	@echo "  make clean    - Remove containers and volumes (resets DB)"
+	@echo "  make promote user=NAME - Promote a user to admin"
 
 .PHONY: build
 build:
@@ -25,6 +26,15 @@ run:
 
 .PHONY: stop
 stop:
+	docker compose down
+
+.PHONY: promote
+promote:
+	docker compose exec app sqlite3 /app/data/accounts.sqlite3 "UPDATE users SET role='admin' WHERE username='$(user)';"
+	@echo "User $(user) promoted to admin."
+
+.PHONY: test
+test:
 	docker compose down
 
 .PHONY: test

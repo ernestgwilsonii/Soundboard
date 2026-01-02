@@ -624,6 +624,15 @@ class Soundboard:
         rows = cur.fetchall()
         return [Tag(id=row['id'], name=row['name']) for row in rows]
 
+    def get_collaborators(self):
+        return BoardCollaborator.get_for_board(self.id)
+
+    def is_editor(self, user_id):
+        if self.user_id == user_id:
+            return True
+        collab = BoardCollaborator.get_by_user_and_board(user_id, self.id)
+        return collab and collab.role == 'editor'
+
     def add_tag(self, tag_name):
         db = get_soundboards_db()
         tag = Tag.get_or_create(tag_name)
@@ -1030,3 +1039,59 @@ class AdminSettings:
             (key, value)
         )
         db.commit()
+
+class BoardCollaborator:
+    def __init__(self, id=None, soundboard_id=None, user_id=None, role='editor', created_at=None):
+        self.id = id
+        self.soundboard_id = soundboard_id
+        self.user_id = user_id
+        self.role = role
+        self.created_at = created_at
+
+    def save(self):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        if self.id is None:
+            cur.execute(
+                "INSERT INTO board_collaborators (soundboard_id, user_id, role) VALUES (?, ?, ?)",
+                (self.soundboard_id, self.user_id, self.role)
+            )
+            self.id = cur.lastrowid
+        else:
+            cur.execute(
+                "UPDATE board_collaborators SET role=? WHERE id=?",
+                (self.role, self.id)
+            )
+        db.commit()
+
+    def delete(self):
+        if self.id:
+            db = get_soundboards_db()
+            cur = db.cursor()
+            cur.execute("DELETE FROM board_collaborators WHERE id = ?", (self.id,))
+            db.commit()
+
+    @staticmethod
+    def get_for_board(soundboard_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM board_collaborators WHERE soundboard_id = ?", (soundboard_id,))
+        rows = cur.fetchall()
+        return [BoardCollaborator(id=row['id'], soundboard_id=row['soundboard_id'], 
+                                 user_id=row['user_id'], role=row['role'], 
+                                 created_at=row['created_at']) for row in rows]
+
+    @staticmethod
+    def get_by_user_and_board(user_id, soundboard_id):
+        db = get_soundboards_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM board_collaborators WHERE user_id = ? AND soundboard_id = ?", (user_id, soundboard_id))
+        row = cur.fetchone()
+        if row:
+            return BoardCollaborator(id=row['id'], soundboard_id=row['soundboard_id'], 
+                                    user_id=row['user_id'], role=row['role'], 
+                                    created_at=row['created_at'])
+        return None
+
+    def get_user(self):
+        return User.get_by_id(self.user_id)

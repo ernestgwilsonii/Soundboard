@@ -6,6 +6,7 @@ from app.db import get_soundboards_db
 from app.auth.routes import verification_required
 from app.utils.audio import AudioProcessor
 from app import limiter
+from app.socket_events import broadcast_board_update
 
 @bp.route('/dashboard')
 @login_required
@@ -89,9 +90,11 @@ def rate_board(id):
     # Notify owner (if not same person)
     if s.user_id != current_user.id:
         from app.models import Notification
-        Notification.add(s.user_id, 'rating',
-                         f'{current_user.username} rated your soundboard "{s.name}" {score} stars.',
-                         url_for('soundboard.view', id=s.id))
+        from app.socket_events import send_instant_notification
+        msg = f'{current_user.username} rated your soundboard "{s.name}" {score} stars.'
+        link = url_for('soundboard.view', id=s.id)
+        Notification.add(s.user_id, 'rating', msg, link)
+        send_instant_notification(s.user_id, msg, link)
     
     stats = s.get_average_rating()
     return jsonify({
@@ -123,9 +126,11 @@ def post_comment(id):
         # Notify owner (if not the same person)
         if s.user_id != current_user.id:
             from app.models import Notification
-            Notification.add(s.user_id, 'comment', 
-                             f'{current_user.username} commented on your soundboard: "{s.name}"',
-                             url_for('soundboard.view', id=s.id))
+            from app.socket_events import send_instant_notification
+            msg = f'{current_user.username} commented on your soundboard: "{s.name}"'
+            link = url_for('soundboard.view', id=s.id)
+            Notification.add(s.user_id, 'comment', msg, link)
+            send_instant_notification(s.user_id, msg, link)
         
         flash('Comment posted!')
     
@@ -179,6 +184,7 @@ def reorder_sounds(id):
                 (index + 1, sound_id, s.id)
             )
         db.commit()
+        broadcast_board_update(s.id, 'sound_reordered')
     except Exception as e:
         db.rollback()
         return jsonify({'error': str(e)}), 500
@@ -190,6 +196,75 @@ def gallery():
     sort = request.args.get('sort', 'recent')
     sbs = Soundboard.get_public(order_by=sort)
     return render_template('soundboard/gallery.html', title='Public Gallery', soundboards=sbs, current_sort=sort)
+
+@bp.route('/<int:id>/collaborators/add', methods=['POST'])
+@login_required
+def add_collaborator(id):
+    from app.models import User, BoardCollaborator
+    s = Soundboard.get_by_id(id)
+    if s is None:
+        flash('Soundboard not found.')
+        return redirect(url_for('soundboard.dashboard'))
+    
+    if s.user_id != current_user.id and current_user.role != 'admin':
+        flash('Permission denied.')
+        return redirect(url_for('soundboard.dashboard'))
+    
+    username = request.form.get('username')
+    user = User.get_by_username(username)
+    if user is None:
+        flash('User not found.')
+        return redirect(url_for('soundboard.edit', id=s.id))
+    
+    if user.id == s.user_id:
+        flash('Owner is already a collaborator.')
+        return redirect(url_for('soundboard.edit', id=s.id))
+    
+    existing = BoardCollaborator.get_by_user_and_board(user.id, s.id)
+    if existing:
+        flash('User is already a collaborator.')
+        return redirect(url_for('soundboard.edit', id=s.id))
+    
+    collab = BoardCollaborator(soundboard_id=s.id, user_id=user.id, role='editor')
+    collab.save()
+    
+    # Notify user
+    from app.models import Notification
+    from app.socket_events import send_instant_notification
+    msg = f'{current_user.username} invited you to collaborate on "{s.name}"'
+    link = url_for('soundboard.view', id=s.id)
+    Notification.add(user.id, 'collab_invite', msg, link)
+    send_instant_notification(user.id, msg, link)
+    
+    flash(f'{username} added as collaborator.')
+    return redirect(url_for('soundboard.edit', id=s.id))
+
+@bp.route('/collaborators/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_collaborator(id):
+    from app.models import BoardCollaborator
+    collab = BoardCollaborator.get_by_user_and_board(request.form.get('user_id'), request.form.get('board_id'))
+    # Wait, the ID should be the collaborator record ID if possible, but user/board pair is safer.
+    # Actually, let's use the record ID if we can pass it.
+    collab = BoardCollaborator.get_by_user_and_board(id, request.form.get('board_id')) # id here is user_id based on typical flow
+    
+    # Redefine:
+    user_id = id
+    board_id = request.form.get('board_id')
+    collab = BoardCollaborator.get_by_user_and_board(user_id, board_id)
+    
+    if collab is None:
+        flash('Collaborator not found.')
+        return redirect(url_for('soundboard.dashboard'))
+        
+    s = Soundboard.get_by_id(collab.soundboard_id)
+    if s.user_id != current_user.id and current_user.role != 'admin':
+        flash('Permission denied.')
+        return redirect(url_for('soundboard.dashboard'))
+        
+    collab.delete()
+    flash('Collaborator removed.')
+    return redirect(url_for('soundboard.edit', id=s.id))
 
 @bp.route('/check-name')
 @login_required
@@ -288,6 +363,7 @@ def edit(id):
         else:
             s.icon = form.icon.data
         s.save()
+        broadcast_board_update(s.id, 'board_metadata_updated')
         
         # Process tags (replace existing)
         current_tags = [t.name for t in s.get_tags()]
@@ -371,6 +447,7 @@ def upload_sound(id):
         AudioProcessor.normalize(full_path)
         
         sound.save()
+        broadcast_board_update(s.id, 'sound_uploaded', {'name': sound.name})
         
         from app.models import Activity
         Activity.record(current_user.id, 'upload_sound', f'Uploaded sound "{sound.name}" to "{s.name}"')
@@ -395,6 +472,7 @@ def delete_sound(id):
         return redirect(url_for('soundboard.dashboard'))
     
     sound.delete()
+    broadcast_board_update(s.id, 'sound_deleted', {'id': id})
     flash('Sound deleted.')
     return redirect(url_for('soundboard.edit', id=s.id))
 
@@ -422,6 +500,7 @@ def update_sound_settings(id):
     sound.icon = data.get('icon', sound.icon)
     
     sound.save()
+    broadcast_board_update(s.id, 'sound_updated', {'id': id, 'name': sound.name})
     return jsonify({'status': 'success'})
 
 @bp.route('/delete/<int:id>', methods=['POST'])

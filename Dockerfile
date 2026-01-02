@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN addgroup --system appgroup && adduser --system --group appuser
 
 # Create necessary directories and set permissions
-RUN mkdir -p app/static/uploads logs && \
+RUN mkdir -p app/static/uploads logs data && \
     chown -R appuser:appgroup /app
 
 # Copy entrypoint script first and make it executable
@@ -47,8 +47,8 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 # Expose port
 EXPOSE 8000
 
-# Default command: Production Gunicorn Server
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "soundboard:app"]
+# Default command: Production Gunicorn Server with Eventlet for SocketIO
+CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:8000", "soundboard:app"]
 
 
 # ==========================================

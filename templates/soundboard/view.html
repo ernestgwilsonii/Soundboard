@@ -28,15 +28,24 @@
 <div class="theme-container theme-{{ soundboard.theme_preset or 'default' }} px-3 px-md-5 py-4" style="margin-left: -12px; margin-right: -12px; margin-top: -24px; min-height: 100vh;">
 <div class="container-fluid">
 <div class="row">
-    <div class="col-12 text-center mb-4">
-        <h1>
+    <!-- Main Content -->
+    <div class="col-lg-9">
+        <div class="text-center mb-4">
+            <h1>
             {% if soundboard.icon and '/' in soundboard.icon %}
             <img src="{{ url_for('static', filename='uploads/' + soundboard.icon) }}" alt="" style="width: 48px; height: 48px; object-fit: contain;">
             {% else %}
             <i class="{{ soundboard.icon or 'fas fa-music' }}"></i>
             {% endif %}
             {{ soundboard.name }}
+            <span id="live-status-badge" class="badge bg-secondary ms-2" style="font-size: 0.5em; vertical-align: middle;">
+                <i class="fas fa-circle-notch fa-spin small"></i> Connecting...
+            </span>
         </h1>
+
+        <div id="presence-list" class="mb-3 d-flex justify-content-center align-items-center flex-wrap" style="min-height: 24px;">
+            <!-- Real-time presence avatars injected here -->
+        </div>
         
         <div class="mb-3">
             {% for tag in soundboard.get_tags() %}
@@ -137,6 +146,22 @@
     </div>
     {% endfor %}
 </div>
+</div> <!-- End col-lg-9 -->
+
+<!-- Sidebar Activity Feed -->
+<div class="col-lg-3 mt-4 mt-lg-0">
+    <div class="card shadow-sm h-100 bg-white bg-opacity-75">
+        <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
+            <span class="small fw-bold uppercase"><i class="fas fa-history"></i> Live Activity</span>
+        </div>
+        <div class="card-body p-2 overflow-auto" style="max-height: 600px;">
+            <div id="board-activity-log">
+                <p class="text-muted small text-center my-3 italic">No live activity yet.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</div> <!-- End Row -->
 </div>
 </div>
 
@@ -468,6 +493,11 @@ function addSoundToPlaylist(soundId, playlistId) {
     })
     .catch(err => ux.alert('Error', err.message, 'error'));
 }
+
+// Initialize Real-time Collaboration
+document.addEventListener('DOMContentLoaded', () => {
+    initCollaboration({{ soundboard.id }}, {% if current_user.is_authenticated %}{ id: {{ current_user.id }}, username: '{{ current_user.username }}' }{% else %}null{% endif %});
+});
 </script>
 
 <style>

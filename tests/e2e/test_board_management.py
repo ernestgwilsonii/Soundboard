@@ -35,7 +35,7 @@ def test_soundboard_lifecycle(page: Page, live_server_url, test_db_setup):
     
     # Should redirect to view page
     expect(page).to_have_url(re.compile(rf"{live_server_url}/soundboard/view/\d+"))
-    expect(page.get_by_role("heading", level=1)).to_have_text(new_name)
+    expect(page.get_by_role("heading", level=1)).to_contain_text(new_name)
     
     # 3. Delete
     # Go back to Edit to delete (View page should have an Edit link for owner)

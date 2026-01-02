@@ -434,12 +434,15 @@ brew install sqlite
 
 ## Administration
 
-### Promote a User to Administrator
-To promote a user to the `admin` role for local development, use the SQLite CLI:
+### First Administrator (Auto-Admin)
+For security and ease of setup, the **very first user** to register on a fresh installation is automatically granted the `admin` role and is pre-verified. No manual database intervention is required for the initial setup.
+
+### Promote Subsequent Users
+To promote any other user to the `admin` role, use the provided Makefile command:
 ```bash
-sqlite3 accounts.sqlite3 "UPDATE users SET role='admin' WHERE username='your_username';"
+make promote user=username
 ```
-Replace `your_username` with the actual username of the account you wish to promote.
+Replace `username` with the actual username of the account you wish to promote. This command correctly targets the database within the Docker container.
 
 ## Email Configuration
 

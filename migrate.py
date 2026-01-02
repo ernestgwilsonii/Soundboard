@@ -146,7 +146,18 @@ MIGRATIONS = [
     """),
     (26, 'add_bitrate_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN bitrate INTEGER;"),
     (27, 'add_file_size_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN file_size INTEGER;"),
-    (28, 'add_format_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN format TEXT;")
+    (28, 'add_format_to_sounds', SOUNDBOARDS_DB, "ALTER TABLE sounds ADD COLUMN format TEXT;"),
+    (29, 'create_board_collaborators_table', SOUNDBOARDS_DB, """
+        CREATE TABLE IF NOT EXISTS board_collaborators (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            soundboard_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            role TEXT NOT NULL DEFAULT 'editor',
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(soundboard_id, user_id),
+            FOREIGN KEY (soundboard_id) REFERENCES soundboards (id)
+        );
+    """)
 ]
 
 def init_migration_table(conn):
