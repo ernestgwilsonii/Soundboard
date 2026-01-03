@@ -138,3 +138,23 @@ def on_reorder(data):
     
     # Broadcast the new order to others
     socketio.emit('update_sound_order', {'sound_ids': sound_ids}, to=str(board_id), include_self=False)
+
+@socketio.on('send_reaction')
+def on_send_reaction(data):
+    board_id = data.get('board_id')
+    emoji = data.get('emoji')
+    if not board_id or not emoji:
+        return
+    
+    username = 'Someone'
+    try:
+        if current_user and current_user.is_authenticated:
+            username = current_user.username
+    except Exception:
+        pass
+
+    # Broadcast to EVERYONE in the room including sender
+    socketio.emit('receive_reaction', {
+        'emoji': emoji,
+        'user': username
+    }, to=str(board_id))

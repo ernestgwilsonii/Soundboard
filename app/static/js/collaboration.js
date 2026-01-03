@@ -11,7 +11,9 @@ class CollaborationManager {
         this.presenceContainer = document.getElementById('presence-list');
         this.statusBadge = document.getElementById('live-status-badge');
         this.activityList = document.getElementById('board-activity-log');
+        this.reactionContainer = null;
         this.isLocked = false;
+        this.reactionCooldown = false;
     }
 
     init() {
@@ -49,6 +51,12 @@ class CollaborationManager {
         this.socket.on('update_sound_order', (data) => {
             this.handleRemoteReorder(data.sound_ids);
         });
+
+        this.socket.on('receive_reaction', (data) => {
+            this.renderReaction(data.emoji, data.user);
+        });
+
+        this.createReactionContainer();
     }
 
     joinBoard() {
@@ -140,20 +148,6 @@ class CollaborationManager {
         if (message) {
             ux.toast(message);
             this.logActivity(message);
-            
-            // In a highly dynamic app, we'd use AJAX to refresh the specific part.
-            // For now, we inform the user.
-            if (ux.confirm) {
-                // If they are on the edit page, we might want to refresh to see changes
-                // But only if they aren't currently editing a sound settings modal
-                const modal = document.getElementById('soundSettingsModal');
-                const isModalOpen = modal && modal.classList.contains('show');
-                
-                if (!isModalOpen && window.location.pathname.includes('/edit/')) {
-                    // console.log("Auto-refreshing view for synchronization...");
-                    // location.reload(); 
-                }
-            }
         }
     }
 
@@ -193,6 +187,49 @@ class CollaborationManager {
             const settingsBtn = item.querySelector('button[title="Settings"]');
             if (settingsBtn) settingsBtn.disabled = false;
         }
+    }
+
+    // --- Emoji Reactions ---
+
+    createReactionContainer() {
+        this.reactionContainer = document.createElement('div');
+        this.reactionContainer.className = 'reaction-container';
+        document.body.appendChild(this.reactionContainer);
+    }
+
+    sendReaction(emoji) {
+        if (this.reactionCooldown) return;
+        
+        this.socket.emit('send_reaction', {
+            board_id: this.boardId,
+            emoji: emoji
+        });
+
+        // Local cooldown
+        this.reactionCooldown = true;
+        setTimeout(() => this.reactionCooldown = false, 500);
+    }
+
+    renderReaction(emoji, username) {
+        if (!this.reactionContainer) return;
+
+        const element = document.createElement('div');
+        element.className = 'floating-emoji';
+        element.innerText = emoji;
+        
+        // Randomize starting position and drift
+        const startX = Math.random() * 80 + 10; // 10% to 90% width
+        const drift = (Math.random() - 0.5) * 200; // -100px to 100px
+        
+        element.style.left = `${startX}%`;
+        element.style.setProperty('--drift', `${drift}px`);
+        
+        this.reactionContainer.appendChild(element);
+
+        // Cleanup after animation
+        setTimeout(() => {
+            element.remove();
+        }, 3000);
     }
 }
 

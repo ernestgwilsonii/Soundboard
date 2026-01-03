@@ -66,3 +66,29 @@ def test_slot_locking_events():
     
     client1.disconnect()
     client2.disconnect()
+
+def test_emoji_reaction_event():
+    flask_app = create_app()
+    flask_app.config['TESTING'] = True
+    
+    client1 = socketio.test_client(flask_app)
+    client2 = socketio.test_client(flask_app)
+    
+    client1.emit('join_board', {'board_id': 1})
+    client2.emit('join_board', {'board_id': 1})
+    
+    client1.get_received()
+    client2.get_received()
+    
+    # Client 1 sends reaction
+    client1.emit('send_reaction', {'board_id': 1, 'emoji': '🔥'})
+    
+    # Both should receive it (EVERYONE broadcast)
+    received1 = client1.get_received()
+    received2 = client2.get_received()
+    
+    assert any(e['name'] == 'receive_reaction' and e['args'][0]['emoji'] == '🔥' for e in received1)
+    assert any(e['name'] == 'receive_reaction' and e['args'][0]['emoji'] == '🔥' for e in received2)
+    
+    client1.disconnect()
+    client2.disconnect()
