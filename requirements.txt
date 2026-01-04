@@ -34,3 +34,9 @@ psutil==6.1.1
 flask-socketio==5.5.1
 python-socketio==5.12.1
 eventlet==0.39.0
+
+# Dev Tools
+black==24.4.2
+flake8==7.1.0
+pydocstyle==6.3.0
+isort==5.13.2
