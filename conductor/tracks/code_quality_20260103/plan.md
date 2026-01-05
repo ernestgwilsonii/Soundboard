@@ -16,7 +16,7 @@
 - [x] Verify no regressions in application startup
 
 ## Phase 3: Documentation (PEP 257)
-- [ ] Add module-level docstrings to key files (`app/__init__.py`, `soundboard.py`, etc.)
+- [x] Add module-level docstrings to key files (`app/__init__.py`, `soundboard.py`, etc.) 3db7ade
 - [x] Add class and method docstrings to `app/models.py`
 - [ ] Add class and method docstrings to `app/routes.py` (and blueprints)
 - [ ] Add class and method docstrings to `app/utils/*.py`
