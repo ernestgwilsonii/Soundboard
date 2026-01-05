@@ -1,3 +1,4 @@
+"""Soundboard blueprint package."""
 from flask import Blueprint
 
 bp = Blueprint("soundboard", __name__, url_prefix="/soundboard")

@@ -1,3 +1,4 @@
+"""Database connection utilities."""
 import sqlite3
 
 from flask import current_app, g
@@ -6,6 +7,7 @@ from config import Config
 
 
 def get_accounts_db():
+    """Get the accounts database connection."""
     if current_app.config.get("TESTING"):
         db = sqlite3.connect(
             current_app.config["ACCOUNTS_DB"], detect_types=sqlite3.PARSE_DECLTYPES
@@ -22,6 +24,7 @@ def get_accounts_db():
 
 
 def get_soundboards_db():
+    """Get the soundboards database connection."""
     if current_app.config.get("TESTING"):
         db = sqlite3.connect(
             current_app.config["SOUNDBOARDS_DB"], detect_types=sqlite3.PARSE_DECLTYPES
@@ -38,6 +41,7 @@ def get_soundboards_db():
 
 
 def close_db(e=None):
+    """Close database connections."""
     accounts_db = g.pop("accounts_db", None)
     if accounts_db is not None:
         accounts_db.close()
@@ -48,4 +52,5 @@ def close_db(e=None):
 
 
 def init_app(app):
+    """Register database functions with the Flask app."""
     app.teardown_appcontext(close_db)

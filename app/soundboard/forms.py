@@ -1,3 +1,4 @@
+"""Soundboard forms."""
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField, FileRequired
 from wtforms import BooleanField, SelectField, StringField, SubmitField
@@ -5,6 +6,8 @@ from wtforms.validators import DataRequired, Length
 
 
 class SoundboardForm(FlaskForm):
+    """Form to create or edit a soundboard."""
+
     name = StringField(
         "Soundboard Name", validators=[DataRequired(), Length(min=1, max=64)]
     )
@@ -30,6 +33,8 @@ class SoundboardForm(FlaskForm):
 
 
 class SoundForm(FlaskForm):
+    """Form to upload a sound."""
+
     name = StringField("Sound Name", validators=[DataRequired(), Length(min=1, max=64)])
     audio_file = FileField(
         "Audio File",
@@ -47,11 +52,15 @@ class SoundForm(FlaskForm):
 
 
 class CommentForm(FlaskForm):
+    """Form to post a comment."""
+
     text = StringField("Comment", validators=[DataRequired(), Length(max=500)])
     submit = SubmitField("Post Comment")
 
 
 class PlaylistForm(FlaskForm):
+    """Form to create or edit a playlist."""
+
     name = StringField(
         "Playlist Name", validators=[DataRequired(), Length(min=1, max=64)]
     )
@@ -61,6 +70,8 @@ class PlaylistForm(FlaskForm):
 
 
 class ImportPackForm(FlaskForm):
+    """Form to import a soundboard pack."""
+
     pack_file = FileField(
         "Soundboard Pack (.sbp)",
         validators=[

@@ -1,3 +1,4 @@
+"""Data models."""
 from flask import current_app
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
@@ -2091,9 +2092,7 @@ class Notification:
 
 
 class AdminSettings:
-    """
-    Manages global application settings stored in the database.
-    """
+    """Manages global application settings stored in the database."""
 
     @staticmethod
     def get_setting(key, default=None):

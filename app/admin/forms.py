@@ -1,3 +1,4 @@
+"""Admin forms."""
 import sqlite3
 
 from flask_wtf import FlaskForm
@@ -8,6 +9,8 @@ from config import Config
 
 
 class AdminPasswordResetForm(FlaskForm):
+    """Form to reset a user's password as an admin."""
+
     password = PasswordField("New Password", validators=[DataRequired(), Length(min=3)])
     password_confirm = PasswordField(
         "Confirm New Password",
@@ -20,16 +23,20 @@ class AdminPasswordResetForm(FlaskForm):
 
 
 class AdminUpdateEmailForm(FlaskForm):
+    """Form to update a user's email address as an admin."""
+
     email = StringField(
         "New Email", validators=[DataRequired(), Email(), Length(max=120)]
     )
     submit = SubmitField("Update Email")
 
     def __init__(self, user_id, *args, **kwargs):
+        """Initialize the form with the user's ID."""
         super(AdminUpdateEmailForm, self).__init__(*args, **kwargs)
         self.user_id = user_id
 
     def validate_email(self, email):
+        """Validate that the email is unique."""
         with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
             cur = conn.cursor()
             cur.execute(
@@ -43,6 +50,8 @@ class AdminUpdateEmailForm(FlaskForm):
 
 
 class PlatformSettingsForm(FlaskForm):
+    """Form to update platform settings."""
+
     featured_soundboard_id = StringField("Featured Soundboard ID")
 
     announcement_message = StringField("Announcement Banner Message")

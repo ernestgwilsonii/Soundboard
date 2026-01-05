@@ -1,3 +1,4 @@
+"""Authentication forms."""
 import sqlite3
 
 from flask_wtf import FlaskForm
@@ -9,6 +10,8 @@ from config import Config
 
 
 class RegistrationForm(FlaskForm):
+    """Form to register a new user."""
+
     username = StringField(
         "Username", validators=[DataRequired(), Length(min=3, max=64)]
     )
@@ -24,6 +27,7 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Register")
 
     def validate_username(self, username):
+        """Validate that the username is unique."""
         with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
             cur = conn.cursor()
             cur.execute("SELECT id FROM users WHERE username = ?", (username.data,))
@@ -33,6 +37,7 @@ class RegistrationForm(FlaskForm):
                 )
 
     def validate_email(self, email):
+        """Validate that the email is unique."""
         with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
             cur = conn.cursor()
             cur.execute("SELECT id FROM users WHERE email = ?", (email.data,))
@@ -41,6 +46,8 @@ class RegistrationForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
+    """Form to log in a user."""
+
     username = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
     remember_me = BooleanField("Remember Me")
@@ -48,6 +55,8 @@ class LoginForm(FlaskForm):
 
 
 class UpdateProfileForm(FlaskForm):
+    """Form to update a user's profile."""
+
     email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
     avatar = FileField(
         "Update Profile Picture",
@@ -60,6 +69,7 @@ class UpdateProfileForm(FlaskForm):
     submit = SubmitField("Update Profile")
 
     def validate_email(self, email):
+        """Validate that the email is unique (if changed)."""
         from flask_login import current_user
 
         if email.data != current_user.email:
@@ -73,6 +83,8 @@ class UpdateProfileForm(FlaskForm):
 
 
 class ChangePasswordForm(FlaskForm):
+    """Form to change a user's password."""
+
     old_password = PasswordField("Current Password", validators=[DataRequired()])
     password = PasswordField("New Password", validators=[DataRequired(), Length(min=3)])
     password_confirm = PasswordField(
@@ -86,11 +98,15 @@ class ChangePasswordForm(FlaskForm):
 
 
 class PasswordResetRequestForm(FlaskForm):
+    """Form to request a password reset."""
+
     email = StringField("Email", validators=[DataRequired(), Email()])
     submit = SubmitField("Request Password Reset")
 
 
 class ResetPasswordForm(FlaskForm):
+    """Form to reset a password."""
+
     password = PasswordField("New Password", validators=[DataRequired(), Length(min=3)])
     password_confirm = PasswordField(
         "Repeat Password",
@@ -103,9 +119,12 @@ class ResetPasswordForm(FlaskForm):
 
 
 class DeleteAccountForm(FlaskForm):
+    """Form to delete a user account."""
+
     confirmation = StringField('Type "DELETE" to confirm', validators=[DataRequired()])
     submit = SubmitField("Permanently Delete My Account")
 
     def validate_confirmation(self, field):
+        """Validate that the user typed DELETE."""
         if field.data != "DELETE":
             raise ValidationError("You must type DELETE to confirm.")

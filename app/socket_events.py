@@ -20,6 +20,7 @@ global_users = {}
 
 @socketio.on("connect")
 def on_connect():
+    """Handle a client connection."""
     if current_user.is_authenticated:
         if current_user.id not in global_users:
             global_users[current_user.id] = []
@@ -29,6 +30,7 @@ def on_connect():
 
 @socketio.on("join_board")
 def on_join(data):
+    """Handle a client joining a board room."""
     board_id = data.get("board_id")
     print(
         f"DEBUG: on_join board_id={board_id}, user={current_user.username if current_user.is_authenticated else 'Anonymous'}"
@@ -58,6 +60,7 @@ def on_join(data):
 
 @socketio.on("leave_board")
 def on_leave(data):
+    """Handle a client leaving a board room."""
     board_id = data.get("board_id")
     if not board_id:
         return
@@ -76,6 +79,7 @@ def on_leave(data):
 
 @socketio.on("disconnect")
 def on_disconnect():
+    """Handle a client disconnection."""
     # Cleanup global users
     if current_user.is_authenticated and current_user.id in global_users:
         if request.sid in global_users[current_user.id]:
@@ -121,6 +125,7 @@ def send_instant_notification(user_id, message, link=None):
 
 @socketio.on("request_lock")
 def on_request_lock(data):
+    """Handle a request to lock a sound slot."""
     board_id = data.get("board_id")
     sound_id = data.get("sound_id")
     if not board_id or not sound_id:
@@ -145,6 +150,7 @@ def on_request_lock(data):
 
 @socketio.on("release_lock")
 def on_release_lock(data):
+    """Handle a request to release a lock on a sound slot."""
     board_id = data.get("board_id")
     sound_id = data.get("sound_id")
     if not board_id or not sound_id:
@@ -157,6 +163,7 @@ def on_release_lock(data):
 
 @socketio.on("sound_reordered")
 def on_reorder(data):
+    """Handle sound reordering."""
     board_id = data.get("board_id")
     sound_ids = data.get("sound_ids")
     if not board_id or not sound_ids:
@@ -173,6 +180,7 @@ def on_reorder(data):
 
 @socketio.on("send_reaction")
 def on_send_reaction(data):
+    """Handle sending a reaction."""
     board_id = data.get("board_id")
     emoji = data.get("emoji")
     if not board_id or not emoji:

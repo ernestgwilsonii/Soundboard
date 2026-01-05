@@ -438,9 +438,7 @@ def search():
 @bp.route("/create", methods=["GET", "POST"])
 @verification_required
 def create():
-    """
-    Handle soundboard creation.
-    """
+    """Handle soundboard creation."""
     import os
 
     from flask import current_app
@@ -753,9 +751,7 @@ def delete(id):
 @bp.route("/playlists")
 @login_required
 def playlists():
-    """
-    Render the playlists management page.
-    """
+    """Render the playlists management page."""
     from app.models import Playlist
 
     user_playlists = Playlist.get_by_user_id(current_user.id)
@@ -767,9 +763,7 @@ def playlists():
 @bp.route("/playlist/create", methods=["GET", "POST"])
 @login_required
 def create_playlist():
-    """
-    Handle playlist creation.
-    """
+    """Handle playlist creation."""
     from app.models import Playlist
     from app.soundboard.forms import PlaylistForm
 
@@ -949,9 +943,7 @@ def export_soundboard(id):
 @bp.route("/import", methods=["GET", "POST"])
 @verification_required
 def import_soundboard():
-    """
-    Handle soundboard import from a ZIP pack.
-    """
+    """Handle soundboard import from a ZIP pack."""
     from app.models import Activity
     from app.soundboard.forms import ImportPackForm
     from app.utils.importer import Importer

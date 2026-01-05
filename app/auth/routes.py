@@ -115,9 +115,7 @@ def login():
 
 @bp.route("/logout")
 def logout():
-    """
-    Log out the current user and redirect to the index page.
-    """
+    """Log out the current user and redirect to the index page."""
     from flask_login import logout_user
 
     logout_user()
@@ -198,9 +196,7 @@ def verify_email(token):
 @bp.route("/notifications/mark_read", methods=["POST"])
 @login_required
 def mark_notifications_read():
-    """
-    Mark all notifications as read for the current user.
-    """
+    """Mark all notifications as read for the current user."""
     from flask import jsonify
 
     from app.models import Notification
@@ -318,9 +314,7 @@ def profile():
 @bp.route("/members")
 @login_required
 def members():
-    """
-    Browse registered members with pagination and search.
-    """
+    """Browse registered members with pagination and search."""
     from app.models import User
 
     page = request.args.get("page", 1, type=int)
@@ -428,9 +422,7 @@ def public_profile(username):
 @bp.route("/update_profile", methods=["GET", "POST"])
 @login_required
 def update_profile():
-    """
-    Handle profile updates (bio, social links, avatar).
-    """
+    """Handle profile updates (bio, social links, avatar)."""
     import os
 
     from flask import current_app
@@ -473,9 +465,7 @@ def update_profile():
 @bp.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
-    """
-    Handle password changes for authenticated users.
-    """
+    """Handle password changes for authenticated users."""
     from app.auth.forms import ChangePasswordForm
 
     form = ChangePasswordForm()
@@ -495,9 +485,7 @@ def change_password():
 @bp.route("/delete_account", methods=["GET", "POST"])
 @login_required
 def delete_account():
-    """
-    Handle permanent account deletion.
-    """
+    """Handle permanent account deletion."""
     from flask_login import logout_user
 
     from app.auth.forms import DeleteAccountForm

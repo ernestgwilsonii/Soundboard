@@ -1,3 +1,4 @@
+"""Email sending utilities."""
 from threading import Thread
 
 from flask import current_app, render_template
@@ -7,6 +8,7 @@ from app import mail
 
 
 def send_async_email(app, msg):
+    """Send an email asynchronously."""
     with app.app_context():
         try:
             mail.send(msg)
@@ -15,6 +17,7 @@ def send_async_email(app, msg):
 
 
 def send_email(subject, sender, recipients, text_body, html_body):
+    """Send an email with both text and HTML bodies."""
     msg = Message(subject, sender=sender, recipients=recipients)
     msg.body = text_body
     msg.html = html_body
@@ -25,6 +28,7 @@ def send_email(subject, sender, recipients, text_body, html_body):
 
 
 def send_verification_email(user):
+    """Send account verification email."""
     token = user.get_token(salt="email-verify")
     send_email(
         "[Soundboard] Verify Your Account",
@@ -36,6 +40,7 @@ def send_verification_email(user):
 
 
 def send_password_reset_email(user):
+    """Send password reset email."""
     token = user.get_token(salt="password-reset")
     send_email(
         "[Soundboard] Reset Your Password",
