@@ -18,7 +18,7 @@
 ## Phase 3: Documentation (PEP 257)
 - [x] Add module-level docstrings to key files (`app/__init__.py`, `soundboard.py`, etc.) 3db7ade
 - [x] Add class and method docstrings to `app/models.py`
-- [ ] Add class and method docstrings to `app/routes.py` (and blueprints)
+- [x] Add class and method docstrings to `app/routes.py` (and blueprints) 720b4b1
 - [ ] Add class and method docstrings to `app/utils/*.py`
 - [ ] Run `pydocstyle` and fix reported errors
 
