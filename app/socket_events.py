@@ -1,3 +1,9 @@
+"""
+Socket.IO event handlers.
+
+This module defines the server-side event handlers for real-time communication,
+including joining/leaving boards, presence tracking, and action synchronization.
+"""
 from flask import request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
