@@ -20,7 +20,7 @@
 - [x] Add class and method docstrings to `app/models.py`
 - [x] Add class and method docstrings to `app/routes.py` (and blueprints) 720b4b1
 - [x] Add class and method docstrings to `app/utils/*.py` 710eaed
-- [ ] Run `pydocstyle` and fix reported errors
+- [x] Run `pydocstyle` and fix reported errors 95cabcd
 
 ## Phase 4: CI/CD Integration (Optional/Future)
 - [ ] Create a pre-commit hook or CI script to enforce these standards on new PRs
