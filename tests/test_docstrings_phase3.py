@@ -67,3 +67,33 @@ def test_routes_docstrings(filepath):
     func_docs = get_function_docstrings(filepath)
     for func_name, doc in func_docs.items():
         assert doc is not None, f"Function '{func_name}' in {filepath} is missing a docstring"
+
+@pytest.mark.parametrize("filepath", [
+    "app/utils/audio.py",
+    "app/utils/importer.py",
+    "app/utils/packager.py"
+])
+def test_utils_docstrings(filepath):
+    """
+    Test that utility functions and classes have docstrings.
+    """
+    # First check module docstring
+    mod_doc = get_module_docstring(filepath)
+    assert mod_doc is not None, f"{filepath} missing module docstring"
+
+    # Check top-level function docstrings
+    func_docs = get_function_docstrings(filepath)
+    for func_name, doc in func_docs.items():
+        assert doc is not None, f"Function '{func_name}' in {filepath} is missing a docstring"
+    
+    # Check class and method docstrings
+    with open(filepath, "r", encoding="utf-8") as f:
+        tree = ast.parse(f.read())
+    
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            assert ast.get_docstring(node) is not None, f"Class '{node.name}' in {filepath} is missing a docstring"
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef):
+                    # Check if method has docstring
+                    assert ast.get_docstring(item) is not None, f"Method '{node.name}.{item.name}' in {filepath} is missing a docstring"
