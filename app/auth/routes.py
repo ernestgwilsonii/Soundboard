@@ -23,6 +23,7 @@ def admin_required(f):
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        """Wrapper to perform the check."""
         if not current_user.is_authenticated or current_user.role != "admin":
             flash("You do not have permission to access this page.")
             return redirect(url_for("main.index"))
@@ -40,6 +41,7 @@ def verification_required(f):
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        """Wrapper to perform the check."""
         from flask import current_app
 
         from app.models import User
