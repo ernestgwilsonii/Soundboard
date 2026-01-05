@@ -19,7 +19,7 @@
 - [x] Add module-level docstrings to key files (`app/__init__.py`, `soundboard.py`, etc.) 3db7ade
 - [x] Add class and method docstrings to `app/models.py`
 - [x] Add class and method docstrings to `app/routes.py` (and blueprints) 720b4b1
-- [ ] Add class and method docstrings to `app/utils/*.py`
+- [x] Add class and method docstrings to `app/utils/*.py` 710eaed
 - [ ] Run `pydocstyle` and fix reported errors
 
 ## Phase 4: CI/CD Integration (Optional/Future)
