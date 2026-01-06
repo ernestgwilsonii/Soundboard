@@ -15,7 +15,7 @@
 - [x] Run `isort` on the entire codebase
 - [x] Verify no regressions in application startup
 
-## Phase 3: Documentation (PEP 257)
+## Phase 3: Documentation (PEP 257) [checkpoint: 4bb9fe4]
 - [x] Add module-level docstrings to key files (`app/__init__.py`, `soundboard.py`, etc.) 3db7ade
 - [x] Add class and method docstrings to `app/models.py`
 - [x] Add class and method docstrings to `app/routes.py` (and blueprints) 720b4b1
