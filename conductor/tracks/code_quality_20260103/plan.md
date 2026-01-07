@@ -23,4 +23,4 @@
 - [x] Run `pydocstyle` and fix reported errors 95cabcd
 
 ## Phase 4: CI/CD Integration (Optional/Future)
-- [~] Create a pre-commit hook or CI script to enforce these standards on new PRs
+- [x] Create a pre-commit hook or CI script to enforce these standards on new PRs 479440e
