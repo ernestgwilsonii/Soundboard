@@ -1,9 +1,8 @@
 """Database connection utilities."""
+
 import sqlite3
 
 from flask import current_app, g
-
-from config import Config
 
 
 def get_accounts_db():

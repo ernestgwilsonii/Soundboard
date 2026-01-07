@@ -4,6 +4,7 @@ Soundboard export utilities.
 This module handles the creation of soundboard packs (ZIP archives), including
 manifest generation and asset packaging.
 """
+
 import io
 import json
 import os

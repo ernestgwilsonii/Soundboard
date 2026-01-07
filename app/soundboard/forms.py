@@ -1,4 +1,5 @@
 """Soundboard forms."""
+
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField, FileRequired
 from wtforms import BooleanField, SelectField, StringField, SubmitField

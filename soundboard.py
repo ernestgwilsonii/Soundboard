@@ -3,11 +3,12 @@ Entry point for the Soundboard application.
 
 This module initializes the Flask application and runs the Socket.IO server.
 """
+
 import eventlet
 
 eventlet.monkey_patch()
 
-from app import create_app, socketio
+from app import create_app, socketio  # noqa: E402
 
 app = create_app()
 

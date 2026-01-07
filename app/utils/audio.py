@@ -4,6 +4,7 @@ Audio processing utilities.
 This module provides functionality for extracting metadata from audio files
 and performing normalization.
 """
+
 import logging
 import os
 

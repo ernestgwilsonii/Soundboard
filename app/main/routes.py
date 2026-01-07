@@ -4,11 +4,12 @@ Main application routes.
 This module handles the main public-facing routes, including the landing page,
 dashboard, and general search functionality.
 """
-from flask import abort, jsonify, render_template, request, url_for
+
+from flask import jsonify, render_template, request, url_for
 from flask_login import current_user
 
 from app.main import bp
-from app.models import Activity, AdminSettings, Soundboard, User
+from app.models import Activity, AdminSettings, Soundboard
 
 
 @bp.app_context_processor

@@ -1,5 +1,4 @@
 import os
-import shutil
 import signal
 import socket
 import sqlite3
@@ -7,8 +6,6 @@ import subprocess
 import time
 
 import pytest
-
-from config import Config
 
 
 def get_open_port():
@@ -66,7 +63,7 @@ def live_server_url():
                     print("[Harness] Server is UP!")
                     connected = True
                     break
-            except:
+            except Exception:
                 time.sleep(1)
 
         if not connected:

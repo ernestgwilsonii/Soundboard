@@ -4,6 +4,7 @@ Main application package initialization.
 This module sets up the Flask application, initializes extensions (Login, CSRF, Mail, Limiter, SocketIO),
 and registers blueprints and error handlers.
 """
+
 import logging
 import os
 from logging.handlers import RotatingFileHandler
@@ -134,4 +135,4 @@ def create_app(config_class=Config):
 
 
 # Register socket events
-import app.socket_events
+import app.socket_events  # noqa: F401, E402

@@ -1,10 +1,15 @@
 import os
 
+
 def test_vscode_settings_exists():
-    assert os.path.exists(".vscode/settings.json"), ".vscode/settings.json file is missing"
+    assert os.path.exists(
+        ".vscode/settings.json"
+    ), ".vscode/settings.json file is missing"
+
 
 def test_vscode_settings_content():
     import json
+
     if not os.path.exists(".vscode/settings.json"):
         return
     with open(".vscode/settings.json", "r") as f:

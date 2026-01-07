@@ -4,6 +4,7 @@ Soundboard management routes.
 This module handles soundboard creation, editing, viewing, and sound management.
 It also includes playlist functionality and social interactions (likes, comments).
 """
+
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
@@ -883,7 +884,7 @@ def tag_search(tag_name):
     Args:
         tag_name (str): The tag name.
     """
-    from app.models import Soundboard, Tag
+    from app.models import Soundboard
 
     sbs = Soundboard.get_by_tag(tag_name)
 

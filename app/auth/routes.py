@@ -4,6 +4,7 @@ Authentication routes.
 This module handles user authentication (login, logout, registration),
 password resets, and profile management.
 """
+
 from functools import wraps
 
 from flask import flash, jsonify, redirect, render_template, request, url_for

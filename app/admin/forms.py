@@ -1,4 +1,5 @@
 """Admin forms."""
+
 import sqlite3
 
 from flask_wtf import FlaskForm

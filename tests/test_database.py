@@ -1,10 +1,6 @@
 import os
 import sqlite3
 
-import pytest
-
-from config import Config
-
 
 def test_accounts_schema():
     # Use an in-memory database for testing schema
@@ -113,7 +109,6 @@ def test_load_user():
     import sqlite3
 
     from app import create_app, login
-    from app.models import User
 
     app = create_app()
     app.config["TESTING"] = True

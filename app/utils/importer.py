@@ -4,7 +4,7 @@ Soundboard import utilities.
 This module handles the importing of soundboard packs (ZIP archives), including
 validating manifests and reconstructing database records.
 """
-import io
+
 import json
 import os
 import uuid
@@ -12,7 +12,7 @@ import zipfile
 
 from flask import current_app
 
-from app.models import Sound, Soundboard, Tag
+from app.models import Sound, Soundboard
 
 
 class AudioProcessor:

@@ -4,8 +4,9 @@ Administrator routes.
 This module handles administrative tasks such as user management,
 system settings, and soundboard moderation.
 """
+
 from flask import flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+from flask_login import current_user
 
 from app.admin import bp
 from app.auth.routes import admin_required
