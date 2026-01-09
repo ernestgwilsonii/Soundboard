@@ -4,7 +4,7 @@ import sqlite3
 import pytest
 
 from app import create_app
-from app.models import Soundboard, User
+from app.models import User
 from config import Config
 
 
@@ -71,7 +71,7 @@ def test_verification_flow(client):
 
     with client.application.app_context():
         u = User.get_by_username("verify_me")
-        assert u.is_verified == True
+        assert u.is_verified is True
 
 
 def test_password_reset_flow(client):

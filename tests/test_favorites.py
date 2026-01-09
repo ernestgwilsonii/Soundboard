@@ -59,7 +59,7 @@ def test_toggle_favorite_endpoint(client):
     # Toggle ON
     response = client.post(f"/soundboard/{sb_id}/favorite", follow_redirects=True)
     assert response.status_code == 200
-    assert response.get_json()["is_favorite"] == True
+    assert response.get_json()["is_favorite"] is True
 
     # Verify DB
     with client.application.app_context():
@@ -69,7 +69,7 @@ def test_toggle_favorite_endpoint(client):
     # Toggle OFF
     response = client.post(f"/soundboard/{sb_id}/favorite", follow_redirects=True)
     assert response.status_code == 200
-    assert response.get_json()["is_favorite"] == False
+    assert response.get_json()["is_favorite"] is False
 
     # Verify DB
     with client.application.app_context():

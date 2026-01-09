@@ -13,4 +13,7 @@ venv/bin/flake8 .
 echo "Running Pydocstyle..."
 venv/bin/pydocstyle app
 
+echo "Running MyPy..."
+venv/bin/mypy app
+
 echo "All quality checks passed!"

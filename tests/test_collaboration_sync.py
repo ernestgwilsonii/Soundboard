@@ -1,6 +1,3 @@
-import pytest
-from flask_socketio import SocketIOTestClient
-
 from app import create_app, socketio
 
 

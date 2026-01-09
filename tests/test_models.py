@@ -5,7 +5,6 @@ import pytest
 
 from app import create_app
 from app.models import Sound, Soundboard, User
-from config import Config
 
 
 @pytest.fixture

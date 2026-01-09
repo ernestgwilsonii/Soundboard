@@ -5,6 +5,8 @@ This module defines the server-side event handlers for real-time communication,
 including joining/leaving boards, presence tracking, and action synchronization.
 """
 
+from typing import Any, Dict, List
+
 from flask import request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
@@ -13,9 +15,9 @@ from app import socketio
 
 # Presence tracking
 # active_users: { board_id: { user_id: { username, sid } } }
-active_users = {}
+active_users: Dict[int, Dict[int, Dict[str, Any]]] = {}
 # global_users: { user_id: [sid1, sid2, ...] } (A user might have multiple tabs)
-global_users = {}
+global_users: Dict[int, List[str]] = {}
 
 
 @socketio.on("connect")
@@ -24,7 +26,7 @@ def on_connect():
     if current_user.is_authenticated:
         if current_user.id not in global_users:
             global_users[current_user.id] = []
-        global_users[current_user.id].append(request.sid)
+        global_users[current_user.id].append(request.sid)  # type: ignore
         print(f"User {current_user.username} connected globally.")
 
 
@@ -44,7 +46,7 @@ def on_join(data):
         user_info = {
             "id": current_user.id,
             "username": current_user.username,
-            "sid": request.sid,
+            "sid": request.sid,  # type: ignore
         }
 
         if board_id not in active_users:
@@ -82,15 +84,15 @@ def on_disconnect():
     """Handle a client disconnection."""
     # Cleanup global users
     if current_user.is_authenticated and current_user.id in global_users:
-        if request.sid in global_users[current_user.id]:
-            global_users[current_user.id].remove(request.sid)
+        if request.sid in global_users[current_user.id]:  # type: ignore
+            global_users[current_user.id].remove(request.sid)  # type: ignore
         if not global_users[current_user.id]:
             del global_users[current_user.id]
 
     # Cleanup presence from all boards
     for board_id, users in list(active_users.items()):
         for user_id, info in list(users.items()):
-            if info["sid"] == request.sid:
+            if info["sid"] == request.sid:  # type: ignore
                 del users[user_id]
                 emit("presence_update", list(users.values()), to=str(board_id))
 

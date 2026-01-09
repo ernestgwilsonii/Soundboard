@@ -154,6 +154,6 @@ def test_playback_fields_persistence(app_context):
     with app_context.app_context():
         s = Sound.get_by_id(sid)
         assert s.volume == 0.5
-        assert s.is_loop == True
+        assert s.is_loop is True
         assert s.start_time == 1.5
         assert s.end_time == 10.0

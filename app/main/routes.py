@@ -5,6 +5,8 @@ This module handles the main public-facing routes, including the landing page,
 dashboard, and general search functionality.
 """
 
+from typing import Any, Dict, List
+
 from flask import jsonify, render_template, request, url_for
 from flask_login import current_user
 
@@ -223,7 +225,7 @@ def sidebar_data():
 
     # Explore section: All public boards grouped by user
     public_boards = Soundboard.get_public()
-    explore = {}
+    explore: Dict[str, List[Dict[str, Any]]] = {}
     for sb in public_boards:
         creator = sb.get_creator_username()
         if creator not in explore:

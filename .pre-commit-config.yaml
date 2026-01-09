@@ -16,7 +16,7 @@ repos:
         entry: venv/bin/flake8
         language: system
         types: [python]
-        exclude: ^(tests/|debug_links.py|verify_normalization_automated.py)
+        exclude: ^(debug_links.py|verify_normalization_automated.py)
       - id: pydocstyle
         name: pydocstyle
         entry: venv/bin/pydocstyle

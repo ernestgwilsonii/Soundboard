@@ -59,8 +59,6 @@ def test_app_factory():
 
 
 def test_logging_configuration():
-    import logging
-
     from app import create_app
     from config import Config
 

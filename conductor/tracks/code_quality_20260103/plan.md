@@ -24,3 +24,10 @@
 
 ## Phase 4: CI/CD Integration (Optional/Future)
 - [x] Create a pre-commit hook or CI script to enforce these standards on new PRs 479440e
+
+## Phase 5: Type Safety & Final Polish
+- [x] Install and configure `mypy` for static type checking
+- [~] Add type hints to core modules (`app/models.py`, `app/utils/*.py`)
+- [ ] Fix linting errors in `tests/` directory and remove the exclusion from `.flake8`
+- [ ] Verify the entire codebase (app + tests) passes all quality gates
+

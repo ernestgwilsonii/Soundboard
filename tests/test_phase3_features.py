@@ -4,7 +4,6 @@ import sqlite3
 import pytest
 
 from app import create_app
-from app.models import Comment, Sound, Soundboard, User
 from config import Config
 
 
@@ -45,7 +44,7 @@ def client(monkeypatch):
 
 
 def test_model_sorting(client):
-    from app.models import Sound, Soundboard, User
+    from app.models import Soundboard, User
 
     with client.application.app_context():
         u = User(username="sortuser", email="sort@test.com")

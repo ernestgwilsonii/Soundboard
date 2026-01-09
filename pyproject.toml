@@ -23,3 +23,15 @@ extend-exclude = '''
 profile = "black"
 line_length = 88
 multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+check_untyped_defs = true
+exclude = [
+    "tests",
+    "venv",
+    "migrations"
+]

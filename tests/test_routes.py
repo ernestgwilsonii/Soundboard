@@ -142,7 +142,7 @@ def test_soundboard_blueprint_registered(client):
 
 
 def test_soundboard_creation_flow(client):
-    from app.models import Soundboard, User
+    from app.models import User
 
     with client.application.app_context():
         u = User(username="sbuser", email="sb@example.com", is_verified=True)

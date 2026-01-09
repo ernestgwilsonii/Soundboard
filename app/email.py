@@ -24,7 +24,7 @@ def send_email(subject, sender, recipients, text_body, html_body):
     msg.html = html_body
     # Use threading for async sending to avoid blocking
     Thread(
-        target=send_async_email, args=(current_app._get_current_object(), msg)
+        target=send_async_email, args=(current_app._get_current_object(), msg)  # type: ignore
     ).start()
 
 

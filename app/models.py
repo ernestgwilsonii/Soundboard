@@ -1,5 +1,7 @@
 """Data models."""
 
+from typing import Optional
+
 from flask import current_app
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
@@ -31,20 +33,20 @@ class User(UserMixin):
 
     def __init__(
         self,
-        id=None,
-        username=None,
-        email=None,
-        password_hash=None,
-        role="user",
-        active=True,
-        is_verified=False,
-        avatar_path=None,
-        failed_login_attempts=0,
-        lockout_until=None,
-        bio=None,
-        social_x=None,
-        social_youtube=None,
-        social_website=None,
+        id: Optional[int] = None,
+        username: Optional[str] = None,
+        email: Optional[str] = None,
+        password_hash: Optional[str] = None,
+        role: str = "user",
+        active: bool = True,
+        is_verified: bool = False,
+        avatar_path: Optional[str] = None,
+        failed_login_attempts: int = 0,
+        lockout_until: Optional[str] = None,
+        bio: Optional[str] = None,
+        social_x: Optional[str] = None,
+        social_youtube: Optional[str] = None,
+        social_website: Optional[str] = None,
     ):
         """
         Initialize a new User instance.

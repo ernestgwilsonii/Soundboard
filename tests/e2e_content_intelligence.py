@@ -34,7 +34,7 @@ def server():
             with socket.create_connection(("127.0.0.1", port), timeout=1):
                 print("[E2E] Server is UP!")
                 break
-        except:
+        except Exception:
             time.sleep(0.5)
     else:
         proc.kill()

@@ -1,5 +1,4 @@
 import os
-import sqlite3
 
 from playwright.sync_api import Page, expect
 
@@ -36,7 +35,7 @@ class PlaywrightHelper:
             expect(
                 self.page.get_by_text("Your account has been verified!")
             ).to_be_visible(timeout=2000)
-        except:
+        except Exception:
             # If they were the first user, they might see 'already verified' or just be on login
             pass
 

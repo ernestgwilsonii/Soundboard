@@ -1,7 +1,4 @@
-import time
-
-import pytest
-from playwright.sync_api import Browser, Page, expect
+from playwright.sync_api import Browser, expect
 
 from tests.e2e.playwright_helper import PlaywrightHelper
 
