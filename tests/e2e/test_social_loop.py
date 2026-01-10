@@ -28,6 +28,7 @@ def test_social_interactions(browser: Browser, live_server_url, test_db_setup):
     expect(page_a).to_have_url(f"{live_server_url}/soundboard/dashboard")
     view_link = page_a.get_by_role("link", name="View").first
     board_url = view_link.get_attribute("href")
+    assert board_url is not None
     board_id = board_url.split("/")[-1]
 
     # 2. Setup User B (Follower/Rater)

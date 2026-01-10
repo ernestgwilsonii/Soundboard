@@ -99,6 +99,7 @@ def test_rating_api(app_context):
         u.save()
         sb = Soundboard(name="Rate Me", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
         sb_id = sb.id
 
     client.post(
@@ -127,6 +128,7 @@ def test_comment_routes(app_context):
         u.save()
         sb = Soundboard(name="Comment Route Board", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
         sb_id = sb.id
 
     client.post(
@@ -145,8 +147,9 @@ def test_comment_routes(app_context):
 
     # Verify DB
     with client.application.app_context():
-        sb = Soundboard.get_by_id(sb_id)
-        comments = sb.get_comments()
+        sb_fetched = Soundboard.get_by_id(sb_id)
+        assert sb_fetched is not None
+        comments = sb_fetched.get_comments()
         assert len(comments) == 1
         comment_id = comments[0].id
 
@@ -157,5 +160,6 @@ def test_comment_routes(app_context):
     assert b"Comment deleted" in response.data
 
     with client.application.app_context():
-        sb = Soundboard.get_by_id(sb_id)
-        assert len(sb.get_comments()) == 0
+        sb_final = Soundboard.get_by_id(sb_id)
+        assert sb_final is not None
+        assert len(sb_final.get_comments()) == 0

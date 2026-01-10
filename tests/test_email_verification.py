@@ -70,8 +70,9 @@ def test_verification_flow(client):
     assert b"Your account has been verified!" in response.data
 
     with client.application.app_context():
-        u = User.get_by_username("verify_me")
-        assert u.is_verified is True
+        fetched_u = User.get_by_username("verify_me")
+        assert fetched_u is not None
+        assert fetched_u.is_verified is True
 
 
 def test_password_reset_flow(client):

@@ -46,6 +46,7 @@ def test_share_button_presence(client):
         u.save()
         sb = Soundboard(name="Shareable Board", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
         sb_id = sb.id
 
     response = client.get(f"/soundboard/view/{sb_id}")
@@ -61,6 +62,7 @@ def test_share_button_absence_private(client):
         u.save()
         sb = Soundboard(name="Private Board", user_id=u.id, is_public=False)
         sb.save()
+        assert sb.id is not None
         sb_id = sb.id
 
     # Need to be logged in to view private board
@@ -77,9 +79,10 @@ def test_share_button_absence_private(client):
     # Let's fix user setup
 
     with client.application.app_context():
-        u = User.get_by_username("privateuser")
-        u.set_password("pass")
-        u.save()
+        u_login = User.get_by_username("privateuser")
+        assert u_login is not None
+        u_login.set_password("pass")
+        u_login.save()
 
     client.post(
         "/auth/login",

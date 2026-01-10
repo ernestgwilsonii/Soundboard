@@ -60,6 +60,9 @@ def test_follow_unfollow_routes(client):
     with client.application.app_context():
         u1_obj = User.get_by_username("follower")
         u2_obj = User.get_by_username("followed")
+        assert u1_obj is not None
+        assert u2_obj is not None
+        assert u2_obj.id is not None
         assert u1_obj.is_following(u2_obj.id) is True
 
     # Unfollow
@@ -70,6 +73,9 @@ def test_follow_unfollow_routes(client):
     with client.application.app_context():
         u1_obj = User.get_by_username("follower")
         u2_obj = User.get_by_username("followed")
+        assert u1_obj is not None
+        assert u2_obj is not None
+        assert u2_obj.id is not None
         assert u1_obj.is_following(u2_obj.id) is False
 
 
@@ -163,6 +169,7 @@ def test_follower_following_lists(client):
         u2 = User(username="user_b", email="b@test.com", is_verified=True)
         u2.set_password("pass")
         u2.save()
+        assert u2.id is not None
         u1.follow(u2.id)
 
     client.post("/auth/login", data={"username": "user_a", "password": "pass"})

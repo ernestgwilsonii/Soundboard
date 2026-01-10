@@ -63,8 +63,9 @@ def test_toggle_favorite_endpoint(client):
 
     # Verify DB
     with client.application.app_context():
-        u = User.get_by_username("favuser")
-        assert sb_id in u.get_favorites()
+        fetched_u = User.get_by_username("favuser")
+        assert fetched_u is not None
+        assert sb_id in fetched_u.get_favorites()
 
     # Toggle OFF
     response = client.post(f"/soundboard/{sb_id}/favorite", follow_redirects=True)
@@ -73,8 +74,9 @@ def test_toggle_favorite_endpoint(client):
 
     # Verify DB
     with client.application.app_context():
-        u = User.get_by_username("favuser")
-        assert sb_id not in u.get_favorites()
+        fetched_u = User.get_by_username("favuser")
+        assert fetched_u is not None
+        assert sb_id not in fetched_u.get_favorites()
 
 
 def test_favorite_status_in_view(client):
@@ -85,6 +87,7 @@ def test_favorite_status_in_view(client):
         u.save()
         sb = Soundboard(name="Fav View Board", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
         sb_id = sb.id
         u.add_favorite(sb_id)
 
@@ -109,6 +112,7 @@ def test_sidebar_reflects_favorites(client):
         u.save()
         sb = Soundboard(name="Sidebar Fav Board", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
         sb_id = sb.id
 
     client.post(

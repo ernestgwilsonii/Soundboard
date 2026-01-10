@@ -53,6 +53,7 @@ def test_admin_toggle_verify(client):
         user = User(username="user_v", email="user_v@test.com", is_verified=False)
         user.set_password("user")
         user.save()
+        assert user.id is not None
         user_id = user.id
 
     # Login as admin
@@ -67,6 +68,7 @@ def test_admin_toggle_verify(client):
 
     with client.application.app_context():
         u = User.get_by_id(user_id)
+        assert u is not None
         assert u.is_verified is True
 
     # Toggle back
@@ -77,4 +79,5 @@ def test_admin_toggle_verify(client):
 
     with client.application.app_context():
         u = User.get_by_id(user_id)
+        assert u is not None
         assert u.is_verified is False

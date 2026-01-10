@@ -26,6 +26,7 @@ def test_instant_invite_notification(browser: Browser, live_server_url, test_db_
     card = page_a.locator(".card", has_text="Live Project")
     edit_link = card.get_by_role("link", name="Edit")
     board_url = edit_link.get_attribute("href")
+    assert board_url is not None
     board_id = board_url.split("/")[-1]
 
     # 2. SETUP BOB (Collaborator)

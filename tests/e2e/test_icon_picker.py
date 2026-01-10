@@ -42,6 +42,7 @@ def test_icon_picker_dynamic_loading(page: Page, live_server_url, test_db_setup)
 
     # 5. Select the icon
     icon_class = dog_icon.get_attribute("data-class")
+    assert icon_class is not None
     dog_icon.click()
 
     # Modal should close
