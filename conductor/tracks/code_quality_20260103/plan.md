@@ -28,6 +28,6 @@
 ## Phase 5: Type Safety & Final Polish
 - [x] Install and configure `mypy` for static type checking
 - [x] Add type hints to core modules (`app/models.py`, `app/utils/*.py`) b367652
-- [~] Fix linting errors in `tests/` directory and remove the exclusion from `.flake8`
+- [x] Fix linting errors in `tests/` directory and remove the exclusion from `.flake8` 2187d0f
 - [ ] Verify the entire codebase (app + tests) passes all quality gates
 
