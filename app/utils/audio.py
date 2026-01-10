@@ -7,6 +7,7 @@ and performing normalization.
 
 import logging
 import os
+from typing import Any, Dict, Optional
 
 import mutagen
 from pydub import AudioSegment
@@ -18,7 +19,7 @@ class AudioProcessor:
     """Handles audio file processing tasks."""
 
     @staticmethod
-    def get_metadata(file_path):
+    def get_metadata(file_path: str) -> Optional[Dict[str, Any]]:
         """
         Extract metadata (duration, sample_rate, bitrate, file_size, format) from an audio file.
 
@@ -50,7 +51,7 @@ class AudioProcessor:
             return None
 
     @staticmethod
-    def normalize(file_path, target_dbfs=-20.0):
+    def normalize(file_path: str, target_dbfs: float = -20.0) -> bool:
         """
         Normalize the audio volume to a target dBFS level.
 

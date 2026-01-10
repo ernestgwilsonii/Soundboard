@@ -1,6 +1,8 @@
 """Data models."""
 
-from typing import Optional
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional, Union
 
 from flask import current_app
 from flask_login import UserMixin
@@ -83,11 +85,11 @@ class User(UserMixin):
         self.social_website = social_website
 
     @property
-    def is_active(self):
+    def is_active(self) -> bool:
         """Check if the user account is active."""
         return self.active
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
         """
         Set the password for the user.
 
@@ -96,7 +98,7 @@ class User(UserMixin):
         """
         self.password_hash = generate_password_hash(password)
 
-    def save(self):
+    def save(self) -> None:
         """
         Save the user to the database.
 
@@ -146,7 +148,7 @@ class User(UserMixin):
             )
         db.commit()
 
-    def delete(self):
+    def delete(self) -> None:
         """Permanently deletes the user and all associated data."""
         if not self.id:
             return
@@ -188,7 +190,7 @@ class User(UserMixin):
             if os.path.exists(full_path):
                 os.remove(full_path)
 
-    def add_favorite(self, soundboard_id):
+    def add_favorite(self, soundboard_id: int) -> None:
         """
         Add a soundboard to the user's favorites.
 
@@ -203,7 +205,7 @@ class User(UserMixin):
         )
         db.commit()
 
-    def remove_favorite(self, soundboard_id):
+    def remove_favorite(self, soundboard_id: int) -> None:
         """
         Remove a soundboard from the user's favorites.
 
@@ -218,7 +220,7 @@ class User(UserMixin):
         )
         db.commit()
 
-    def get_favorites(self):
+    def get_favorites(self) -> List[int]:
         """
         Retrieve a list of the user's favorite soundboard IDs.
 
@@ -231,7 +233,7 @@ class User(UserMixin):
         rows = cur.fetchall()
         return [row["soundboard_id"] for row in rows]
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
         """
         Check if the provided password matches the user's password hash.
 
@@ -246,7 +248,7 @@ class User(UserMixin):
         return check_password_hash(self.password_hash, password)
 
     @staticmethod
-    def get_by_username(username):
+    def get_by_username(username: str) -> Optional[User]:
         """
         Retrieve a user by their username.
 
@@ -280,7 +282,7 @@ class User(UserMixin):
         return None
 
     @staticmethod
-    def get_by_email(email):
+    def get_by_email(email: str) -> Optional[User]:
         """
         Retrieve a user by their email address.
 
@@ -314,7 +316,7 @@ class User(UserMixin):
         return None
 
     @staticmethod
-    def get_by_id(user_id):
+    def get_by_id(user_id: int) -> Optional[User]:
         """
         Retrieve a user by their ID.
 
@@ -348,7 +350,12 @@ class User(UserMixin):
         return None
 
     @staticmethod
-    def get_all(limit=10, offset=0, sort_by="newest", search_query=None):
+    def get_all(
+        limit: int = 10,
+        offset: int = 0,
+        sort_by: str = "newest",
+        search_query: Optional[str] = None,
+    ) -> List[User]:
         """
         Retrieve a list of users with pagination, sorting, and search.
 
@@ -365,7 +372,7 @@ class User(UserMixin):
         cur = db.cursor()
 
         sql = "SELECT * FROM users WHERE 1=1"
-        params = []
+        params: List[Any] = []
 
         if search_query:
             sql += " AND username LIKE ?"
@@ -414,7 +421,7 @@ class User(UserMixin):
         ]
 
     @staticmethod
-    def count_all(search_query=None):
+    def count_all(search_query: Optional[str] = None) -> int:
         """
         Count the total number of users matching a search query.
 
@@ -432,12 +439,12 @@ class User(UserMixin):
             sql += " AND username LIKE ?"
             params.append(f"%{search_query}%")
         cur.execute(sql, params)
-        return cur.fetchone()[0]
+        return int(cur.fetchone()[0])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<User {self.username}>"
 
-    def get_token(self, salt):
+    def get_token(self, salt: str) -> str:
         """
         Generate a secure token for the user.
 
@@ -451,7 +458,7 @@ class User(UserMixin):
         return s.dumps(self.email, salt=salt)
 
     @staticmethod
-    def verify_token(token, salt, expiration=3600):
+    def verify_token(token: str, salt: str, expiration: int = 3600) -> Optional[User]:
         """
         Verify a token and retrieve the associated user.
 
@@ -470,7 +477,7 @@ class User(UserMixin):
             return None
         return User.get_by_email(email)
 
-    def increment_failed_attempts(self):
+    def increment_failed_attempts(self) -> None:
         """Increment failed login attempts and lock account if threshold reached."""
         self.failed_login_attempts += 1
         if self.failed_login_attempts >= 5:
@@ -481,13 +488,13 @@ class User(UserMixin):
             )
         self.save()
 
-    def reset_failed_attempts(self):
+    def reset_failed_attempts(self) -> None:
         """Reset failed login attempts and clear lockout status."""
         self.failed_login_attempts = 0
         self.lockout_until = None
         self.save()
 
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """
         Check if the account is currently locked out.
 
@@ -504,7 +511,7 @@ class User(UserMixin):
             return False
         return True
 
-    def follow(self, user_id):
+    def follow(self, user_id: int) -> None:
         """
         Follow another user.
 
@@ -521,7 +528,7 @@ class User(UserMixin):
         )
         db.commit()
 
-    def unfollow(self, user_id):
+    def unfollow(self, user_id: int) -> None:
         """
         Unfollow another user.
 
@@ -536,7 +543,7 @@ class User(UserMixin):
         )
         db.commit()
 
-    def is_following(self, user_id):
+    def is_following(self, user_id: int) -> bool:
         """
         Check if currently following another user.
 
@@ -554,7 +561,7 @@ class User(UserMixin):
         )
         return cur.fetchone() is not None
 
-    def get_followers(self):
+    def get_followers(self) -> List[User]:
         """
         Retrieve a list of followers.
 
@@ -593,7 +600,7 @@ class User(UserMixin):
             for row in rows
         ]
 
-    def get_following(self):
+    def get_following(self) -> List[User]:
         """
         Retrieve a list of users being followed.
 
@@ -632,7 +639,7 @@ class User(UserMixin):
             for row in rows
         ]
 
-    def get_follower_count(self):
+    def get_follower_count(self) -> int:
         """
         Get the number of followers.
 
@@ -642,9 +649,9 @@ class User(UserMixin):
         db = get_accounts_db()
         cur = db.cursor()
         cur.execute("SELECT COUNT(*) FROM follows WHERE followed_id = ?", (self.id,))
-        return cur.fetchone()[0]
+        return int(cur.fetchone()[0])
 
-    def get_following_count(self):
+    def get_following_count(self) -> int:
         """
         Get the number of users followed.
 
@@ -654,7 +661,7 @@ class User(UserMixin):
         db = get_accounts_db()
         cur = db.cursor()
         cur.execute("SELECT COUNT(*) FROM follows WHERE follower_id = ?", (self.id,))
-        return cur.fetchone()[0]
+        return int(cur.fetchone()[0])
 
 
 class Soundboard:
@@ -673,13 +680,13 @@ class Soundboard:
 
     def __init__(
         self,
-        id=None,
-        name=None,
-        user_id=None,
-        icon=None,
-        is_public=False,
-        theme_color="#0d6efd",
-        theme_preset="default",
+        id: Optional[int] = None,
+        name: Optional[str] = None,
+        user_id: Optional[int] = None,
+        icon: Optional[str] = None,
+        is_public: bool = False,
+        theme_color: str = "#0d6efd",
+        theme_preset: str = "default",
     ):
         """
         Initialize a new Soundboard instance.
@@ -701,7 +708,7 @@ class Soundboard:
         self.theme_color = theme_color
         self.theme_preset = theme_preset
 
-    def save(self):
+    def save(self) -> None:
         """
         Save the soundboard to the database.
 
@@ -737,7 +744,7 @@ class Soundboard:
             )
         db.commit()
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete the soundboard and all associated sounds."""
         if self.id:
             db = get_soundboards_db()
@@ -748,7 +755,7 @@ class Soundboard:
             db.commit()
 
     @staticmethod
-    def get_by_id(soundboard_id):
+    def get_by_id(soundboard_id: int) -> Optional[Soundboard]:
         """
         Retrieve a soundboard by its ID.
 
@@ -775,7 +782,7 @@ class Soundboard:
         return None
 
     @staticmethod
-    def get_all():
+    def get_all() -> List[Soundboard]:
         """
         Retrieve all soundboards.
 
@@ -800,7 +807,7 @@ class Soundboard:
         ]
 
     @staticmethod
-    def get_by_user_id(user_id):
+    def get_by_user_id(user_id: int) -> List[Soundboard]:
         """
         Retrieve all soundboards created by a specific user.
 
@@ -830,7 +837,7 @@ class Soundboard:
         ]
 
     @staticmethod
-    def get_public(order_by="recent"):
+    def get_public(order_by: str = "recent") -> List[Soundboard]:
         """
         Retrieve public soundboards.
 
@@ -878,7 +885,7 @@ class Soundboard:
         ]
 
     @staticmethod
-    def get_by_tag(tag_name):
+    def get_by_tag(tag_name: str) -> List[Soundboard]:
         """
         Retrieve public soundboards associated with a specific tag.
 
@@ -915,7 +922,7 @@ class Soundboard:
         ]
 
     @staticmethod
-    def get_recent_public(limit=6):
+    def get_recent_public(limit: int = 6) -> List[Soundboard]:
         """
         Retrieve the most recently created public soundboards.
 
@@ -946,7 +953,7 @@ class Soundboard:
         ]
 
     @staticmethod
-    def get_trending(limit=10):
+    def get_trending(limit: int = 10) -> List[Soundboard]:
         """
         Calculate and retrieve trending soundboards.
 
@@ -1002,7 +1009,7 @@ class Soundboard:
         return [x[0] for x in scored_boards[:limit]]
 
     @staticmethod
-    def get_featured():
+    def get_featured() -> Optional[Soundboard]:
         """
         Retrieve the featured soundboard.
 
@@ -1022,7 +1029,7 @@ class Soundboard:
         return trending[0] if trending else None
 
     @staticmethod
-    def search(query, order_by="recent"):
+    def search(query: str, order_by: str = "recent") -> List[Soundboard]:
         """
         Search for soundboards by name, user, sound name, or tag.
 
@@ -1113,7 +1120,7 @@ class Soundboard:
             for row in rows
         ]
 
-    def get_sounds(self):
+    def get_sounds(self) -> List[Sound]:
         """
         Retrieve all sounds associated with this soundboard.
 
@@ -1147,7 +1154,7 @@ class Soundboard:
             for row in rows
         ]
 
-    def get_creator_username(self):
+    def get_creator_username(self) -> str:
         """
         Retrieve the username of the soundboard's creator.
 
@@ -1158,9 +1165,9 @@ class Soundboard:
         cur = db.cursor()
         cur.execute("SELECT username FROM users WHERE id = ?", (self.user_id,))
         row = cur.fetchone()
-        return row["username"] if row else "Unknown"
+        return str(row["username"]) if row else "Unknown"
 
-    def get_average_rating(self):
+    def get_average_rating(self) -> Dict[str, Union[float, int]]:
         """
         Calculate the average rating for the soundboard.
 
@@ -1179,7 +1186,7 @@ class Soundboard:
             "count": row["count"],
         }
 
-    def get_user_rating(self, user_id):
+    def get_user_rating(self, user_id: int) -> int:
         """
         Retrieve the rating given by a specific user.
 
@@ -1196,9 +1203,9 @@ class Soundboard:
             (self.id, user_id),
         )
         row = cur.fetchone()
-        return row["score"] if row else 0
+        return int(row["score"]) if row else 0
 
-    def get_comments(self):
+    def get_comments(self) -> List[Comment]:
         """
         Retrieve all comments on the soundboard.
 
@@ -1223,7 +1230,7 @@ class Soundboard:
             for row in rows
         ]
 
-    def get_tags(self):
+    def get_tags(self) -> List[Tag]:
         """
         Retrieve all tags associated with the soundboard.
 
@@ -1244,16 +1251,18 @@ class Soundboard:
         rows = cur.fetchall()
         return [Tag(id=row["id"], name=row["name"]) for row in rows]
 
-    def get_collaborators(self):
+    def get_collaborators(self) -> List[BoardCollaborator]:
         """
         Retrieve all collaborators for the soundboard.
 
         Returns:
             list[BoardCollaborator]: A list of BoardCollaborator objects.
         """
+        if self.id is None:
+            return []
         return BoardCollaborator.get_for_board(self.id)
 
-    def is_editor(self, user_id):
+    def is_editor(self, user_id: int) -> bool:
         """
         Check if a user is an editor (or owner) of the soundboard.
 
@@ -1265,10 +1274,12 @@ class Soundboard:
         """
         if self.user_id == user_id:
             return True
+        if self.id is None:
+            return False
         collab = BoardCollaborator.get_by_user_and_board(user_id, self.id)
-        return collab and collab.role == "editor"
+        return collab is not None and collab.role == "editor"
 
-    def add_tag(self, tag_name):
+    def add_tag(self, tag_name: str) -> None:
         """
         Add a tag to the soundboard.
 
@@ -1288,7 +1299,7 @@ class Soundboard:
         )
         db.commit()
 
-    def remove_tag(self, tag_name):
+    def remove_tag(self, tag_name: str) -> None:
         """
         Remove a tag from the soundboard.
 
@@ -1306,7 +1317,7 @@ class Soundboard:
         )
         db.commit()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Soundboard {self.name}>"
 
 
@@ -1333,20 +1344,20 @@ class Sound:
 
     def __init__(
         self,
-        id=None,
-        soundboard_id=None,
-        name=None,
-        file_path=None,
-        icon=None,
-        display_order=0,
-        volume=1.0,
-        is_loop=False,
-        start_time=0.0,
-        end_time=None,
-        hotkey=None,
-        bitrate=None,
-        file_size=None,
-        format=None,
+        id: Optional[int] = None,
+        soundboard_id: Optional[int] = None,
+        name: Optional[str] = None,
+        file_path: Optional[str] = None,
+        icon: Optional[str] = None,
+        display_order: int = 0,
+        volume: float = 1.0,
+        is_loop: bool = False,
+        start_time: float = 0.0,
+        end_time: Optional[float] = None,
+        hotkey: Optional[str] = None,
+        bitrate: Optional[int] = None,
+        file_size: Optional[int] = None,
+        format: Optional[str] = None,
     ):
         """
         Initialize a new Sound instance.
@@ -1382,7 +1393,7 @@ class Sound:
         self.file_size = file_size
         self.format = format
 
-    def save(self):
+    def save(self) -> None:
         """Save the sound to the database. Inserts if new, updates otherwise."""
         db = get_soundboards_db()
         cur = db.cursor()
@@ -1437,7 +1448,7 @@ class Sound:
             )
         db.commit()
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete the sound and its associated files from the filesystem."""
         if self.id:
             import os
@@ -1447,11 +1458,12 @@ class Sound:
             db = get_soundboards_db()
             cur = db.cursor()
 
-            full_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"], self.file_path
-            )
-            if os.path.exists(full_path):
-                os.remove(full_path)
+            if self.file_path:
+                full_path = os.path.join(
+                    current_app.config["UPLOAD_FOLDER"], self.file_path
+                )
+                if os.path.exists(full_path):
+                    os.remove(full_path)
 
             if self.icon and "/" in self.icon:
                 icon_full_path = os.path.join(
@@ -1464,7 +1476,7 @@ class Sound:
             db.commit()
 
     @staticmethod
-    def get_by_id(sound_id):
+    def get_by_id(sound_id: int) -> Optional[Sound]:
         """
         Retrieve a sound by its ID.
 
@@ -1497,7 +1509,7 @@ class Sound:
             )
         return None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Sound {self.name}>"
 
 
@@ -1514,7 +1526,12 @@ class Rating:
     """
 
     def __init__(
-        self, id=None, user_id=None, soundboard_id=None, score=0, created_at=None
+        self,
+        id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        soundboard_id: Optional[int] = None,
+        score: int = 0,
+        created_at: Optional[str] = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -1522,7 +1539,7 @@ class Rating:
         self.score = score
         self.created_at = created_at
 
-    def save(self):
+    def save(self) -> None:
         """
         Save the rating to the database.
 
@@ -1555,7 +1572,12 @@ class Comment:
     """
 
     def __init__(
-        self, id=None, user_id=None, soundboard_id=None, text=None, created_at=None
+        self,
+        id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        soundboard_id: Optional[int] = None,
+        text: Optional[str] = None,
+        created_at: Optional[str] = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -1563,7 +1585,7 @@ class Comment:
         self.text = text
         self.created_at = created_at
 
-    def save(self):
+    def save(self) -> None:
         """Save the comment to the database."""
         db = get_soundboards_db()
         cur = db.cursor()
@@ -1577,7 +1599,7 @@ class Comment:
             cur.execute("UPDATE comments SET text=? WHERE id=?", (self.text, self.id))
         db.commit()
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete the comment from the database."""
         if self.id:
             db = get_soundboards_db()
@@ -1586,7 +1608,7 @@ class Comment:
             db.commit()
 
     @staticmethod
-    def get_by_id(comment_id):
+    def get_by_id(comment_id: int) -> Optional[Comment]:
         """
         Retrieve a comment by its ID.
 
@@ -1610,7 +1632,7 @@ class Comment:
             )
         return None
 
-    def get_author_username(self):
+    def get_author_username(self) -> str:
         """
         Retrieve the username of the comment author.
 
@@ -1621,15 +1643,17 @@ class Comment:
         cur = db.cursor()
         cur.execute("SELECT username FROM users WHERE id = ?", (self.user_id,))
         row = cur.fetchone()
-        return row["username"] if row else "Unknown"
+        return str(row["username"]) if row else "Unknown"
 
-    def get_author(self):
+    def get_author(self) -> Optional[User]:
         """
         Retrieve the User object of the comment author.
 
         Returns:
             User or None: The User object.
         """
+        if self.user_id is None:
+            return None
         return User.get_by_id(self.user_id)
 
 
@@ -1648,12 +1672,12 @@ class Playlist:
 
     def __init__(
         self,
-        id=None,
-        user_id=None,
-        name=None,
-        description=None,
-        is_public=False,
-        created_at=None,
+        id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        is_public: bool = False,
+        created_at: Optional[str] = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -1662,7 +1686,7 @@ class Playlist:
         self.is_public = bool(is_public)
         self.created_at = created_at
 
-    def save(self):
+    def save(self) -> None:
         """Save the playlist to the database."""
         db = get_soundboards_db()
         cur = db.cursor()
@@ -1679,7 +1703,7 @@ class Playlist:
             )
         db.commit()
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete the playlist and its items."""
         if self.id:
             db = get_soundboards_db()
@@ -1689,7 +1713,7 @@ class Playlist:
             db.commit()
 
     @staticmethod
-    def get_by_id(playlist_id):
+    def get_by_id(playlist_id: int) -> Optional[Playlist]:
         """
         Retrieve a playlist by its ID.
 
@@ -1715,7 +1739,7 @@ class Playlist:
         return None
 
     @staticmethod
-    def get_by_user_id(user_id):
+    def get_by_user_id(user_id: int) -> List[Playlist]:
         """
         Retrieve all playlists created by a specific user.
 
@@ -1743,7 +1767,7 @@ class Playlist:
             for row in rows
         ]
 
-    def get_sounds(self):
+    def get_sounds(self) -> List[Sound]:
         """
         Retrieve all sounds in the playlist.
 
@@ -1781,7 +1805,7 @@ class Playlist:
             for row in rows
         ]
 
-    def add_sound(self, sound_id):
+    def add_sound(self, sound_id: int) -> None:
         """
         Add a sound to the playlist.
 
@@ -1805,7 +1829,7 @@ class Playlist:
         )
         db.commit()
 
-    def remove_sound(self, sound_id):
+    def remove_sound(self, sound_id: int) -> None:
         """
         Remove a sound from the playlist.
 
@@ -1832,7 +1856,13 @@ class PlaylistItem:
         display_order (int): Order in the playlist.
     """
 
-    def __init__(self, id=None, playlist_id=None, sound_id=None, display_order=0):
+    def __init__(
+        self,
+        id: Optional[int] = None,
+        playlist_id: Optional[int] = None,
+        sound_id: Optional[int] = None,
+        display_order: int = 0,
+    ):
         self.id = id
         self.playlist_id = playlist_id
         self.sound_id = sound_id
@@ -1848,12 +1878,12 @@ class Tag:
         name (str): Tag name.
     """
 
-    def __init__(self, id=None, name=None):
+    def __init__(self, id: Optional[int] = None, name: Optional[str] = None):
         self.id = id
         self.name = name
 
     @staticmethod
-    def get_or_create(name):
+    def get_or_create(name: str) -> Optional[Tag]:
         """
         Retrieve a tag by name or create it if it doesn't exist.
 
@@ -1878,7 +1908,7 @@ class Tag:
         return Tag(id=cur.lastrowid, name=name)
 
     @staticmethod
-    def get_all():
+    def get_all() -> List[Tag]:
         """
         Retrieve all tags.
 
@@ -1892,7 +1922,7 @@ class Tag:
         return [Tag(id=row["id"], name=row["name"]) for row in rows]
 
     @staticmethod
-    def get_popular(limit=10):
+    def get_popular(limit: int = 10) -> List[Tag]:
         """
         Retrieve the most popular tags based on usage.
 
@@ -1932,7 +1962,12 @@ class Activity:
     """
 
     def __init__(
-        self, id=None, user_id=None, action_type=None, description=None, created_at=None
+        self,
+        id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        action_type: Optional[str] = None,
+        description: Optional[str] = None,
+        created_at: Optional[str] = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -1941,7 +1976,7 @@ class Activity:
         self.created_at = created_at
 
     @staticmethod
-    def record(user_id, action_type, description):
+    def record(user_id: int, action_type: str, description: str) -> None:
         """
         Record a new user activity.
 
@@ -1959,7 +1994,7 @@ class Activity:
         db.commit()
 
     @staticmethod
-    def get_recent(limit=20):
+    def get_recent(limit: int = 20) -> List[Activity]:
         """
         Retrieve recent activities.
 
@@ -1986,13 +2021,15 @@ class Activity:
             for row in rows
         ]
 
-    def get_user(self):
+    def get_user(self) -> Optional[User]:
         """
         Retrieve the user associated with this activity.
 
         Returns:
             User or None: The User object.
         """
+        if self.user_id is None:
+            return None
         return User.get_by_id(self.user_id)
 
 
@@ -2012,13 +2049,13 @@ class Notification:
 
     def __init__(
         self,
-        id=None,
-        user_id=None,
-        type=None,
-        message=None,
-        link=None,
-        is_read=False,
-        created_at=None,
+        id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        type: Optional[str] = None,
+        message: Optional[str] = None,
+        link: Optional[str] = None,
+        is_read: bool = False,
+        created_at: Optional[str] = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -2029,7 +2066,7 @@ class Notification:
         self.created_at = created_at
 
     @staticmethod
-    def add(user_id, type, message, link=None):
+    def add(user_id: int, type: str, message: str, link: Optional[str] = None) -> None:
         """
         Create a new notification for a user.
 
@@ -2048,7 +2085,7 @@ class Notification:
         db.commit()
 
     @staticmethod
-    def get_unread_for_user(user_id):
+    def get_unread_for_user(user_id: int) -> List[Notification]:
         """
         Retrieve all unread notifications for a user.
 
@@ -2079,7 +2116,7 @@ class Notification:
         ]
 
     @staticmethod
-    def mark_all_read(user_id):
+    def mark_all_read(user_id: int) -> None:
         """
         Mark all notifications as read for a user.
 
@@ -2098,7 +2135,7 @@ class AdminSettings:
     """Manages global application settings stored in the database."""
 
     @staticmethod
-    def get_setting(key, default=None):
+    def get_setting(key: str, default: Any = None) -> Any:
         """
         Retrieve a setting value by key.
 
@@ -2118,7 +2155,7 @@ class AdminSettings:
         return default
 
     @staticmethod
-    def set_setting(key, value):
+    def set_setting(key: str, value: Any) -> None:
         """
         Set or update a setting value.
 
@@ -2148,7 +2185,12 @@ class BoardCollaborator:
     """
 
     def __init__(
-        self, id=None, soundboard_id=None, user_id=None, role="editor", created_at=None
+        self,
+        id: Optional[int] = None,
+        soundboard_id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        role: str = "editor",
+        created_at: Optional[str] = None,
     ):
         self.id = id
         self.soundboard_id = soundboard_id
@@ -2156,7 +2198,7 @@ class BoardCollaborator:
         self.role = role
         self.created_at = created_at
 
-    def save(self):
+    def save(self) -> None:
         """Save the collaborator record to the database."""
         db = get_soundboards_db()
         cur = db.cursor()
@@ -2172,7 +2214,7 @@ class BoardCollaborator:
             )
         db.commit()
 
-    def delete(self):
+    def delete(self) -> None:
         """Remove the collaborator."""
         if self.id:
             db = get_soundboards_db()
@@ -2181,7 +2223,7 @@ class BoardCollaborator:
             db.commit()
 
     @staticmethod
-    def get_for_board(soundboard_id):
+    def get_for_board(soundboard_id: int) -> List[BoardCollaborator]:
         """
         Retrieve all collaborators for a specific soundboard.
 
@@ -2210,7 +2252,9 @@ class BoardCollaborator:
         ]
 
     @staticmethod
-    def get_by_user_and_board(user_id, soundboard_id):
+    def get_by_user_and_board(
+        user_id: int, soundboard_id: int
+    ) -> Optional[BoardCollaborator]:
         """
         Retrieve a specific collaborator record.
 
@@ -2238,11 +2282,13 @@ class BoardCollaborator:
             )
         return None
 
-    def get_user(self):
+    def get_user(self) -> Optional[User]:
         """
         Retrieve the User object for this collaborator.
 
         Returns:
             User or None: The User object.
         """
+        if self.user_id is None:
+            return None
         return User.get_by_id(self.user_id)

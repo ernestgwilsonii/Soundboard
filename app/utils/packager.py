@@ -9,15 +9,18 @@ import io
 import json
 import os
 import zipfile
+from typing import Any, Dict
 
 from flask import current_app
+
+from app.models import Soundboard
 
 
 class Packager:
     """Handles the logic for exporting soundboards."""
 
     @staticmethod
-    def create_soundboard_pack(soundboard):
+    def create_soundboard_pack(soundboard: Soundboard) -> io.BytesIO:
         """
         Create a ZIP archive containing the soundboard manifest and all associated assets.
 
@@ -31,7 +34,7 @@ class Packager:
 
         with zipfile.ZipFile(memory_file, "w", zipfile.ZIP_DEFLATED) as zf:
             # 1. Generate Manifest
-            manifest = {
+            manifest: Dict[str, Any] = {
                 "version": "1.0",
                 "name": soundboard.name,
                 "icon": (
@@ -46,7 +49,10 @@ class Packager:
 
             # 2. Add Sounds and their assets
             for sound in soundboard.get_sounds():
-                sound_data = {
+                if not sound.file_path:
+                    continue
+
+                sound_data: Dict[str, Any] = {
                     "name": sound.name,
                     "file_name": os.path.basename(sound.file_path),
                     "icon": (

@@ -9,6 +9,7 @@ import json
 import os
 import uuid
 import zipfile
+from typing import BinaryIO, Tuple
 
 from flask import current_app
 
@@ -19,7 +20,7 @@ class AudioProcessor:
     """Placeholder for audio processing during import."""
 
     @staticmethod
-    def process_audio(file_bytes, filename):
+    def process_audio(file_bytes: bytes, filename: str) -> Tuple[bytes, str]:
         """
         Process audio bytes (placeholder).
 
@@ -37,7 +38,7 @@ class Importer:
     """Handles the logic for importing soundboard packs."""
 
     @staticmethod
-    def import_soundboard_pack(zip_stream, user_id):
+    def import_soundboard_pack(zip_stream: BinaryIO, user_id: int) -> Soundboard:
         """
         Extract a Soundboard Pack and reconstruct the soundboard in the database.
 
