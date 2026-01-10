@@ -15,6 +15,7 @@ def test_get_metadata_success():
         with patch("app.utils.audio.os.path.getsize", return_value=5000):
             metadata = AudioProcessor.get_metadata("dummy/path/song.mp3")
 
+            assert metadata is not None
             assert metadata["duration"] == 120.5
             assert metadata["sample_rate"] == 44100
 
@@ -39,10 +40,13 @@ def test_get_metadata_advanced_success():
         with patch("app.utils.audio.os.path.getsize", return_value=1024 * 1024):  # 1MB
             metadata = AudioProcessor.get_metadata("dummy/path/song.mp3")
 
+            assert metadata is not None
             assert metadata["bitrate"] == 128
             assert metadata["file_size"] == 1048576
             assert metadata["format"] == "MP3"
 
+
+def test_normalize_stub():
     """Test that the normalize method exists and runs without error (stub)."""
     # Should not raise exception
     try:

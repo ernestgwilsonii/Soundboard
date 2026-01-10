@@ -27,5 +27,5 @@ def server():
 
 def test_homepage_loads(page: Page, server):
     page.goto(server)
-    expect(page).to_have_title(compiled_regex=r".*Home.*")
+    expect(page).to_have_title(r".*Home.*")
     print("SUCCESS: Homepage verified.")

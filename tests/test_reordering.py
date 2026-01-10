@@ -1,3 +1,5 @@
+"""Tests for sound reordering and playback fields persistence."""
+
 import os
 import sqlite3
 
@@ -10,6 +12,12 @@ from config import Config
 
 @pytest.fixture
 def app_context(monkeypatch):
+    """
+    App context fixture with temporary databases.
+
+    Args:
+        monkeypatch: Pytest monkeypatch fixture.
+    """
     accounts_db = os.path.abspath("test_accounts_reorder.sqlite3")
     soundboards_db = os.path.abspath("test_soundboards_reorder.sqlite3")
 
@@ -39,13 +47,16 @@ def app_context(monkeypatch):
 
 
 def test_sound_default_ordering(app_context):
+    """Test default sound ordering when sounds are added to a board."""
     with app_context.app_context():
         u = User(username="test", email="test@example.com")
         u.set_password("pass")
         u.save()
+        assert u.id is not None
 
         sb = Soundboard(name="Order Board", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
 
         s1 = Sound(soundboard_id=sb.id, name="First", file_path="1/1.mp3")
         s1.save()
@@ -62,13 +73,16 @@ def test_sound_default_ordering(app_context):
 
 
 def test_explicit_ordering(app_context):
+    """Test sound retrieval based on explicit display_order."""
     with app_context.app_context():
         u = User(username="test2", email="test2@example.com")
         u.set_password("pass")
         u.save()
+        assert u.id is not None
 
         sb = Soundboard(name="Explicit Board", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
 
         # Create sounds with explicit swapped orders
         s1 = Sound(
@@ -87,6 +101,7 @@ def test_explicit_ordering(app_context):
 
 
 def test_reorder_api(app_context):
+    """Test the sound reordering API endpoint."""
     client = app_context.test_client()
     from app.models import Sound, Soundboard, User
 
@@ -94,6 +109,7 @@ def test_reorder_api(app_context):
         u = User(username="reorder", email="reorder@example.com")
         u.set_password("pass")
         u.save()
+        assert u.id is not None
 
         from app.models import AdminSettings
 
@@ -101,15 +117,18 @@ def test_reorder_api(app_context):
 
         sb = Soundboard(name="API Board", user_id=u.id, is_public=True)
         sb.save()
+        sb_id = sb.id
+        assert sb_id is not None
 
-        s1 = Sound(soundboard_id=sb.id, name="S1", file_path="1/1.mp3")
+        s1 = Sound(soundboard_id=sb_id, name="S1", file_path="1/1.mp3")
         s1.save()
-        s2 = Sound(soundboard_id=sb.id, name="S2", file_path="1/2.mp3")
+        s2 = Sound(soundboard_id=sb_id, name="S2", file_path="1/2.mp3")
         s2.save()
 
-        sb_id = sb.id
         s1_id = s1.id
+        assert s1_id is not None
         s2_id = s2.id
+        assert s2_id is not None
 
     login_resp = client.post(
         "/auth/login",
@@ -123,8 +142,9 @@ def test_reorder_api(app_context):
     assert response.status_code == 200
 
     with app_context.app_context():
-        sb = Soundboard.get_by_id(sb_id)
-        sounds = sb.get_sounds()
+        sb_loaded = Soundboard.get_by_id(sb_id)
+        assert sb_loaded is not None
+        sounds = sb_loaded.get_sounds()
         assert sounds[0].id == s2_id
         assert sounds[1].id == s1_id
         assert sounds[0].display_order == 1
@@ -132,12 +152,16 @@ def test_reorder_api(app_context):
 
 
 def test_playback_fields_persistence(app_context):
+    """Test that volume, loop, and time fields are correctly persisted."""
     with app_context.app_context():
         u = User(username="pb", email="pb@example.com")
         u.set_password("p")
         u.save()
+        assert u.id is not None
+
         sb = Soundboard(name="PB Board", user_id=u.id, is_public=True)
         sb.save()
+        assert sb.id is not None
 
         s = Sound(
             soundboard_id=sb.id,
@@ -150,10 +174,12 @@ def test_playback_fields_persistence(app_context):
         )
         s.save()
         sid = s.id
+        assert sid is not None
 
     with app_context.app_context():
-        s = Sound.get_by_id(sid)
-        assert s.volume == 0.5
-        assert s.is_loop is True
-        assert s.start_time == 1.5
-        assert s.end_time == 10.0
+        s_loaded = Sound.get_by_id(sid)
+        assert s_loaded is not None
+        assert s_loaded.volume == 0.5
+        assert s_loaded.is_loop is True
+        assert s_loaded.start_time == 1.5
+        assert s_loaded.end_time == 10.0

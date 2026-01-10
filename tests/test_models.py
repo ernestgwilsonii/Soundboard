@@ -1,3 +1,5 @@
+"""Tests for application models."""
+
 import os
 import sqlite3
 
@@ -9,6 +11,7 @@ from app.models import Sound, Soundboard, User
 
 @pytest.fixture
 def app():
+    """App fixture for model tests."""
     app = create_app()
     app.config["TESTING"] = True
     # Use in-memory or temp DBs for tests?
@@ -38,6 +41,7 @@ def app():
 
 
 def test_user_password_hashing(app):
+    """Test user password hashing and verification."""
     u = User(username="test", email="test@example.com")
     u.set_password("cat")
     assert not u.check_password("dog")
@@ -45,11 +49,13 @@ def test_user_password_hashing(app):
 
 
 def test_user_representation(app):
+    """Test user string representation."""
     u = User(username="test", email="test@example.com")
     assert str(u) == "<User test>"
 
 
 def test_user_mixin_inheritance(app):
+    """Test that User inherits from UserMixin correctly."""
     from flask_login import UserMixin
 
     u = User(username="test", email="test@example.com")
@@ -60,16 +66,20 @@ def test_user_mixin_inheritance(app):
 
 
 def test_user_active_status(app):
+    """Test user active status toggling and persistence."""
     u = User(username="inactive", email="inactive@e.com", active=False)
     u.set_password("cat")
     u.save()
+    assert u.id is not None
 
     u2 = User.get_by_id(u.id)
+    assert u2 is not None
     assert u2.active is False
     assert u2.is_active is False
 
 
 def test_user_favorites(app):
+    """Test user favorite soundboard management."""
     u = User(username="favuser", email="fav@e.com")
     u.set_password("cat")
     u.save()
@@ -86,6 +96,7 @@ def test_user_favorites(app):
 
 
 def test_user_get_all(app):
+    """Test retrieving all users from the database."""
     # Already some users created in previous tests might exist if not cleared
     # But fixture clears them.
     u1 = User(username="user1", email="u1@e.com")
@@ -103,6 +114,7 @@ def test_user_get_all(app):
 
 
 def test_soundboard_model(app):
+    """Test basic Soundboard model properties and representation."""
     s = Soundboard(name="My Board", user_id=1, icon="fas fa-music", is_public=True)
     assert s.name == "My Board"
     assert s.user_id == 1
@@ -112,6 +124,7 @@ def test_soundboard_model(app):
 
 
 def test_soundboard_get_all(app):
+    """Test retrieving all soundboards from the database."""
     s1 = Soundboard(name="SB1", user_id=1)
     s1.save()
     s2 = Soundboard(name="SB2", user_id=1)
@@ -125,6 +138,7 @@ def test_soundboard_get_all(app):
 
 
 def test_sound_model(app):
+    """Test basic Sound model properties and representation."""
     s = Sound(
         name="Explosion",
         soundboard_id=1,
@@ -139,6 +153,7 @@ def test_sound_model(app):
 
 
 def test_soundboard_crud(app):
+    """Test Create, Read, Update, and Delete operations for Soundboard."""
     # Create
     s = Soundboard(name="CRUD Board", user_id=1, icon="test-icon", is_public=True)
     s.save()
@@ -146,6 +161,7 @@ def test_soundboard_crud(app):
 
     # Read
     s2 = Soundboard.get_by_id(s.id)
+    assert s2 is not None
     assert s2.name == "CRUD Board"
     assert s2.is_public is True
 
@@ -153,6 +169,7 @@ def test_soundboard_crud(app):
     s2.is_public = False
     s2.save()
     s3 = Soundboard.get_by_id(s.id)
+    assert s3 is not None
     assert s3.is_public is False
 
     # Delete
@@ -161,6 +178,7 @@ def test_soundboard_crud(app):
 
 
 def test_soundboard_get_public(app):
+    """Test retrieving only public soundboards."""
     # Create public and private boards
     s1 = Soundboard(name="Public Board", user_id=1, is_public=True)
     s1.save()
@@ -175,6 +193,7 @@ def test_soundboard_get_public(app):
 
 
 def test_soundboard_search(app):
+    """Test soundboard search functionality."""
     from app.models import Sound, Soundboard, User
 
     with app.app_context():
@@ -211,6 +230,7 @@ def test_soundboard_search(app):
 
 
 def test_sound_crud(app):
+    """Test Create, Read, Update, and Delete operations for Sound."""
     # Create
     s = Sound(
         name="CRUD Sound", soundboard_id=1, file_path="path/to/file", icon="test-icon"
@@ -220,12 +240,14 @@ def test_sound_crud(app):
 
     # Read
     s2 = Sound.get_by_id(s.id)
+    assert s2 is not None
     assert s2.name == "CRUD Sound"
 
     # Update
     s2.name = "Updated Sound"
     s2.save()
     s3 = Sound.get_by_id(s.id)
+    assert s3 is not None
     assert s3.name == "Updated Sound"
 
     # Delete

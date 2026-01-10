@@ -43,8 +43,11 @@ def test_get_trending_logic(client):
         u2.set_password("p")
         u2.save()
 
-        # u2 follows u1 (u1 has 1 follower)
-        u2.follow(u1.id)
+        assert u1.id is not None
+        assert u2.id is not None
+
+        # U1 follows U2 -> U2 (and its boards) gets 2 points
+        u1.follow(u2.id)
 
         # Setup boards
         # sb1: high rating, 1 creator follower

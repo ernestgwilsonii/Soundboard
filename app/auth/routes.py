@@ -157,6 +157,7 @@ def register():
 
         from app.models import Activity
 
+        assert user.id is not None
         Activity.record(user.id, "registration", "Joined the community!")
 
         send_verification_email(user)
@@ -202,6 +203,7 @@ def mark_notifications_read():
 
     from app.models import Notification
 
+    assert current_user.id is not None
     Notification.mark_all_read(current_user.id)
     return jsonify({"status": "success"})
 
@@ -217,6 +219,7 @@ def unread_notifications_count():
     """
     from app.models import Notification
 
+    assert current_user.id is not None
     unread = Notification.get_unread_for_user(current_user.id)
     data = [
         {"message": n.message, "link": n.link or "#", "created_at": str(n.created_at)}
@@ -407,6 +410,7 @@ def public_profile(username):
         flash("User not found.")
         return redirect(url_for("main.index"))
 
+    assert user.id is not None
     public_sbs = Soundboard.get_by_user_id(user.id)
     # Filter for public only if it's not the owner viewing their own public profile
     # (actually public profile should always show only public sbs)
@@ -521,6 +525,9 @@ def follow(username):
     if user.id == current_user.id:
         flash("You cannot follow yourself!")
         return redirect(url_for("auth.public_profile", username=username))
+
+    assert current_user.id is not None
+    assert user.id is not None
     current_user.follow(user.id)
 
     from app.models import Activity

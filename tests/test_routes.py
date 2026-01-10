@@ -1,3 +1,5 @@
+"""Tests for application routes."""
+
 import os
 import sqlite3
 
@@ -9,6 +11,12 @@ from config import Config
 
 @pytest.fixture
 def client(monkeypatch):
+    """
+    Test client fixture with temporary databases.
+
+    Args:
+        monkeypatch: Pytest monkeypatch fixture.
+    """
     # Use temporary DBs for route tests
     accounts_db = os.path.abspath("test_accounts_routes.sqlite3")
     soundboards_db = os.path.abspath("test_soundboards_routes.sqlite3")
@@ -45,12 +53,14 @@ def client(monkeypatch):
 
 
 def test_index_route(client):
+    """Test the index route."""
     response = client.get("/")
     assert response.status_code == 200
     assert b"Soundboard" in response.data
 
 
 def test_auth_blueprint_registered(client):
+    """Test that the auth blueprint is registered and routes are correct."""
     from flask import url_for
 
     with client.application.test_request_context():
@@ -61,6 +71,7 @@ def test_auth_blueprint_registered(client):
 
 
 def test_registration_flow(client):
+    """Test the user registration flow."""
     # Registration flow should redirect to login upon success
     response = client.post(
         "/auth/register",
@@ -79,6 +90,7 @@ def test_registration_flow(client):
 
 
 def test_login_flow(client):
+    """Test the user login flow."""
     from app.models import User
 
     with client.application.app_context():
@@ -97,6 +109,7 @@ def test_login_flow(client):
 
 
 def test_logout_flow(client):
+    """Test the user logout flow."""
     from app.models import User
 
     with client.application.app_context():
@@ -114,6 +127,7 @@ def test_logout_flow(client):
 
 
 def test_profile_protected(client):
+    """Test that the profile page is protected and requires login."""
     response = client.get("/auth/profile", follow_redirects=True)
     assert b"Sign In" in response.data
 
@@ -134,6 +148,7 @@ def test_profile_protected(client):
 
 
 def test_soundboard_blueprint_registered(client):
+    """Test that the soundboard blueprint is registered."""
     from flask import url_for
 
     with client.application.test_request_context():
@@ -142,6 +157,7 @@ def test_soundboard_blueprint_registered(client):
 
 
 def test_soundboard_creation_flow(client):
+    """Test the soundboard creation flow."""
     from app.models import User
 
     with client.application.app_context():
@@ -171,6 +187,7 @@ def test_soundboard_creation_flow(client):
 
 
 def test_gallery_route(client):
+    """Test the soundboard gallery route."""
     from app.models import Soundboard, User
 
     with client.application.app_context():
@@ -186,6 +203,7 @@ def test_gallery_route(client):
 
 
 def test_search_route(client):
+    """Test the soundboard search route."""
     from app.models import Soundboard, User
 
     with client.application.app_context():
@@ -201,6 +219,7 @@ def test_search_route(client):
 
 
 def test_view_access_control(client):
+    """Test access control for viewing soundboards."""
     from app.models import Soundboard, User
 
     with client.application.app_context():
@@ -237,6 +256,7 @@ def test_view_access_control(client):
 
 
 def test_admin_crud_override(client):
+    """Test that an admin can edit and delete any soundboard."""
     from app.models import Soundboard, User
 
     with client.application.app_context():
@@ -247,6 +267,7 @@ def test_admin_crud_override(client):
         s = Soundboard(name="Regular Board", user_id=u.id)
         s.save()
         sb_id = s.id
+        assert sb_id is not None
 
         # Admin exists
         a = User(username="bigadmin", email="admin@test.com", role="admin")
@@ -275,6 +296,7 @@ def test_admin_crud_override(client):
 
 
 def test_admin_required_logic(client):
+    """Test the administrative requirement logic."""
     from app.models import User
 
     with client.application.app_context():
@@ -295,6 +317,7 @@ def test_admin_required_logic(client):
 
 
 def test_admin_required_decorator(client):
+    """Test the admin_required decorator."""
     from app.models import User
 
     with client.application.app_context():
@@ -333,6 +356,7 @@ def test_admin_required_decorator(client):
 
 
 def test_toggle_user_active_flow(client):
+    """Test the flow for toggling a user's active status."""
     from app.models import User
 
     with client.application.app_context():
@@ -340,6 +364,7 @@ def test_toggle_user_active_flow(client):
         u.set_password("cat")
         u.save()
         user_id = u.id
+        assert user_id is not None
 
         a = User(username="tgladmin", email="tgla@e.com", role="admin")
         a.set_password("cat")
@@ -357,6 +382,7 @@ def test_toggle_user_active_flow(client):
     assert b"has been disabled" in response.data
     with client.application.app_context():
         u2 = User.get_by_id(user_id)
+        assert u2 is not None
         assert u2.active is False
 
     # Toggle back to active
@@ -366,10 +392,12 @@ def test_toggle_user_active_flow(client):
     assert b"has been enabled" in response.data
     with client.application.app_context():
         u3 = User.get_by_id(user_id)
+        assert u3 is not None
         assert u3.active is True
 
 
 def test_toggle_user_role_flow(client):
+    """Test the flow for toggling a user's role."""
     from app.models import User
 
     with client.application.app_context():
@@ -377,6 +405,7 @@ def test_toggle_user_role_flow(client):
         u.set_password("cat")
         u.save()
         user_id = u.id
+        assert user_id is not None
 
         a = User(username="roleadmin", email="rolea@e.com", role="admin")
         a.set_password("cat")
@@ -392,6 +421,7 @@ def test_toggle_user_role_flow(client):
     assert b"role changed to admin" in response.data
     with client.application.app_context():
         u2 = User.get_by_id(user_id)
+        assert u2 is not None
         assert u2.role == "admin"
 
     # Toggle back to user
@@ -399,10 +429,12 @@ def test_toggle_user_role_flow(client):
     assert b"role changed to user" in response.data
     with client.application.app_context():
         u3 = User.get_by_id(user_id)
+        assert u3 is not None
         assert u3.role == "user"
 
 
 def test_admin_password_reset_flow(client):
+    """Test the administrative password reset flow."""
     from app.models import User
 
     with client.application.app_context():
@@ -410,6 +442,7 @@ def test_admin_password_reset_flow(client):
         u.set_password("oldpass")
         u.save()
         user_id = u.id
+        assert user_id is not None
 
         a = User(username="resetadmin", email="reseta@e.com", role="admin")
         a.set_password("cat")
@@ -444,6 +477,7 @@ def test_admin_password_reset_flow(client):
 
 
 def test_update_profile_flow(client):
+    """Test the user profile update flow."""
     from app.models import User
 
     with client.application.app_context():
@@ -451,6 +485,7 @@ def test_update_profile_flow(client):
         u.set_password("cat")
         u.save()
         user_id = u.id
+        assert user_id is not None
 
     client.post(
         "/auth/login",
@@ -468,10 +503,12 @@ def test_update_profile_flow(client):
 
     with client.application.app_context():
         u_updated = User.get_by_id(user_id)
+        assert u_updated is not None
         assert u_updated.email == "mail@new.com"
 
 
 def test_admin_update_email_flow(client):
+    """Test the administrative email update flow."""
     from app.models import User
 
     with client.application.app_context():
@@ -479,6 +516,7 @@ def test_admin_update_email_flow(client):
         u.set_password("cat")
         u.save()
         user_id = u.id
+        assert user_id is not None
 
         a = User(username="admin_boss", email="boss@test.com", role="admin")
         a.set_password("cat")
@@ -501,10 +539,12 @@ def test_admin_update_email_flow(client):
 
     with client.application.app_context():
         u_updated = User.get_by_id(user_id)
+        assert u_updated is not None
         assert u_updated.email == "target@new.com"
 
 
 def test_soundboard_edit_flow(client):
+    """Test the soundboard edit flow."""
     from app.models import Soundboard, User
 
     with client.application.app_context():
@@ -514,6 +554,7 @@ def test_soundboard_edit_flow(client):
         s = Soundboard(name="Old Name", user_id=u.id, icon="old-icon", is_public=False)
         s.save()
         sb_id = s.id
+        assert sb_id is not None
 
     client.post(
         "/auth/login",
@@ -537,11 +578,13 @@ def test_soundboard_edit_flow(client):
 
     with client.application.app_context():
         s_updated = Soundboard.get_by_id(sb_id)
+        assert s_updated is not None
         assert s_updated.name == "New Name"
         assert s_updated.is_public is True
 
 
 def test_soundboard_delete_flow(client):
+    """Test the soundboard delete flow."""
     from app.models import Soundboard, User
 
     with client.application.app_context():
@@ -551,6 +594,7 @@ def test_soundboard_delete_flow(client):
         s = Soundboard(name="To Delete", user_id=u.id, icon="del-icon")
         s.save()
         sb_id = s.id
+        assert sb_id is not None
 
     client.post(
         "/auth/login",
@@ -567,6 +611,7 @@ def test_soundboard_delete_flow(client):
 
 
 def test_sound_upload_flow(client):
+    """Test the sound upload flow."""
     import io
 
     from app.models import Sound, Soundboard, User
@@ -578,6 +623,7 @@ def test_sound_upload_flow(client):
         s = Soundboard(name="Upload Board", user_id=u.id)
         s.save()
         sb_id = s.id
+        assert sb_id is not None
 
     client.post(
         "/auth/login",
@@ -603,11 +649,14 @@ def test_sound_upload_flow(client):
 
     with client.application.app_context():
         sbs = Soundboard.get_by_id(sb_id)
+        assert sbs is not None
         sounds = sbs.get_sounds()
         assert len(sounds) == 1
         assert sounds[0].name == "Test Sound"
+        assert sounds[0].file_path is not None
         assert sounds[0].file_path.endswith("test.mp3")
         sound_id = sounds[0].id
+        assert sound_id is not None
 
     # Delete sound
     response = client.post(
@@ -621,6 +670,7 @@ def test_sound_upload_flow(client):
 
 
 def test_soundboard_view_route(client):
+    """Test the soundboard view route."""
     from app.models import Sound, Soundboard, User
 
     with client.application.app_context():
@@ -632,6 +682,7 @@ def test_soundboard_view_route(client):
         snd = Sound(soundboard_id=s.id, name="View Sound", file_path="1/test.mp3")
         snd.save()
         sb_id = s.id
+        assert sb_id is not None
 
     response = client.get(f"/soundboard/view/{sb_id}")
     assert response.status_code == 200
@@ -640,6 +691,7 @@ def test_soundboard_view_route(client):
 
 
 def test_sidebar_data_route(client):
+    """Test the sidebar data JSON route."""
     from app.models import Soundboard, User
 
     with client.application.app_context():
@@ -664,6 +716,7 @@ def test_sidebar_data_route(client):
 
 
 def test_change_password_route(client):
+    """Test the change password route."""
     from app.models import User
 
     with client.application.app_context():

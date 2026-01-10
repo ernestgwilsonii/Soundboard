@@ -5,6 +5,8 @@ This module handles soundboard creation, editing, viewing, and sound management.
 It also includes playlist functionality and social interactions (likes, comments).
 """
 
+from typing import List
+
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
@@ -25,6 +27,7 @@ def dashboard():
 
     Displays a list of the user's soundboards.
     """
+    assert current_user.id is not None
     sbs = Soundboard.get_by_user_id(current_user.id)
     return render_template(
         "soundboard/dashboard.html", title="My Soundboards", soundboards=sbs
@@ -55,6 +58,7 @@ def view(id):
     is_favorite = False
     user_rating = 0
     if current_user.is_authenticated:
+        assert current_user.id is not None
         favorites = current_user.get_favorites()
         if s.id in favorites:
             is_favorite = True
@@ -135,6 +139,8 @@ def rate_board(id):
     if score < 1 or score > 5:
         return jsonify({"error": "Score must be between 1 and 5"}), 400
 
+    assert current_user.id is not None
+    assert s.id is not None
     rating = Rating(user_id=current_user.id, soundboard_id=s.id, score=score)
     rating.save()
 
@@ -149,6 +155,7 @@ def rate_board(id):
 
         msg = f'{current_user.username} rated your soundboard "{s.name}" {score} stars.'
         link = url_for("soundboard.view", id=s.id)
+        assert s.user_id is not None
         Notification.add(s.user_id, "rating", msg, link)
         send_instant_notification(s.user_id, msg, link)
 
@@ -182,6 +189,8 @@ def post_comment(id):
 
     form = CommentForm()
     if form.validate_on_submit():
+        assert current_user.id is not None
+        assert s.id is not None
         comment = Comment(
             user_id=current_user.id, soundboard_id=s.id, text=form.text.data
         )
@@ -194,6 +203,7 @@ def post_comment(id):
 
             msg = f'{current_user.username} commented on your soundboard: "{s.name}"'
             link = url_for("soundboard.view", id=s.id)
+            assert s.user_id is not None
             Notification.add(s.user_id, "comment", msg, link)
             send_instant_notification(s.user_id, msg, link)
 
@@ -218,9 +228,12 @@ def delete_comment(id):
         flash("Comment not found.")
         return redirect(url_for("main.index"))
 
+    assert comment.soundboard_id is not None
     s = Soundboard.get_by_id(comment.soundboard_id)
+    assert s is not None
 
     # Permission check: Author OR Board Owner OR Admin
+    assert current_user.id is not None
     if (
         comment.user_id != current_user.id
         and s.user_id != current_user.id
@@ -231,6 +244,7 @@ def delete_comment(id):
 
     comment.delete()
     flash("Comment deleted.")
+    assert s.id is not None
     return redirect(url_for("soundboard.view", id=s.id))
 
 
@@ -252,6 +266,7 @@ def reorder_sounds(id):
     if s is None:
         return jsonify({"error": "Soundboard not found"}), 404
 
+    assert current_user.id is not None
     if s.user_id != current_user.id and current_user.role != "admin":
         return jsonify({"error": "Permission denied"}), 403
 
@@ -264,6 +279,7 @@ def reorder_sounds(id):
     cur = db.cursor()
 
     try:
+        assert s.id is not None
         for index, sound_id in enumerate(sound_ids):
             cur.execute(
                 "UPDATE sounds SET display_order = ? WHERE id = ? AND soundboard_id = ?",
@@ -317,11 +333,14 @@ def add_collaborator(id):
         return redirect(url_for("soundboard.dashboard"))
 
     username = request.form.get("username")
+    assert username is not None
     user = User.get_by_username(username)
     if user is None:
         flash("User not found.")
         return redirect(url_for("soundboard.edit", id=s.id))
 
+    assert user.id is not None
+    assert s.id is not None
     if user.id == s.user_id:
         flash("Owner is already a collaborator.")
         return redirect(url_for("soundboard.edit", id=s.id))
@@ -331,6 +350,8 @@ def add_collaborator(id):
         flash("User is already a collaborator.")
         return redirect(url_for("soundboard.edit", id=s.id))
 
+    assert s.id is not None
+    assert user.id is not None
     collab = BoardCollaborator(soundboard_id=s.id, user_id=user.id, role="editor")
     collab.save()
 
@@ -358,31 +379,30 @@ def delete_collaborator(id):
     """
     from app.models import BoardCollaborator
 
-    collab = BoardCollaborator.get_by_user_and_board(
-        request.form.get("user_id"), request.form.get("board_id")
-    )
-    # Wait, the ID should be the collaborator record ID if possible, but user/board pair is safer.
-    # Actually, let's use the record ID if we can pass it.
-    collab = BoardCollaborator.get_by_user_and_board(
-        id, request.form.get("board_id")
-    )  # id here is user_id based on typical flow
+    u_id_raw = request.form.get("user_id")
+    b_id_raw = request.form.get("board_id")
+    assert u_id_raw is not None
+    assert b_id_raw is not None
+    user_id = int(u_id_raw)
+    board_id = int(b_id_raw)
 
-    # Redefine:
-    user_id = id
-    board_id = request.form.get("board_id")
     collab = BoardCollaborator.get_by_user_and_board(user_id, board_id)
 
     if collab is None:
         flash("Collaborator not found.")
         return redirect(url_for("soundboard.dashboard"))
 
+    assert collab.soundboard_id is not None
     s = Soundboard.get_by_id(collab.soundboard_id)
+    assert s is not None
+    assert current_user.id is not None
     if s.user_id != current_user.id and current_user.role != "admin":
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
 
     collab.delete()
     flash("Collaborator removed.")
+    assert s.id is not None
     return redirect(url_for("soundboard.edit", id=s.id))
 
 
@@ -407,8 +427,9 @@ def check_name():
     # Check if this user already has a board with this name
     from app.models import Soundboard
 
+    assert current_user.id is not None
     user_boards = Soundboard.get_by_user_id(current_user.id)
-    exists = any(sb.name.lower() == name.lower() for sb in user_boards)
+    exists = any(sb.name and sb.name.lower() == name.lower() for sb in user_boards)
     return jsonify({"available": not exists})
 
 
@@ -460,6 +481,7 @@ def create():
             f.save(full_path)
             icon = icon_path
 
+        assert current_user.id is not None
         s = Soundboard(
             name=form.name.data,
             user_id=current_user.id,
@@ -472,7 +494,8 @@ def create():
 
         # Process tags
         if form.tags.data:
-            tag_list = [t.strip() for t in form.tags.data.split(",") if t.strip()]
+            tag_data: str = form.tags.data
+            tag_list = [t.strip() for t in tag_data.split(",") if t.strip()]
             for tag_name in tag_list:
                 s.add_tag(tag_name)
 
@@ -513,12 +536,14 @@ def edit(id):
         return redirect(url_for("soundboard.dashboard"))
 
     # Ownership check with admin override
+    assert current_user.id is not None
     if s.user_id != current_user.id and current_user.role != "admin":
         flash("You do not have permission to edit this soundboard.")
         return redirect(url_for("soundboard.dashboard"))
 
     form = SoundboardForm()
     if form.validate_on_submit():
+        assert s.id is not None
         s.name = form.name.data
         s.is_public = form.is_public.data
         s.theme_color = form.theme_color.data
@@ -538,8 +563,8 @@ def edit(id):
         broadcast_board_update(s.id, "board_metadata_updated")
 
         # Process tags (replace existing)
-        current_tags = [t.name for t in s.get_tags()]
-        new_tags = (
+        current_tags: List[str] = [t.name for t in s.get_tags() if t.name is not None]
+        new_tags: List[str] = (
             [t.strip().lower() for t in form.tags.data.split(",") if t.strip()]
             if form.tags.data
             else []
@@ -561,7 +586,7 @@ def edit(id):
         form.is_public.data = s.is_public
         form.theme_color.data = s.theme_color
         form.theme_preset.data = s.theme_preset
-        form.tags.data = ", ".join([t.name for t in s.get_tags()])
+        form.tags.data = ", ".join([t.name for t in s.get_tags() if t.name is not None])
 
     # Get sounds for this board
     sounds = s.get_sounds()
@@ -597,6 +622,7 @@ def upload_sound(id):
         return redirect(url_for("soundboard.dashboard"))
 
     # Ownership check with admin override
+    assert current_user.id is not None
     if s.user_id != current_user.id and current_user.role != "admin":
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
@@ -607,6 +633,7 @@ def upload_sound(id):
         filename = secure_filename(f.filename)
 
         # Create directory for soundboard if it doesn't exist
+        assert s.id is not None
         sb_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], str(s.id))
         if not os.path.exists(sb_dir):
             os.makedirs(sb_dir)
@@ -675,12 +702,16 @@ def delete_sound(id):
         return redirect(url_for("soundboard.dashboard"))
 
     # Check board ownership with admin override
+    assert sound.soundboard_id is not None
     s = Soundboard.get_by_id(sound.soundboard_id)
-    if s is None or (s.user_id != current_user.id and current_user.role != "admin"):
+    assert s is not None
+    assert current_user.id is not None
+    if s.user_id != current_user.id and current_user.role != "admin":
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
 
     sound.delete()
+    assert s.id is not None
     broadcast_board_update(s.id, "sound_deleted", {"id": id})
     flash("Sound deleted.")
     return redirect(url_for("soundboard.edit", id=s.id))
@@ -704,7 +735,12 @@ def update_sound_settings(id):
     if sound is None:
         return jsonify({"error": "Sound not found"}), 404
 
+    assert sound.soundboard_id is not None
     s = Soundboard.get_by_id(sound.soundboard_id)
+    if s is None:
+        return jsonify({"error": "Soundboard not found"}), 404
+
+    assert current_user.id is not None
     if s.user_id != current_user.id and current_user.role != "admin":
         return jsonify({"error": "Permission denied"}), 403
 
@@ -720,7 +756,9 @@ def update_sound_settings(id):
     sound.icon = data.get("icon", sound.icon)
 
     sound.save()
+    assert s.id is not None
     broadcast_board_update(s.id, "sound_updated", {"id": id, "name": sound.name})
+
     return jsonify({"status": "success"})
 
 
@@ -739,6 +777,7 @@ def delete(id):
         return redirect(url_for("soundboard.dashboard"))
 
     # Ownership check with admin override
+    assert current_user.id is not None
     if s.user_id != current_user.id and current_user.role != "admin":
         flash("You do not have permission to delete this soundboard.")
         return redirect(url_for("soundboard.dashboard"))
@@ -755,6 +794,7 @@ def playlists():
     """Render the playlists management page."""
     from app.models import Playlist
 
+    assert current_user.id is not None
     user_playlists = Playlist.get_by_user_id(current_user.id)
     return render_template(
         "soundboard/playlists.html", title="My Playlists", playlists=user_playlists
@@ -770,6 +810,7 @@ def create_playlist():
 
     form = PlaylistForm()
     if form.validate_on_submit():
+        assert current_user.id is not None
         pl = Playlist(
             user_id=current_user.id,
             name=form.name.data,
@@ -805,6 +846,7 @@ def add_to_playlist(playlist_id, sound_id):
     if pl is None:
         return jsonify({"error": "Playlist not found"}), 404
 
+    assert current_user.id is not None
     if pl.user_id != current_user.id and current_user.role != "admin":
         return jsonify({"error": "Permission denied"}), 403
 
@@ -813,7 +855,9 @@ def add_to_playlist(playlist_id, sound_id):
         return jsonify({"error": "Sound not found"}), 404
 
     # Check if sound is accessible (own board or public)
+    assert sound.soundboard_id is not None
     s = Soundboard.get_by_id(sound.soundboard_id)
+    assert s is not None
     if (
         not s.is_public
         and s.user_id != current_user.id
@@ -821,6 +865,7 @@ def add_to_playlist(playlist_id, sound_id):
     ):
         return jsonify({"error": "Sound is private"}), 403
 
+    assert sound.id is not None
     pl.add_sound(sound.id)
     return jsonify({"status": "success"})
 
@@ -867,6 +912,7 @@ def delete_playlist(id):
         flash("Playlist not found.")
         return redirect(url_for("soundboard.playlists"))
 
+    assert current_user.id is not None
     if pl.user_id != current_user.id and current_user.role != "admin":
         flash("Permission denied.")
         return redirect(url_for("soundboard.playlists"))
@@ -886,6 +932,7 @@ def tag_search(tag_name):
     """
     from app.models import Soundboard
 
+    assert tag_name is not None
     sbs = Soundboard.get_by_tag(tag_name)
 
     return render_template(
@@ -915,18 +962,16 @@ def export_soundboard(id):
     s = Soundboard.get_by_id(id)
 
     if s is None:
-
         flash("Soundboard not found.")
-
         return redirect(url_for("soundboard.dashboard"))
 
+    assert current_user.id is not None
     if s.user_id != current_user.id and current_user.role != "admin":
-
         flash("Permission denied.")
-
         return redirect(url_for("soundboard.dashboard"))
 
     pack_data = Packager.create_soundboard_pack(s)
+    assert s.name is not None
     safe_name = (
         "".join([c for c in s.name if c.isalnum() or c in (" ", "_")])
         .strip()
@@ -952,6 +997,7 @@ def import_soundboard():
     form = ImportPackForm()
     if form.validate_on_submit():
         try:
+            assert current_user.id is not None
             new_sb = Importer.import_soundboard_pack(
                 form.pack_file.data, current_user.id
             )

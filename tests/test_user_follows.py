@@ -51,6 +51,9 @@ def test_user_follow_unfollow(client):
         u2.set_password("pass2")
         u2.save()
 
+        assert u1.id is not None
+        assert u2.id is not None
+
         # Test follow
         u1.follow(u2.id)
         assert u1.is_following(u2.id) is True
