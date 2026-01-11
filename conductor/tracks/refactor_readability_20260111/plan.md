@@ -10,7 +10,7 @@
 - [x] Refactor `app/models.py` to use these Enums instead of string literals (e.g., "admin", "public") 3ceb365
 - [x] Refactor `app/routes.py` (and blueprints) to use these Enums and Constants ee0e328
 
-## Phase 2: Modularization (Breaking the Monoliths)
+## Phase 2: Modularization (Breaking the Monoliths) [checkpoint: 67c553b]
 - [x] Refactor `app/models.py`: Split into a package `app/models/` 39a352f
 - [x] Update all imports across the application to point to the new model locations (or ensuring `__init__` handles it correctly) 0b43a4b
 - [ ] Verify application starts and runs correctly [checkpoint]
