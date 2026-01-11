@@ -10,6 +10,7 @@ from flask_login import current_user
 
 from app.admin import bp
 from app.auth.routes import admin_required
+from app.enums import UserRole
 from app.models import AdminSettings, Soundboard, User
 
 
@@ -111,7 +112,7 @@ def toggle_user_active(id):
 @admin_required
 def toggle_user_role(id):
     """
-    Toggle a user's role between 'user' and 'admin'.
+    Toggle a user's role between USER and ADMIN.
 
     Args:
         id (int): The user ID.
@@ -124,7 +125,7 @@ def toggle_user_role(id):
         flash("You cannot change your own role!")
         return redirect(url_for("admin.users"))
 
-    u.role = "admin" if u.role == "user" else "user"
+    u.role = UserRole.ADMIN if u.role == UserRole.USER else UserRole.USER
     u.save()
     flash(f"User {u.username} role changed to {u.role}.")
     return redirect(url_for("admin.users"))

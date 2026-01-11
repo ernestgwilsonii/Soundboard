@@ -10,6 +10,8 @@ from typing import Any, Dict, List
 from flask import jsonify, render_template, request, url_for
 from flask_login import current_user
 
+from app.constants import DEFAULT_PAGE_SIZE
+from app.enums import UserRole
 from app.main import bp
 from app.models import Activity, AdminSettings, Soundboard
 
@@ -62,7 +64,7 @@ def check_maintenance():
     is_maintenance = AdminSettings.get_setting("maintenance_mode") == "1"
     if is_maintenance:
         # Admins bypass maintenance
-        if current_user.is_authenticated and current_user.role == "admin":
+        if current_user.is_authenticated and current_user.role == UserRole.ADMIN:
             return
 
         return render_template("maintenance.html"), 503
@@ -158,7 +160,7 @@ def get_activities():
     Returns:
         JSON: List of activity objects.
     """
-    limit = request.args.get("limit", 10, type=int)
+    limit = request.args.get("limit", DEFAULT_PAGE_SIZE, type=int)
     activities = Activity.get_recent(limit=limit)
     data = []
     for a in activities:

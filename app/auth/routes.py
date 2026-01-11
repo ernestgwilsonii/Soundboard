@@ -13,6 +13,8 @@ from flask_login import current_user, login_required
 from app import limiter
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm
+from app.constants import DEFAULT_PAGE_SIZE
+from app.enums import UserRole
 
 
 def admin_required(f):
@@ -25,7 +27,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         """Wrapper to perform the check."""
-        if not current_user.is_authenticated or current_user.role != "admin":
+        if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
             flash("You do not have permission to access this page.")
             return redirect(url_for("main.index"))
         return f(*args, **kwargs)
@@ -145,7 +147,7 @@ def register():
 
         # Expert Logic: The very first user is automatically an Administrator and Verified
         if User.count_all() == 0:
-            user.role = "admin"
+            user.role = UserRole.ADMIN
             user.is_verified = True
             flash(
                 "Welcome! As the first user, you have been promoted to Administrator."
@@ -322,7 +324,7 @@ def members():
     from app.models import User
 
     page = request.args.get("page", 1, type=int)
-    limit = request.args.get("limit", 10, type=int)
+    limit = request.args.get("limit", DEFAULT_PAGE_SIZE, type=int)
     sort = request.args.get("sort", "newest")
     query = request.args.get("q", "")
 

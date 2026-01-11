@@ -12,6 +12,8 @@ from typing import Any, Dict, Optional
 import mutagen
 from pydub import AudioSegment
 
+from app.constants import NORMALIZATION_TARGET_DBFS
+
 logger = logging.getLogger(__name__)
 
 
@@ -51,18 +53,15 @@ class AudioProcessor:
             return None
 
     @staticmethod
-    def normalize(file_path: str, target_dbfs: float = -20.0) -> bool:
+    def normalize(
+        file_path: str, target_dbfs: float = NORMALIZATION_TARGET_DBFS
+    ) -> bool:
         """
-        Normalize the audio volume to a target dBFS level.
-
-        This method overwrites the original file with the normalized version.
+        Normalize the volume of an audio file.
 
         Args:
             file_path (str): The path to the audio file.
-            target_dbfs (float, optional): The target volume level. Defaults to -20.0.
-
-        Returns:
-            bool: True if successful, False otherwise.
+            target_dbfs (float, optional): The target volume level. Defaults to NORMALIZATION_TARGET_DBFS.
         """
         try:
             audio = AudioSegment.from_file(file_path)
