@@ -13,7 +13,7 @@ from flask_login import current_user, login_required
 from app import limiter
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm
-from app.constants import DEFAULT_PAGE_SIZE
+from app.constants import DEFAULT_PAGE_SIZE, LOGIN_LIMIT, REGISTRATION_LIMIT
 from app.enums import UserRole
 
 
@@ -68,7 +68,7 @@ def verification_required(f):
 
 
 @bp.route("/login", methods=["GET", "POST"])
-@limiter.limit("10 per minute")
+@limiter.limit(LOGIN_LIMIT)
 def login():
     """
     Handle user login.
@@ -126,7 +126,7 @@ def logout():
 
 
 @bp.route("/register", methods=["GET", "POST"])
-@limiter.limit("5 per hour")
+@limiter.limit(REGISTRATION_LIMIT)
 def register():
     """
     Handle user registration.

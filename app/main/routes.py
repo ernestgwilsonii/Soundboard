@@ -10,7 +10,13 @@ from typing import Any, Dict, List
 from flask import jsonify, render_template, request, url_for
 from flask_login import current_user
 
-from app.constants import DEFAULT_PAGE_SIZE
+from app.constants import (
+    DEFAULT_PAGE_SIZE,
+    EXPLORE_BOARD_LIMIT,
+    POPULAR_TAGS_LIMIT,
+    SIDEBAR_ACTIVITY_LIMIT,
+    SIDEBAR_NOTIFICATION_LIMIT,
+)
 from app.enums import UserRole
 from app.main import bp
 from app.models import Activity, AdminSettings, Soundboard
@@ -29,7 +35,9 @@ def inject_announcement():
     unread_notifications = []
     unread_count = 0
     if current_user.is_authenticated:
-        unread_notifications = Notification.get_unread_for_user(current_user.id)[:5]
+        unread_notifications = Notification.get_unread_for_user(current_user.id)[
+            :SIDEBAR_NOTIFICATION_LIMIT
+        ]
         # Count all unread
         from app.db import get_accounts_db
 
@@ -111,8 +119,8 @@ def index():
 
             # Activities from followed users
             cur.execute(
-                f"SELECT * FROM activities WHERE user_id IN ({placeholders}) ORDER BY created_at DESC LIMIT 10",
-                following_ids,
+                f"SELECT * FROM activities WHERE user_id IN ({placeholders}) ORDER BY created_at DESC LIMIT ?",
+                (*following_ids, SIDEBAR_ACTIVITY_LIMIT),
             )
             act_rows = cur.fetchall()
             activities = [
@@ -130,14 +138,17 @@ def index():
             activities = []
     else:
         # Standard Explore view
-        recent_all = Soundboard.get_recent_public(limit=7)
-        activities = Activity.get_recent(limit=10)
+        # We fetch one extra in case we need to filter out the featured board
+        recent_all = Soundboard.get_recent_public(limit=EXPLORE_BOARD_LIMIT + 1)
+        activities = Activity.get_recent(limit=SIDEBAR_ACTIVITY_LIMIT)
 
         # Filter out featured from recent list to avoid duplication
         if featured:
-            soundboards = [sb for sb in recent_all if sb.id != featured.id][:6]
+            soundboards = [sb for sb in recent_all if sb.id != featured.id][
+                :EXPLORE_BOARD_LIMIT
+            ]
         else:
-            soundboards = recent_all[:6]
+            soundboards = recent_all[:EXPLORE_BOARD_LIMIT]
 
     return render_template(
         "index.html",
@@ -163,14 +174,14 @@ def get_activities():
     limit = request.args.get("limit", DEFAULT_PAGE_SIZE, type=int)
     activities = Activity.get_recent(limit=limit)
     data = []
-    for a in activities:
-        user = a.get_user()
+    for activity in activities:
+        user = activity.get_user()
         data.append(
             {
                 "username": user.username if user else "New Member",
                 "avatar": user.avatar_path if user else None,
-                "description": a.description,
-                "created_at": a.created_at,
+                "description": activity.description,
+                "created_at": activity.created_at,
                 "profile_url": (
                     url_for("auth.public_profile", username=user.username)
                     if user
@@ -204,8 +215,8 @@ def sidebar_data():
         ]
 
         fav_ids = current_user.get_favorites()
-        for fid in fav_ids:
-            sb = Soundboard.get_by_id(fid)
+        for favorite_id in fav_ids:
+            sb = Soundboard.get_by_id(favorite_id)
             if sb:
                 favorites.append({"id": sb.id, "name": sb.name, "icon": sb.icon})
 
@@ -219,11 +230,15 @@ def sidebar_data():
             for u in current_user.get_following()
         ]
 
-        popular_tags = [{"name": t.name} for t in Tag.get_popular(limit=10)]
+        popular_tags = [
+            {"name": t.name} for t in Tag.get_popular(limit=POPULAR_TAGS_LIMIT)
+        ]
     else:
         from app.models import Tag
 
-        popular_tags = [{"name": t.name} for t in Tag.get_popular(limit=10)]
+        popular_tags = [
+            {"name": t.name} for t in Tag.get_popular(limit=POPULAR_TAGS_LIMIT)
+        ]
 
     # Explore section: All public boards grouped by user
     public_boards = Soundboard.get_public()
