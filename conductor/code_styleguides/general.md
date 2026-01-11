@@ -2,9 +2,14 @@
 
 This document outlines general coding principles that apply across all languages and frameworks used in this project.
 
-## Readability
-- Code should be easy to read and understand by humans.
-- Avoid overly clever or obscure constructs.
+## Readability (The Soundboard Priority)
+- **Code is for Humans:** Always prioritize human understanding over machine efficiency or code brevity.
+- **Semantic Naming:** Choose names that reveal intent. A developer should understand what a variable holds or a function does without reading its implementation.
+- **No Magic Values:** Abstract all strings and numbers into Constants or Enums.
+
+## Single Responsibility
+- Each module, class, and function should have one reason to change.
+- Prefer many small, well-named functions over few large ones.
 
 ## Consistency
 - Follow existing patterns in the codebase.

@@ -2,6 +2,12 @@
 
 This document summarizes key rules and best practices from the Google Python Style Guide.
 
+## 0. Human Readable Code (Soundboard Priority)
+- **Primary Goal:** Code is written for humans first, machines second. Clarity is prioritized over brevity.
+- **Naming:** Variable and function names must be self-explanatory. Avoid single-letter variables. Use `is_`, `has_`, `can_` for booleans.
+- **Single Responsibility:** Functions should do one thing well. Break down functions that exceed 30-40 lines.
+- **No Magic Values:** String literals and numbers must never be used in business logic. Use `app/enums.py` for states/roles and `app/constants.py` for configuration defaults and limits.
+
 ## 1. Python Language Rules
 - **Linting:** Run `pylint` on your code to catch bugs and style issues.
 - **Imports:** Use `import x` for packages/modules. Use `from x import y` only when `y` is a submodule.
