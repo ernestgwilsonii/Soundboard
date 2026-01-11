@@ -9,6 +9,7 @@ from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from app.constants import DEFAULT_PAGE_SIZE, LARGE_PAGE_SIZE
 from app.db import get_accounts_db, get_soundboards_db
 from app.enums import UserRole, Visibility
 
@@ -357,7 +358,7 @@ class User(UserMixin):
 
     @staticmethod
     def get_all(
-        limit: int = 10,
+        limit: int = DEFAULT_PAGE_SIZE,
         offset: int = 0,
         sort_by: str = "newest",
         search_query: Optional[str] = None,
@@ -970,7 +971,7 @@ class Soundboard:
         ]
 
     @staticmethod
-    def get_trending(limit: int = 10) -> List[Soundboard]:
+    def get_trending(limit: int = DEFAULT_PAGE_SIZE) -> List[Soundboard]:
         """
         Calculate and retrieve trending soundboards.
 
@@ -1939,7 +1940,7 @@ class Tag:
         return [Tag(id=row["id"], name=row["name"]) for row in rows]
 
     @staticmethod
-    def get_popular(limit: int = 10) -> List[Tag]:
+    def get_popular(limit: int = DEFAULT_PAGE_SIZE) -> List[Tag]:
         """
         Retrieve the most popular tags based on usage.
 
@@ -2011,7 +2012,7 @@ class Activity:
         db.commit()
 
     @staticmethod
-    def get_recent(limit: int = 20) -> List[Activity]:
+    def get_recent(limit: int = LARGE_PAGE_SIZE) -> List[Activity]:
         """
         Retrieve recent activities.
 

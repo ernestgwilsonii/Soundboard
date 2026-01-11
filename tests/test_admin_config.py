@@ -4,6 +4,7 @@ import sqlite3
 import pytest
 
 from app import create_app
+from app.enums import UserRole
 from app.models import AdminSettings
 from config import Config
 
@@ -60,7 +61,7 @@ def test_settings_route_updates(app_context):
     from app.models import User
 
     with app_context.app_context():
-        u = User(username="admin", email="admin@example.com", role="admin")
+        u = User(username="admin", email="admin@example.com", role=UserRole.ADMIN)
         u.set_password("pass")
         u.save()
 
@@ -140,7 +141,7 @@ def test_maintenance_mode_enforcement(app_context):
 
     # Login as normal user
     with app_context.app_context():
-        u = User(username="user", email="user@example.com", role="user")
+        u = User(username="user", email="user@example.com", role=UserRole.USER)
         u.set_password("pass")
         u.save()
 
@@ -155,7 +156,7 @@ def test_maintenance_mode_enforcement(app_context):
 
     # Login as admin
     with app_context.app_context():
-        a = User(username="admin2", email="admin2@example.com", role="admin")
+        a = User(username="admin2", email="admin2@example.com", role=UserRole.ADMIN)
         a.set_password("pass")
         a.save()
 

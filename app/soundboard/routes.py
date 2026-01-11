@@ -13,6 +13,7 @@ from flask_login import current_user, login_required
 from app import limiter
 from app.auth.routes import verification_required
 from app.db import get_soundboards_db
+from app.enums import UserRole
 from app.models import Sound, Soundboard
 from app.socket_events import broadcast_board_update
 from app.soundboard import bp
@@ -237,7 +238,7 @@ def delete_comment(id):
     if (
         comment.user_id != current_user.id
         and s.user_id != current_user.id
-        and current_user.role != "admin"
+        and current_user.role != UserRole.ADMIN
     ):
         flash("Permission denied.")
         return redirect(url_for("soundboard.view", id=s.id))
@@ -267,7 +268,7 @@ def reorder_sounds(id):
         return jsonify({"error": "Soundboard not found"}), 404
 
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         return jsonify({"error": "Permission denied"}), 403
 
     data = request.get_json()
@@ -328,7 +329,7 @@ def add_collaborator(id):
         flash("Soundboard not found.")
         return redirect(url_for("soundboard.dashboard"))
 
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
 
@@ -396,7 +397,7 @@ def delete_collaborator(id):
     s = Soundboard.get_by_id(collab.soundboard_id)
     assert s is not None
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
 
@@ -537,7 +538,7 @@ def edit(id):
 
     # Ownership check with admin override
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("You do not have permission to edit this soundboard.")
         return redirect(url_for("soundboard.dashboard"))
 
@@ -623,7 +624,7 @@ def upload_sound(id):
 
     # Ownership check with admin override
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
 
@@ -706,7 +707,7 @@ def delete_sound(id):
     s = Soundboard.get_by_id(sound.soundboard_id)
     assert s is not None
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
 
@@ -741,7 +742,7 @@ def update_sound_settings(id):
         return jsonify({"error": "Soundboard not found"}), 404
 
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         return jsonify({"error": "Permission denied"}), 403
 
     data = request.get_json()
@@ -778,7 +779,7 @@ def delete(id):
 
     # Ownership check with admin override
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("You do not have permission to delete this soundboard.")
         return redirect(url_for("soundboard.dashboard"))
 
@@ -847,7 +848,7 @@ def add_to_playlist(playlist_id, sound_id):
         return jsonify({"error": "Playlist not found"}), 404
 
     assert current_user.id is not None
-    if pl.user_id != current_user.id and current_user.role != "admin":
+    if pl.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         return jsonify({"error": "Permission denied"}), 403
 
     sound = Sound.get_by_id(sound_id)
@@ -861,7 +862,7 @@ def add_to_playlist(playlist_id, sound_id):
     if (
         not s.is_public
         and s.user_id != current_user.id
-        and current_user.role != "admin"
+        and current_user.role != UserRole.ADMIN
     ):
         return jsonify({"error": "Sound is private"}), 403
 
@@ -913,7 +914,7 @@ def delete_playlist(id):
         return redirect(url_for("soundboard.playlists"))
 
     assert current_user.id is not None
-    if pl.user_id != current_user.id and current_user.role != "admin":
+    if pl.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("Permission denied.")
         return redirect(url_for("soundboard.playlists"))
 
@@ -966,7 +967,7 @@ def export_soundboard(id):
         return redirect(url_for("soundboard.dashboard"))
 
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != "admin":
+    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         flash("Permission denied.")
         return redirect(url_for("soundboard.dashboard"))
 

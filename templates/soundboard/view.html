@@ -58,7 +58,7 @@
         <p class="text-muted">Click an icon to play the sound.</p>
         
         <div class="mb-4">
-            {% if current_user.is_authenticated and (soundboard.user_id == current_user.id or current_user.role == 'admin') %}
+            {% if current_user.is_authenticated and (soundboard.user_id == current_user.id or current_user.role == UserRole.ADMIN) %}
             <a href="{{ url_for('soundboard.edit', id=soundboard.id) }}" class="btn btn-outline-secondary me-2">
                 <i class="fas fa-edit"></i> Edit Board
             </a>
@@ -206,7 +206,7 @@
                             </div>
                         </div>
                         
-                        {% if comment.user_id == current_user.id or soundboard.user_id == current_user.id or current_user.role == 'admin' %}
+                        {% if comment.user_id == current_user.id or soundboard.user_id == current_user.id or current_user.role == UserRole.ADMIN %}
                         <form id="delete-comment-{{ comment.id }}" action="{{ url_for('soundboard.delete_comment', id=comment.id) }}" method="post" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="button" class="btn btn-sm text-danger p-0" title="Delete comment" onclick="confirmDeleteComment({{ comment.id }})">

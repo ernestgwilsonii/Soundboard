@@ -17,6 +17,7 @@ from flask_mail import Mail
 from flask_socketio import SocketIO
 from flask_wtf.csrf import CSRFProtect
 
+from app.enums import UserRole
 from config import Config
 
 login = LoginManager()
@@ -78,11 +79,15 @@ def create_app(config_class=Config):
 
         if flask_app.config.get("TESTING"):
             return True
-        return current_user.is_authenticated and current_user.role == "admin"
+        return current_user.is_authenticated and current_user.role == UserRole.ADMIN
 
     from app import db
 
     db.init_app(flask_app)
+
+    @flask_app.context_processor
+    def inject_enums():
+        return {"UserRole": UserRole}
 
     # Register blueprints here
     from app.main import bp as main_bp
