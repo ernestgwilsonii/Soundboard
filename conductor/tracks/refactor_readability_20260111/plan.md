@@ -16,11 +16,11 @@
 - [ ] Verify application starts and runs correctly [checkpoint]
 
 ## Phase 3: Semantic Refactoring (Clean Code)
-- [ ] Audit `app/utils/` and refactor complex functions into smaller, single-purpose functions
-- [ ] Rename ambiguous variables/functions in `app/main/routes.py` and `app/soundboard/routes.py` to be self-explanatory
-- [ ] Ensure all configuration is strictly pulled from `config.py` or `.env`, removing any hardcoded fallbacks in logic
+- [x] Audit `app/utils/` and refactor complex functions into smaller, single-purpose functions 0d5175f
+- [x] Rename ambiguous variables/functions in `app/main/routes.py` and `app/soundboard/routes.py` to be self-explanatory
+- [x] Ensure all configuration is strictly pulled from `config.py` or `.env`, removing any hardcoded fallbacks in logic fe7273c
 
 ## Phase 4: Documentation & Guidelines
-- [ ] Create `CONTRIBUTING.md` detailing the "Human Readable" philosophy, naming conventions, and structure
-- [ ] Update `conductor/code_styleguides/*.md` to reflect the new strict preferences for "Clean Code"
+- [x] Create `CONTRIBUTING.md` detailing the "Human Readable" philosophy, naming conventions, and structure afcba20
+- [x] Update `conductor/code_styleguides/*.md` to reflect the new strict preferences for "Clean Code" afcba20
 - [ ] Verify all tests pass after these massive structural changes [checkpoint]
