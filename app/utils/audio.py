@@ -23,7 +23,7 @@ class AudioProcessor:
     @staticmethod
     def get_metadata(file_path: str) -> Optional[Dict[str, Any]]:
         """
-        Extract metadata (duration, sample_rate, bitrate, file_size, format) from an audio file.
+        Extract metadata from an audio file.
 
         Args:
             file_path (str): The path to the audio file.
@@ -37,20 +37,28 @@ class AudioProcessor:
                 logger.warning(f"Could not read metadata from {file_path}")
                 return None
 
-            return {
-                "duration": round(audio.info.length, 3),
-                "sample_rate": getattr(audio.info, "sample_rate", 0),
-                "bitrate": (
-                    getattr(audio.info, "bitrate", 0) // 1000
-                    if hasattr(audio.info, "bitrate")
-                    else 0
-                ),
-                "file_size": os.path.getsize(file_path),
-                "format": type(audio).__name__,
-            }
+            return AudioProcessor._build_metadata_dict(audio, file_path)
         except Exception as e:
             logger.error(f"Error processing audio metadata for {file_path}: {e}")
             return None
+
+    @staticmethod
+    def _build_metadata_dict(audio: Any, file_path: str) -> Dict[str, Any]:
+        """Construct the metadata dictionary from mutagen object."""
+        return {
+            "duration": round(audio.info.length, 3),
+            "sample_rate": getattr(audio.info, "sample_rate", 0),
+            "bitrate": AudioProcessor._extract_bitrate(audio.info),
+            "file_size": os.path.getsize(file_path),
+            "format": type(audio).__name__,
+        }
+
+    @staticmethod
+    def _extract_bitrate(info: Any) -> int:
+        """Extract bitrate in kbps from mutagen info object."""
+        if hasattr(info, "bitrate") and info.bitrate:
+            return info.bitrate // 1000
+        return 0
 
     @staticmethod
     def normalize(
@@ -68,14 +76,19 @@ class AudioProcessor:
             change_in_dbfs = target_dbfs - audio.dBFS
             normalized_audio = audio.apply_gain(change_in_dbfs)
 
-            # Determine format from extension
-            ext = os.path.splitext(file_path)[1][1:].lower()
-            if ext == "sbp":  # Should not happen here but safety first
-                ext = "zip"
+            format_ext = AudioProcessor._get_export_format(file_path)
 
-            normalized_audio.export(file_path, format=ext)
+            normalized_audio.export(file_path, format=format_ext)
             logger.info(f"Normalized {file_path} to {target_dbfs} dBFS")
             return True
         except Exception as e:
             logger.error(f"Error normalizing audio for {file_path}: {e}")
             return False
+
+    @staticmethod
+    def _get_export_format(file_path: str) -> str:
+        """Determine the export format from file extension."""
+        ext = os.path.splitext(file_path)[1][1:].lower()
+        if ext == "sbp":  # Soundboard Pack file extension
+            return "zip"
+        return ext
