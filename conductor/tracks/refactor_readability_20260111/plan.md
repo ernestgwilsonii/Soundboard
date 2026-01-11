@@ -8,7 +8,7 @@
 - [x] Create `app/constants.py` for global constants (Time, Limits, Configuration defaults) 28fb169
 - [x] Create `app/enums.py` for state definitions (UserRoles, SoundboardVisibility, etc.) db15b6b
 - [x] Refactor `app/models.py` to use these Enums instead of string literals (e.g., "admin", "public") 3ceb365
-- [ ] Refactor `app/routes.py` (and blueprints) to use these Enums and Constants
+- [x] Refactor `app/routes.py` (and blueprints) to use these Enums and Constants ee0e328
 
 ## Phase 2: Modularization (Breaking the Monoliths)
 - [ ] Refactor `app/models.py`: Split into a package `app/models/`
