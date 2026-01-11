@@ -6,7 +6,7 @@
 
 ## Phase 1: Foundations (Constants & Enums)
 - [x] Create `app/constants.py` for global constants (Time, Limits, Configuration defaults) 28fb169
-- [ ] Create `app/enums.py` for state definitions (UserRoles, SoundboardVisibility, etc.)
+- [x] Create `app/enums.py` for state definitions (UserRoles, SoundboardVisibility, etc.) db15b6b
 - [ ] Refactor `app/models.py` to use these Enums instead of string literals (e.g., "admin", "public")
 - [ ] Refactor `app/routes.py` (and blueprints) to use these Enums and Constants
 
