@@ -11,12 +11,8 @@
 - [x] Refactor `app/routes.py` (and blueprints) to use these Enums and Constants ee0e328
 
 ## Phase 2: Modularization (Breaking the Monoliths)
-- [ ] Refactor `app/models.py`: Split into a package `app/models/`
-    - [ ] `app/models/user.py`
-    - [ ] `app/models/soundboard.py`
-    - [ ] `app/models/social.py` (Comments, Follows)
-    - [ ] `app/models/__init__.py` (Expose classes to maintain import compatibility where possible, or update imports)
-- [ ] Update all imports across the application to point to the new model locations (or ensuring `__init__` handles it correctly)
+- [x] Refactor `app/models.py`: Split into a package `app/models/` 39a352f
+- [x] Update all imports across the application to point to the new model locations (or ensuring `__init__` handles it correctly) 0b43a4b
 - [ ] Verify application starts and runs correctly [checkpoint]
 
 ## Phase 3: Semantic Refactoring (Clean Code)
