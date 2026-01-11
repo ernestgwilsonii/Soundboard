@@ -10,6 +10,7 @@ from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.db import get_accounts_db, get_soundboards_db
+from app.enums import UserRole, Visibility
 
 
 class User(UserMixin):
@@ -21,7 +22,7 @@ class User(UserMixin):
         username (str): The user's username.
         email (str): The user's email address.
         password_hash (str): Hashed password.
-        role (str): User role (e.g., 'user', 'admin').
+        role (UserRole): User role (e.g., ADMIN, USER).
         active (bool): Whether the account is active.
         is_verified (bool): Whether the email is verified.
         avatar_path (str): Path to the user's avatar image.
@@ -39,7 +40,7 @@ class User(UserMixin):
         username: Optional[str] = None,
         email: Optional[str] = None,
         password_hash: Optional[str] = None,
-        role: str = "user",
+        role: UserRole = UserRole.USER,
         active: bool = True,
         is_verified: bool = False,
         avatar_path: Optional[str] = None,
@@ -58,7 +59,7 @@ class User(UserMixin):
             username (str, optional): Username.
             email (str, optional): Email address.
             password_hash (str, optional): Hashed password.
-            role (str, optional): User role. Defaults to "user".
+            role (UserRole, optional): User role. Defaults to UserRole.USER.
             active (bool, optional): Is account active. Defaults to True.
             is_verified (bool, optional): Is email verified. Defaults to False.
             avatar_path (str, optional): Path to avatar.
@@ -88,6 +89,11 @@ class User(UserMixin):
     def is_active(self) -> bool:
         """Check if the user account is active."""
         return self.active
+
+    @property
+    def is_admin(self) -> bool:
+        """Check if the user has admin privileges."""
+        return self.role == UserRole.ADMIN
 
     def set_password(self, password: str) -> None:
         """
@@ -674,6 +680,7 @@ class Soundboard:
         user_id (int): ID of the user who created the soundboard.
         icon (str): Path to the soundboard's icon.
         is_public (bool): Whether the soundboard is publicly visible.
+        visibility (Visibility): Visibility status (PUBLIC or PRIVATE).
         theme_color (str): Hex color code for the theme.
         theme_preset (str): Name of the theme preset.
     """
@@ -707,6 +714,16 @@ class Soundboard:
         self.is_public = bool(is_public)
         self.theme_color = theme_color
         self.theme_preset = theme_preset
+
+    @property
+    def visibility(self) -> Visibility:
+        """Get the visibility status as an enum."""
+        return Visibility.PUBLIC if self.is_public else Visibility.PRIVATE
+
+    @visibility.setter
+    def visibility(self, value: Visibility) -> None:
+        """Set the visibility status using an enum."""
+        self.is_public = value == Visibility.PUBLIC
 
     def save(self) -> None:
         """
