@@ -4,7 +4,7 @@
 
 **Context:** The user emphasized that "Human Readable Code is Paramount." The current codebase has large files (e.g., `models.py` ~2300 lines) and likely contains "magic strings" and procedural logic that could be cleaner.
 
-## Phase 1: Foundations (Constants & Enums)
+## Phase 1: Foundations (Constants & Enums) [checkpoint: 0c5ec8a]
 - [x] Create `app/constants.py` for global constants (Time, Limits, Configuration defaults) 28fb169
 - [x] Create `app/enums.py` for state definitions (UserRoles, SoundboardVisibility, etc.) db15b6b
 - [x] Refactor `app/models.py` to use these Enums instead of string literals (e.g., "admin", "public") 3ceb365
