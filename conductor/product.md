@@ -32,4 +32,5 @@ The Soundboard Website is a professional and intuitive platform that empowers us
 - **AI-Ready Architecture:** Automated audio normalization and metadata generation pipeline during content ingestion.
 - **Hardened Security:** Mandatory email verification for new accounts, secure token-based password resets, automatic account lockout, and IP-based rate limiting to prevent automated abuse.
 - **Self-Verifying Architecture:** Robust E2E automation suite (Playwright) ensuring every user flow—from auth to visual trimming—is verified on every change.
+- **Standardized Excellence:** Strict adherence to PEP 8, PEP 257, and type safety, enforced by a comprehensive suite of automated quality gates.
 - **Responsive Design:** A polished, professional UI that adapts perfectly to desktop and mobile environments, including custom-themed error pages.
