@@ -7,7 +7,7 @@
 ## Phase 1: Foundations (Constants & Enums)
 - [x] Create `app/constants.py` for global constants (Time, Limits, Configuration defaults) 28fb169
 - [x] Create `app/enums.py` for state definitions (UserRoles, SoundboardVisibility, etc.) db15b6b
-- [ ] Refactor `app/models.py` to use these Enums instead of string literals (e.g., "admin", "public")
+- [x] Refactor `app/models.py` to use these Enums instead of string literals (e.g., "admin", "public") 3ceb365
 - [ ] Refactor `app/routes.py` (and blueprints) to use these Enums and Constants
 
 ## Phase 2: Modularization (Breaking the Monoliths)
