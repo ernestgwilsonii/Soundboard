@@ -13,7 +13,7 @@ This plan focuses on final hardening and polishing to reach a 10/10 professional
 - [x] Refactor `app/models/user.py`: Improve readability of complex follow/unfollow and search methods.
 
 ## Phase 3: Total Mypy Compliance
-- [~] Fix all remaining `mypy` errors in `app/models/`.
+- [x] Fix all remaining `mypy` errors in `app/models/`. 6dbdca7
 
 ## Phase 4: Final Quality Sweep
 - [ ] Verify all docstrings follow the Google style guide.
