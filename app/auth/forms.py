@@ -1,13 +1,9 @@
 """Authentication forms."""
 
-import sqlite3
-
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from wtforms import BooleanField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
-
-from config import Config
 
 
 class RegistrationForm(FlaskForm):
@@ -27,23 +23,19 @@ class RegistrationForm(FlaskForm):
     )
     submit = SubmitField("Register")
 
-    def validate_username(self, username):
-        """Validate that the username is unique."""
-        with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM users WHERE username = ?", (username.data,))
-            if cur.fetchone():
-                raise ValidationError(
-                    "This username is already taken. Please choose another."
-                )
+    def validate_username(self, username: StringField) -> None:
+        """Ensure username is unique."""
+        from app.models.user import User
 
-    def validate_email(self, email):
-        """Validate that the email is unique."""
-        with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM users WHERE email = ?", (email.data,))
-            if cur.fetchone():
-                raise ValidationError("This email address is already registered.")
+        if User.exists_by_username(username.data):
+            raise ValidationError("Please use a different username.")
+
+    def validate_email(self, email: StringField) -> None:
+        """Ensure email is unique."""
+        from app.models.user import User
+
+        if User.exists_by_email(email.data):
+            raise ValidationError("Please use a different email address.")
 
 
 class LoginForm(FlaskForm):
@@ -69,18 +61,15 @@ class UpdateProfileForm(FlaskForm):
     social_website = StringField("Personal Website", validators=[Length(max=255)])
     submit = SubmitField("Update Profile")
 
-    def validate_email(self, email):
-        """Validate that the email is unique (if changed)."""
+    def validate_email(self, email: StringField) -> None:
+        """Ensure email is unique if changed."""
         from flask_login import current_user
 
+        from app.models.user import User
+
         if email.data != current_user.email:
-            with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
-                cur = conn.cursor()
-                cur.execute("SELECT id FROM users WHERE email = ?", (email.data,))
-                if cur.fetchone():
-                    raise ValidationError(
-                        "This email address is already in use by another account."
-                    )
+            if User.exists_by_email(email.data):
+                raise ValidationError("Please use a different email address.")
 
 
 class ChangePasswordForm(FlaskForm):
@@ -125,7 +114,7 @@ class DeleteAccountForm(FlaskForm):
     confirmation = StringField('Type "DELETE" to confirm', validators=[DataRequired()])
     submit = SubmitField("Permanently Delete My Account")
 
-    def validate_confirmation(self, field):
+    def validate_confirmation(self, field: StringField) -> None:
         """Validate that the user typed DELETE."""
         if field.data != "DELETE":
             raise ValidationError("You must type DELETE to confirm.")

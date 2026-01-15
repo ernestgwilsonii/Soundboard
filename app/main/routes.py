@@ -19,35 +19,24 @@ from app.constants import (
 )
 from app.enums import UserRole
 from app.main import bp
-from app.models import Activity, AdminSettings, Soundboard
+from app.models import Activity, AdminSettings, Notification, Playlist, Soundboard, Tag
 
 
-@bp.app_context_processor
-def inject_announcement():
+@bp.app_context_processor  # type: ignore
+def inject_announcement() -> Dict[str, Any]:
     """
     Inject announcement details and unread notification counts into the template context.
 
     Returns:
         dict: Context variables (announcement_message, announcement_type, unread_notifications, unread_count).
     """
-    from app.models import Notification
-
     unread_notifications = []
     unread_count = 0
     if current_user.is_authenticated:
         unread_notifications = Notification.get_unread_for_user(current_user.id)[
             :SIDEBAR_NOTIFICATION_LIMIT
         ]
-        # Count all unread
-        from app.db import get_accounts_db
-
-        db = get_accounts_db()
-        cur = db.cursor()
-        cur.execute(
-            "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0",
-            (current_user.id,),
-        )
-        unread_count = cur.fetchone()[0]
+        unread_count = Notification.count_unread_for_user(current_user.id)
 
     return {
         "announcement_message": AdminSettings.get_setting("announcement_message"),
@@ -57,8 +46,8 @@ def inject_announcement():
     }
 
 
-@bp.before_app_request
-def check_maintenance():
+@bp.before_app_request  # type: ignore
+def check_maintenance() -> Any:
     """
     Check if maintenance mode is enabled before processing the request.
 
@@ -78,61 +67,27 @@ def check_maintenance():
         return render_template("maintenance.html"), 503
 
 
-@bp.route("/")
-@bp.route("/index")
-def index():
+@bp.route("/")  # type: ignore
+@bp.route("/index")  # type: ignore
+def index() -> Any:
     """
     Render the home page (dashboard/explore view).
 
     Handles 'tab' parameter to switch between 'explore' and 'following' views.
     """
     tab = request.args.get("tab", "explore")
-    featured = Soundboard.get_featured()
+    featured_soundboard = Soundboard.get_featured()
 
     if tab == "following" and current_user.is_authenticated:
         # Get boards and activity only from followed users
-        following_ids = [u.id for u in current_user.get_following()]
+        following_ids = [
+            followed_user.id for followed_user in current_user.get_following()
+        ]
         if following_ids:
-            # Soundboards from followed users
-            from app.db import get_soundboards_db
-
-            db = get_soundboards_db()
-            placeholders = ",".join(["?"] * len(following_ids))
-            cur = db.cursor()
-            cur.execute(
-                f"SELECT * FROM soundboards WHERE user_id IN ({placeholders}) AND is_public = 1 ORDER BY created_at DESC",
-                following_ids,
+            soundboards = Soundboard.get_from_following(following_ids)
+            activities = Activity.get_from_following(
+                following_ids, limit=SIDEBAR_ACTIVITY_LIMIT
             )
-            rows = cur.fetchall()
-            soundboards = [
-                Soundboard(
-                    id=row["id"],
-                    name=row["name"],
-                    user_id=row["user_id"],
-                    icon=row["icon"],
-                    is_public=row["is_public"],
-                    theme_color=row["theme_color"],
-                    theme_preset=row["theme_preset"],
-                )
-                for row in rows
-            ]
-
-            # Activities from followed users
-            cur.execute(
-                f"SELECT * FROM activities WHERE user_id IN ({placeholders}) ORDER BY created_at DESC LIMIT ?",
-                (*following_ids, SIDEBAR_ACTIVITY_LIMIT),
-            )
-            act_rows = cur.fetchall()
-            activities = [
-                Activity(
-                    id=row["id"],
-                    user_id=row["user_id"],
-                    action_type=row["action_type"],
-                    description=row["description"],
-                    created_at=row["created_at"],
-                )
-                for row in act_rows
-            ]
         else:
             soundboards = []
             activities = []
@@ -143,25 +98,27 @@ def index():
         activities = Activity.get_recent(limit=SIDEBAR_ACTIVITY_LIMIT)
 
         # Filter out featured from recent list to avoid duplication
-        if featured:
-            soundboards = [sb for sb in recent_all if sb.id != featured.id][
-                :EXPLORE_BOARD_LIMIT
-            ]
+        if featured_soundboard:
+            soundboards = [
+                soundboard
+                for soundboard in recent_all
+                if soundboard.id != featured_soundboard.id
+            ][:EXPLORE_BOARD_LIMIT]
         else:
             soundboards = recent_all[:EXPLORE_BOARD_LIMIT]
 
     return render_template(
         "index.html",
         title="Home",
-        featured=featured,
+        featured=featured_soundboard,
         soundboards=soundboards,
         activities=activities,
         current_tab=tab,
     )
 
 
-@bp.route("/activities")
-def get_activities():
+@bp.route("/activities")  # type: ignore
+def get_activities() -> Any:
     """
     Retrieve recent activities as JSON.
 
@@ -173,10 +130,10 @@ def get_activities():
     """
     limit = request.args.get("limit", DEFAULT_PAGE_SIZE, type=int)
     activities = Activity.get_recent(limit=limit)
-    data = []
+    response_data = []
     for activity in activities:
         user = activity.get_user()
-        data.append(
+        response_data.append(
             {
                 "username": user.username if user else "New Member",
                 "avatar": user.avatar_path if user else None,
@@ -189,11 +146,11 @@ def get_activities():
                 ),
             }
         )
-    return jsonify(data)
+    return jsonify(response_data)
 
 
-@bp.route("/sidebar-data")
-def sidebar_data():
+@bp.route("/sidebar-data")  # type: ignore
+def sidebar_data() -> Any:
     """
     Retrieve data for the sidebar (user boards, playlists, following, etc.).
 
@@ -207,47 +164,51 @@ def sidebar_data():
     popular_tags = []
 
     if current_user.is_authenticated:
-        from app.models import Playlist, Tag
-
         my_boards = [
-            {"id": sb.id, "name": sb.name, "icon": sb.icon}
-            for sb in Soundboard.get_by_user_id(current_user.id)
+            {"id": soundboard.id, "name": soundboard.name, "icon": soundboard.icon}
+            for soundboard in Soundboard.get_by_user_id(current_user.id)
         ]
 
-        fav_ids = current_user.get_favorites()
-        for favorite_id in fav_ids:
-            sb = Soundboard.get_by_id(favorite_id)
-            if sb:
-                favorites.append({"id": sb.id, "name": sb.name, "icon": sb.icon})
+        favorite_ids = current_user.get_favorites()
+        for favorite_id in favorite_ids:
+            soundboard = Soundboard.get_by_id(favorite_id)
+            if soundboard:
+                favorites.append(
+                    {
+                        "id": soundboard.id,
+                        "name": soundboard.name,
+                        "icon": soundboard.icon,
+                    }
+                )
 
         my_playlists = [
-            {"id": pl.id, "name": pl.name}
-            for pl in Playlist.get_by_user_id(current_user.id)
+            {"id": playlist.id, "name": playlist.name}
+            for playlist in Playlist.get_by_user_id(current_user.id)
         ]
 
         following = [
-            {"username": u.username, "avatar": u.avatar_path}
-            for u in current_user.get_following()
+            {"username": followed_user.username, "avatar": followed_user.avatar_path}
+            for followed_user in current_user.get_following()
         ]
 
         popular_tags = [
-            {"name": t.name} for t in Tag.get_popular(limit=POPULAR_TAGS_LIMIT)
+            {"name": tag.name} for tag in Tag.get_popular(limit=POPULAR_TAGS_LIMIT)
         ]
     else:
-        from app.models import Tag
-
         popular_tags = [
-            {"name": t.name} for t in Tag.get_popular(limit=POPULAR_TAGS_LIMIT)
+            {"name": tag.name} for tag in Tag.get_popular(limit=POPULAR_TAGS_LIMIT)
         ]
 
     # Explore section: All public boards grouped by user
     public_boards = Soundboard.get_public()
-    explore: Dict[str, List[Dict[str, Any]]] = {}
-    for sb in public_boards:
-        creator = sb.get_creator_username()
-        if creator not in explore:
-            explore[creator] = []
-        explore[creator].append({"id": sb.id, "name": sb.name, "icon": sb.icon})
+    explore_section: Dict[str, List[Dict[str, Any]]] = {}
+    for soundboard in public_boards:
+        creator_username = soundboard.get_creator_username()
+        if creator_username not in explore_section:
+            explore_section[creator_username] = []
+        explore_section[creator_username].append(
+            {"id": soundboard.id, "name": soundboard.name, "icon": soundboard.icon}
+        )
 
     return jsonify(
         {
@@ -256,6 +217,6 @@ def sidebar_data():
             "my_playlists": my_playlists,
             "following": following,
             "popular_tags": popular_tags,
-            "explore": explore,
+            "explore": explore_section,
         }
     )

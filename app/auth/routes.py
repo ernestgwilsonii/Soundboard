@@ -6,8 +6,17 @@ password resets, and profile management.
 """
 
 from functools import wraps
+from typing import Any, Callable
 
-from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 from app import limiter
@@ -15,9 +24,10 @@ from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm
 from app.constants import DEFAULT_PAGE_SIZE, LOGIN_LIMIT, REGISTRATION_LIMIT
 from app.enums import UserRole
+from app.models import Activity, Notification, Soundboard, User
 
 
-def admin_required(f):
+def admin_required(f: Callable[..., Any]) -> Callable[..., Any]:
     """
     Decorator to ensure the current user is an administrator.
 
@@ -25,7 +35,7 @@ def admin_required(f):
     """
 
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args: Any, **kwargs: Any) -> Any:
         """Wrapper to perform the check."""
         if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
             flash("You do not have permission to access this page.")
@@ -35,7 +45,7 @@ def admin_required(f):
     return decorated_function
 
 
-def verification_required(f):
+def verification_required(f: Callable[..., Any]) -> Callable[..., Any]:
     """
     Decorator to ensure the current user has verified their email.
 
@@ -43,11 +53,9 @@ def verification_required(f):
     """
 
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args: Any, **kwargs: Any) -> Any:
         """Wrapper to perform the check."""
         from flask import current_app
-
-        from app.models import User
 
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login"))
@@ -55,8 +63,8 @@ def verification_required(f):
         # In testing mode, the DB might update behind the server's back.
         # Force a refresh of the verified status if needed.
         if not current_user.is_verified and current_app.config.get("TESTING"):
-            u = User.get_by_id(current_user.id)
-            if u and u.is_verified:
+            user_from_db = User.get_by_id(current_user.id)
+            if user_from_db and user_from_db.is_verified:
                 current_user.is_verified = True
 
         if not current_user.is_verified:
@@ -67,9 +75,9 @@ def verification_required(f):
     return decorated_function
 
 
-@bp.route("/login", methods=["GET", "POST"])
-@limiter.limit(LOGIN_LIMIT)
-def login():
+@bp.route("/login", methods=["GET", "POST"])  # type: ignore
+@limiter.limit(LOGIN_LIMIT)  # type: ignore
+def login() -> Any:
     """
     Handle user login.
 
@@ -78,56 +86,51 @@ def login():
     from urllib.parse import urlparse
 
     from flask import request
-    from flask_login import current_user, login_user
+    from flask_login import login_user
 
-    from app.models import User
-
-    # flash('TEST LOGIN FLASH') # Temporary test
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
+
     form = LoginForm()
-    if form.validate_on_submit():
-        # Support login by username or email
-        user = User.get_by_username(form.username.data)
-        if user is None:
-            user = User.get_by_email(form.username.data)
+    if not form.validate_on_submit():
+        return render_template("auth/login.html", title="Sign In", form=form)
 
-        if user is None:
-            flash("Invalid username or password")
-            return redirect(url_for("auth.login"))
+    # Support login by username or email
+    user = User.get_by_username(form.username.data) or User.get_by_email(
+        form.username.data
+    )
 
-        if user.is_locked():
-            flash(
-                f"Account is locked due to too many failed attempts. Please try again after {user.lockout_until}."
-            )
-            return redirect(url_for("auth.login"))
+    if user is None:
+        flash("Invalid username or password")
+        return redirect(url_for("auth.login"))
 
-        if not user.check_password(form.password.data):
-            user.increment_failed_attempts()
-            flash("Invalid username or password")
-            return redirect(url_for("auth.login"))
+    if user.is_locked():
+        flash(
+            f"Account is locked due to too many failed attempts. Please try again after {user.lockout_until}."
+        )
+        return redirect(url_for("auth.login"))
 
-        user.reset_failed_attempts()
-        login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get("next")
-        if not next_page or urlparse(next_page).netloc != "":
-            next_page = url_for("main.index")
-        return redirect(next_page)
-    return render_template("auth/login.html", title="Sign In", form=form)
+    if not user.check_password(form.password.data):
+        user.increment_failed_attempts()
+        flash("Invalid username or password")
+        return redirect(url_for("auth.login"))
 
+    user.reset_failed_attempts()
+    login_user(user, remember=form.remember_me.data)
 
-@bp.route("/logout")
-def logout():
-    """Log out the current user and redirect to the index page."""
-    from flask_login import logout_user
+    next_page = request.args.get("next")
+    if not next_page or urlparse(next_page).netloc != "":
+        next_page = url_for("main.index")
 
-    logout_user()
-    return redirect(url_for("main.index"))
+    return redirect(next_page)
 
 
-@bp.route("/register", methods=["GET", "POST"])
-@limiter.limit(REGISTRATION_LIMIT)
-def register():
+...
+
+
+@bp.route("/register", methods=["GET", "POST"])  # type: ignore
+@limiter.limit(REGISTRATION_LIMIT)  # type: ignore
+def register() -> Any:
     """
     Handle user registration.
 
@@ -136,44 +139,41 @@ def register():
     from flask_login import current_user
 
     from app.email import send_verification_email
-    from app.models import User
 
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
+
     form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
+    if not form.validate_on_submit():
+        if request.method == "POST":
+            current_app.logger.debug(f"Registration form errors: {form.errors}")
+        return render_template("auth/signup.html", title="Register", form=form)
 
-        # Expert Logic: The very first user is automatically an Administrator and Verified
-        if User.count_all() == 0:
-            user.role = UserRole.ADMIN
-            user.is_verified = True
-            flash(
-                "Welcome! As the first user, you have been promoted to Administrator."
-            )
-        else:
-            user.is_verified = False
+    user = User(username=form.username.data, email=form.email.data)
+    user.set_password(form.password.data)
 
-        user.save()
+    # Expert Logic: The very first user is automatically an Administrator and Verified
+    if User.count_all() == 0:
+        user.role = UserRole.ADMIN
+        user.is_verified = True
+        flash("Welcome! As the first user, you have been promoted to Administrator.")
+    else:
+        user.is_verified = False
 
-        from app.models import Activity
+    user.save()
 
-        assert user.id is not None
-        Activity.record(user.id, "registration", "Joined the community!")
+    assert user.id is not None
+    Activity.record(user.id, "registration", "Joined the community!")
 
-        send_verification_email(user)
-        flash(
-            "Congratulations, you are now a registered user! Please check your email to verify your account."
-        )
-        return redirect(url_for("auth.login"))
-    elif request.method == "POST":
-        print(f"DEBUG: Form errors: {form.errors}")
-    return render_template("auth/signup.html", title="Register", form=form)
+    send_verification_email(user)
+    flash(
+        "Congratulations, you are now a registered user! Please check your email to verify your account."
+    )
+    return redirect(url_for("auth.login"))
 
 
-@bp.route("/verify/<token>")
-def verify_email(token):
+@bp.route("/verify/<token>")  # type: ignore
+def verify_email(token: str) -> Any:
     """
     Verify a user's email address using a token.
 
@@ -184,22 +184,22 @@ def verify_email(token):
 
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
-    user = User.verify_token(token, salt="email-verify")
-    if user:
-        if user.is_verified:
+    verified_user = User.verify_token(token, salt="email-verify")
+    if verified_user:
+        if verified_user.is_verified:
             flash("Account already verified.")
         else:
-            user.is_verified = True
-            user.save()
+            verified_user.is_verified = True
+            verified_user.save()
             flash("Your account has been verified!")
     else:
         flash("The confirmation link is invalid or has expired.")
     return redirect(url_for("auth.login"))
 
 
-@bp.route("/notifications/mark_read", methods=["POST"])
-@login_required
-def mark_notifications_read():
+@bp.route("/notifications/mark_read", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def mark_notifications_read() -> Any:
     """Mark all notifications as read for the current user."""
     from flask import jsonify
 
@@ -210,28 +210,30 @@ def mark_notifications_read():
     return jsonify({"status": "success"})
 
 
-@bp.route("/notifications/unread_count")
-@login_required
-def unread_notifications_count():
+@bp.route("/notifications/unread_count")  # type: ignore
+@login_required  # type: ignore
+def unread_notifications_count() -> Any:
     """
     Get the count and details of unread notifications.
 
     Returns:
         JSON: Dictionary with count and list of notification objects.
     """
-    from app.models import Notification
-
     assert current_user.id is not None
-    unread = Notification.get_unread_for_user(current_user.id)
-    data = [
-        {"message": n.message, "link": n.link or "#", "created_at": str(n.created_at)}
-        for n in unread[:5]
+    unread_notifications = Notification.get_unread_for_user(current_user.id)
+    response_data = [
+        {
+            "message": notification.message,
+            "link": notification.link or "#",
+            "created_at": str(notification.created_at),
+        }
+        for notification in unread_notifications[:5]
     ]
-    return jsonify({"count": len(unread), "notifications": data})
+    return jsonify({"count": len(unread_notifications), "notifications": response_data})
 
 
-@bp.route("/check-availability")
-def check_availability():
+@bp.route("/check-availability")  # type: ignore
+def check_availability() -> Any:
     """
     Check if a username or email is available.
 
@@ -257,8 +259,8 @@ def check_availability():
     return jsonify({"error": "No field provided"}), 400
 
 
-@bp.route("/reset_password_request", methods=["GET", "POST"])
-def reset_password_request():
+@bp.route("/reset_password_request", methods=["GET", "POST"])  # type: ignore
+def reset_password_request() -> Any:
     """
     Handle requests for password reset.
 
@@ -266,7 +268,6 @@ def reset_password_request():
     """
     from app.auth.forms import PasswordResetRequestForm
     from app.email import send_password_reset_email
-    from app.models import User
 
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
@@ -282,8 +283,8 @@ def reset_password_request():
     )
 
 
-@bp.route("/reset_password/<token>", methods=["GET", "POST"])
-def reset_password(token):
+@bp.route("/reset_password/<token>", methods=["GET", "POST"])  # type: ignore
+def reset_password(token: str) -> Any:
     """
     Reset the user's password using a valid token.
 
@@ -295,14 +296,14 @@ def reset_password(token):
 
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
-    user = User.verify_token(token, salt="password-reset")
-    if not user:
+    user_to_reset = User.verify_token(token, salt="password-reset")
+    if not user_to_reset:
         flash("The reset link is invalid or has expired.")
         return redirect(url_for("main.index"))
     form = ResetPasswordForm()
     if form.validate_on_submit():
-        user.set_password(form.password.data)
-        user.save()
+        user_to_reset.set_password(form.password.data)
+        user_to_reset.save()
         flash("Your password has been reset.")
         return redirect(url_for("auth.login"))
     return render_template(
@@ -310,16 +311,16 @@ def reset_password(token):
     )
 
 
-@bp.route("/profile")
-@login_required
-def profile():
+@bp.route("/profile")  # type: ignore
+@login_required  # type: ignore
+def profile() -> Any:
     """Render the user's private profile page."""
     return render_template("auth/profile.html", title="Profile")
 
 
-@bp.route("/members")
-@login_required
-def members():
+@bp.route("/members")  # type: ignore
+@login_required  # type: ignore
+def members() -> Any:
     """Browse registered members with pagination and search."""
     from app.models import User
 
@@ -349,9 +350,9 @@ def members():
     )
 
 
-@bp.route("/user/<username>/followers")
-@login_required
-def followers(username):
+@bp.route("/user/<username>/followers")  # type: ignore
+@login_required  # type: ignore
+def followers(username: str) -> Any:
     """
     Show list of followers for a specific user.
 
@@ -373,9 +374,9 @@ def followers(username):
     )
 
 
-@bp.route("/user/<username>/following")
-@login_required
-def following(username):
+@bp.route("/user/<username>/following")  # type: ignore
+@login_required  # type: ignore
+def following(username: str) -> Any:
     """
     Show list of users followed by a specific user.
 
@@ -397,38 +398,38 @@ def following(username):
     )
 
 
-@bp.route("/user/<username>")
-def public_profile(username):
+@bp.route("/user/<username>")  # type: ignore
+def public_profile(username: str) -> Any:
     """
     Render the public profile of a user.
 
     Args:
         username (str): The username.
     """
-    from app.models import Soundboard, User
-
     user = User.get_by_username(username)
     if not user:
         flash("User not found.")
         return redirect(url_for("main.index"))
 
     assert user.id is not None
-    public_sbs = Soundboard.get_by_user_id(user.id)
+    public_soundboards = Soundboard.get_by_user_id(user.id)
     # Filter for public only if it's not the owner viewing their own public profile
     # (actually public profile should always show only public sbs)
-    public_sbs = [sb for sb in public_sbs if sb.is_public]
+    public_soundboards = [
+        soundboard for soundboard in public_soundboards if soundboard.is_public
+    ]
 
     return render_template(
         "auth/public_profile.html",
         title=f"{user.username}'s Profile",
         user=user,
-        soundboards=public_sbs,
+        soundboards=public_soundboards,
     )
 
 
-@bp.route("/update_profile", methods=["GET", "POST"])
-@login_required
-def update_profile():
+@bp.route("/update_profile", methods=["GET", "POST"])  # type: ignore
+@login_required  # type: ignore
+def update_profile() -> Any:
     """Handle profile updates (bio, social links, avatar)."""
     import os
 
@@ -446,13 +447,15 @@ def update_profile():
         current_user.social_website = form.social_website.data
 
         if form.avatar.data:
-            f = form.avatar.data
-            filename = secure_filename(f"{current_user.id}_{f.filename}")
+            uploaded_avatar_file = form.avatar.data
+            filename = secure_filename(
+                f"{current_user.id}_{uploaded_avatar_file.filename}"
+            )
             avatar_path = os.path.join("avatars", filename)
             full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], avatar_path)
             if not os.path.exists(os.path.dirname(full_path)):
                 os.makedirs(os.path.dirname(full_path))
-            f.save(full_path)
+            uploaded_avatar_file.save(full_path)
             current_user.avatar_path = avatar_path
 
         current_user.save()
@@ -469,9 +472,9 @@ def update_profile():
     )
 
 
-@bp.route("/change_password", methods=["GET", "POST"])
-@login_required
-def change_password():
+@bp.route("/change_password", methods=["GET", "POST"])  # type: ignore
+@login_required  # type: ignore
+def change_password() -> Any:
     """Handle password changes for authenticated users."""
     from app.auth.forms import ChangePasswordForm
 
@@ -489,9 +492,9 @@ def change_password():
     )
 
 
-@bp.route("/delete_account", methods=["GET", "POST"])
-@login_required
-def delete_account():
+@bp.route("/delete_account", methods=["GET", "POST"])  # type: ignore
+@login_required  # type: ignore
+def delete_account() -> Any:
     """Handle permanent account deletion."""
     from flask_login import logout_user
 
@@ -509,9 +512,9 @@ def delete_account():
     )
 
 
-@bp.route("/follow/<username>", methods=["POST"])
-@login_required
-def follow(username):
+@bp.route("/follow/<username>", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def follow(username: str) -> Any:
     """
     Follow a user.
 
@@ -532,17 +535,15 @@ def follow(username):
     assert user.id is not None
     current_user.follow(user.id)
 
-    from app.models import Activity
-
     Activity.record(current_user.id, "follow", f"Started following {username}")
 
     flash(f"You are now following {username}!")
     return redirect(url_for("auth.public_profile", username=username))
 
 
-@bp.route("/unfollow/<username>", methods=["POST"])
-@login_required
-def unfollow(username):
+@bp.route("/unfollow/<username>", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def unfollow(username: str) -> Any:
     """
     Unfollow a user.
 

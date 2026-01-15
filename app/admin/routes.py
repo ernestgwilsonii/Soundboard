@@ -5,6 +5,8 @@ This module handles administrative tasks such as user management,
 system settings, and soundboard moderation.
 """
 
+from typing import Any
+
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user
 
@@ -14,9 +16,9 @@ from app.enums import UserRole
 from app.models import AdminSettings, Soundboard, User
 
 
-@bp.route("/users")
-@admin_required
-def users():
+@bp.route("/users")  # type: ignore
+@admin_required  # type: ignore
+def users() -> Any:
     """
     Render the user management page.
 
@@ -29,9 +31,9 @@ def users():
     )
 
 
-@bp.route("/settings", methods=["GET", "POST"])
-@admin_required
-def settings():
+@bp.route("/settings", methods=["GET", "POST"])  # type: ignore
+@admin_required  # type: ignore
+def settings() -> Any:
     """
     Handle global platform settings.
 
@@ -70,91 +72,93 @@ def settings():
     return render_template("admin/settings.html", title="Admin Settings", form=form)
 
 
-@bp.route("/soundboards")
-@admin_required
-def soundboards():
+@bp.route("/soundboards")  # type: ignore
+@admin_required  # type: ignore
+def soundboards() -> Any:
     """
     Render the soundboard management page.
 
     Lists all soundboards for moderation.
     """
-    sbs = Soundboard.get_all()
+    all_soundboards = Soundboard.get_all()
     return render_template(
-        "admin/soundboards.html", title="Content Management", soundboards=sbs
+        "admin/soundboards.html",
+        title="Content Management",
+        soundboards=all_soundboards,
     )
 
 
-@bp.route("/user/<int:id>/toggle_active", methods=["POST"])
-@admin_required
-def toggle_user_active(id):
+@bp.route("/user/<int:id>/toggle_active", methods=["POST"])  # type: ignore
+@admin_required  # type: ignore
+def toggle_user_active(id: int) -> Any:
     """
     Toggle a user's active status (enable/disable account).
 
     Args:
         id (int): The user ID.
     """
-    u = User.get_by_id(id)
-    if u is None:
+    user = User.get_by_id(id)
+    if user is None:
         flash("User not found.")
         return redirect(url_for("admin.users"))
-    if u.id == current_user.id:
+    if user.id == current_user.id:
         flash("You cannot disable your own account!")
         return redirect(url_for("admin.users"))
 
-    u.active = not u.active
-    u.save()
-    status = "enabled" if u.active else "disabled"
-    flash(f"User {u.username} has been {status}.")
+    user.active = not user.active
+    user.save()
+    status = "enabled" if user.active else "disabled"
+    flash(f"User {user.username} has been {status}.")
     return redirect(url_for("admin.users"))
 
 
-@bp.route("/user/<int:id>/toggle_role", methods=["POST"])
-@admin_required
-def toggle_user_role(id):
+@bp.route("/user/<int:id>/toggle_role", methods=["POST"])  # type: ignore
+@admin_required  # type: ignore
+def toggle_user_role(id: int) -> Any:
     """
     Toggle a user's role between USER and ADMIN.
 
     Args:
         id (int): The user ID.
     """
-    u = User.get_by_id(id)
-    if u is None:
+    user = User.get_by_id(id)
+    if user is None:
         flash("User not found.")
         return redirect(url_for("admin.users"))
-    if u.id == current_user.id:
+    if user.id == current_user.id:
         flash("You cannot change your own role!")
         return redirect(url_for("admin.users"))
 
-    u.role = UserRole.ADMIN if u.role == UserRole.USER else UserRole.USER
-    u.save()
-    flash(f"User {u.username} role changed to {u.role}.")
+    user.role = UserRole.ADMIN if user.role == UserRole.USER else UserRole.USER
+    user.save()
+    flash(f"User {user.username} role changed to {user.role}.")
     return redirect(url_for("admin.users"))
 
 
-@bp.route("/user/<int:id>/toggle_verified", methods=["POST"])
-@admin_required
-def toggle_user_verified(id):
+@bp.route("/user/<int:id>/toggle_verified", methods=["POST"])  # type: ignore
+@admin_required  # type: ignore
+def toggle_user_verified(id: int) -> Any:
     """
     Toggle a user's email verification status.
 
     Args:
         id (int): The user ID.
     """
-    u = User.get_by_id(id)
-    if u is None:
+    user = User.get_by_id(id)
+    if user is None:
         flash("User not found.")
         return redirect(url_for("admin.users"))
 
-    u.is_verified = not u.is_verified
-    u.save()
-    status = "verified" if u.is_verified else "unverified"
-    flash(f"User {u.username} is now {status}.")
+    user.is_verified = not user.is_verified
+    user.save()
+    status = "verified" if user.is_verified else "unverified"
+    flash(f"User {user.username} is now {status}.")
     return redirect(url_for("admin.users"))
 
 
-@bp.route("/user/<int:id>/reset_password", methods=["GET", "POST"])
-@admin_required
-def reset_password(id):
+@bp.route("/user/<int:id>/reset_password", methods=["GET", "POST"])  # type: ignore
+@admin_required  # type: ignore
+def reset_password(id: int) -> Any:
     """
     Manually reset a user's password.
 
@@ -163,25 +167,25 @@ def reset_password(id):
     """
     from app.admin.forms import AdminPasswordResetForm
 
-    u = User.get_by_id(id)
-    if u is None:
+    user = User.get_by_id(id)
+    if user is None:
         flash("User not found.")
         return redirect(url_for("admin.users"))
 
     form = AdminPasswordResetForm()
     if form.validate_on_submit():
-        u.set_password(form.password.data)
-        u.save()
-        flash(f"Password for {u.username} has been reset.")
+        user.set_password(form.password.data)
+        user.save()
+        flash(f"Password for {user.username} has been reset.")
         return redirect(url_for("admin.users"))
     return render_template(
-        "admin/reset_password.html", title="Reset Password", form=form, user=u
+        "admin/reset_password.html", title="Reset Password", form=form, user=user
     )
 
 
-@bp.route("/user/<int:id>/update_email", methods=["GET", "POST"])
-@admin_required
-def update_email(id):
+@bp.route("/user/<int:id>/update_email", methods=["GET", "POST"])  # type: ignore
+@admin_required  # type: ignore
+def update_email(id: int) -> Any:
     """
     Manually update a user's email address.
 
@@ -190,19 +194,20 @@ def update_email(id):
     """
     from app.admin.forms import AdminUpdateEmailForm
 
-    u = User.get_by_id(id)
-    if u is None:
+    user = User.get_by_id(id)
+    if user is None:
         flash("User not found.")
         return redirect(url_for("admin.users"))
 
-    form = AdminUpdateEmailForm(user_id=u.id)
+    assert user.id is not None
+    form = AdminUpdateEmailForm(user_id=user.id)
     if form.validate_on_submit():
-        u.email = form.email.data
-        u.save()
-        flash(f"Email for {u.username} has been updated.")
+        user.email = form.email.data
+        user.save()
+        flash(f"Email for {user.username} has been updated.")
         return redirect(url_for("admin.users"))
     elif request.method == "GET":
-        form.email.data = u.email
+        form.email.data = user.email
     return render_template(
-        "admin/update_email.html", title="Update Email", form=form, user=u
+        "admin/update_email.html", title="Update Email", form=form, user=user
     )

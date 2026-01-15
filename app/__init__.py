@@ -8,6 +8,7 @@ and registers blueprints and error handlers.
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from typing import Any, Dict
 
 from flask import Flask, render_template
 from flask_limiter import Limiter
@@ -28,8 +29,8 @@ limiter = Limiter(key_func=get_remote_address)
 socketio = SocketIO(cors_allowed_origins="*", async_mode="eventlet")
 
 
-@login.user_loader
-def load_user(id):
+@login.user_loader  # type: ignore
+def load_user(id: str) -> Any:
     """
     Load a user given the ID.
 
@@ -52,7 +53,7 @@ def load_user(id):
     return user
 
 
-def create_app(config_class=Config):
+def create_app(config_class: Any = Config) -> Flask:
     """
     Create and configure the Flask application.
 
@@ -73,20 +74,22 @@ def create_app(config_class=Config):
     socketio.init_app(flask_app)
 
     # Bypass rate limiting for admins and testing
-    @limiter.request_filter
-    def admin_whitelist():
+    @limiter.request_filter  # type: ignore
+    def admin_whitelist() -> bool:
         from flask_login import current_user
 
         if flask_app.config.get("TESTING"):
             return True
-        return current_user.is_authenticated and current_user.role == UserRole.ADMIN
+        return bool(
+            current_user.is_authenticated and current_user.role == UserRole.ADMIN
+        )
 
     from app import db
 
     db.init_app(flask_app)
 
-    @flask_app.context_processor
-    def inject_enums():
+    @flask_app.context_processor  # type: ignore
+    def inject_enums() -> Dict[str, Any]:
         return {"UserRole": UserRole}
 
     # Register blueprints here
@@ -107,12 +110,12 @@ def create_app(config_class=Config):
     flask_app.register_blueprint(admin_bp)
 
     # Error Handlers
-    @flask_app.errorhandler(404)
-    def not_found_error(error):
+    @flask_app.errorhandler(404)  # type: ignore
+    def not_found_error(error: Any) -> Any:
         return render_template("404.html"), 404
 
-    @flask_app.errorhandler(500)
-    def internal_error(error):
+    @flask_app.errorhandler(500)  # type: ignore
+    def internal_error(error: Any) -> Any:
         from app.db import close_db
 
         close_db()  # Ensure DB connection is closed on error

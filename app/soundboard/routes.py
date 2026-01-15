@@ -5,7 +5,7 @@ This module handles soundboard creation, editing, viewing, and sound management.
 It also includes playlist functionality and social interactions (likes, comments).
 """
 
-from typing import List
+from typing import Any, List
 
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -13,17 +13,26 @@ from flask_login import current_user, login_required
 from app import limiter
 from app.auth.routes import verification_required
 from app.constants import COMMENT_LIMIT, RATING_LIMIT, UPLOAD_LIMIT
-from app.db import get_soundboards_db
 from app.enums import UserRole
-from app.models import Sound, Soundboard
+from app.models import (
+    Activity,
+    BoardCollaborator,
+    Comment,
+    Notification,
+    Playlist,
+    Rating,
+    Sound,
+    Soundboard,
+    User,
+)
 from app.socket_events import broadcast_board_update
 from app.soundboard import bp
 from app.utils.audio import AudioProcessor
 
 
-@bp.route("/dashboard")
-@login_required
-def dashboard():
+@bp.route("/dashboard")  # type: ignore
+@login_required  # type: ignore
+def dashboard() -> Any:
     """
     Render the user's dashboard.
 
@@ -38,8 +47,8 @@ def dashboard():
     )
 
 
-@bp.route("/view/<int:id>")
-def view(id):
+@bp.route("/view/<int:id>")  # type: ignore
+def view(id: int) -> Any:
     """
     Render the soundboard view page.
 
@@ -79,9 +88,9 @@ def view(id):
     )
 
 
-@bp.route("/<int:id>/favorite", methods=["POST"])
-@login_required
-def toggle_favorite(id):
+@bp.route("/<int:id>/favorite", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def toggle_favorite(id: int) -> Any:
     """
     Toggle favorite status for a soundboard.
 
@@ -111,10 +120,10 @@ def toggle_favorite(id):
     return jsonify({"status": "success", "is_favorite": is_favorite})
 
 
-@bp.route("/<int:id>/rate", methods=["POST"])
-@login_required
-@limiter.limit(RATING_LIMIT)
-def rate_board(id):
+@bp.route("/<int:id>/rate", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+@limiter.limit(RATING_LIMIT)  # type: ignore
+def rate_board(id: int) -> Any:
     """
     Submit a rating for a soundboard.
 
@@ -125,8 +134,6 @@ def rate_board(id):
         JSON: Dictionary with status and updated rating stats.
     """
     from flask import jsonify
-
-    from app.models import Rating
 
     soundboard = Soundboard.get_by_id(id)
     if soundboard is None:
@@ -148,22 +155,19 @@ def rate_board(id):
     rating = Rating(user_id=current_user.id, soundboard_id=soundboard.id, score=score)
     rating.save()
 
-    from app.models import Activity
-
     Activity.record(
         current_user.id, "rate_board", f'Rated "{soundboard.name}" {score} stars'
     )
 
     # Notify owner (if not same person)
     if soundboard.user_id != current_user.id:
-        from app.models import Notification
         from app.socket_events import send_instant_notification
 
-        msg = f'{current_user.username} rated your soundboard "{soundboard.name}" {score} stars.'
+        notification_message = f'{current_user.username} rated your soundboard "{soundboard.name}" {score} stars.'
         link = url_for("soundboard.view", id=soundboard.id)
         assert soundboard.user_id is not None
-        Notification.add(soundboard.user_id, "rating", msg, link)
-        send_instant_notification(soundboard.user_id, msg, link)
+        Notification.add(soundboard.user_id, "rating", notification_message, link)
+        send_instant_notification(soundboard.user_id, notification_message, link)
 
     stats = soundboard.get_average_rating()
     return jsonify(
@@ -171,17 +175,16 @@ def rate_board(id):
     )
 
 
-@bp.route("/<int:id>/comment", methods=["POST"])
-@verification_required
-@limiter.limit(COMMENT_LIMIT)
-def post_comment(id):
+@bp.route("/<int:id>/comment", methods=["POST"])  # type: ignore
+@verification_required  # type: ignore
+@limiter.limit(COMMENT_LIMIT)  # type: ignore
+def post_comment(id: int) -> Any:
     """
     Post a comment on a soundboard.
 
     Args:
         id (int): The soundboard ID.
     """
-    from app.models import Comment
     from app.soundboard.forms import CommentForm
 
     soundboard = Soundboard.get_by_id(id)
@@ -209,56 +212,54 @@ def post_comment(id):
             from app.models import Notification
             from app.socket_events import send_instant_notification
 
-            msg = f'{current_user.username} commented on your soundboard: "{soundboard.name}"'
+            notification_message = f'{current_user.username} commented on your soundboard: "{soundboard.name}"'
             link = url_for("soundboard.view", id=soundboard.id)
             assert soundboard.user_id is not None
-            Notification.add(soundboard.user_id, "comment", msg, link)
-            send_instant_notification(soundboard.user_id, msg, link)
+            Notification.add(soundboard.user_id, "comment", notification_message, link)
+            send_instant_notification(soundboard.user_id, notification_message, link)
 
         flash("Comment posted!")
 
     return redirect(url_for("soundboard.view", id=soundboard.id))
 
 
-@bp.route("/comment/<int:id>/delete", methods=["POST"])
-@login_required
-def delete_comment(id):
+@bp.route("/comment/<int:id>/delete", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def delete_comment(id: int) -> Any:
     """
     Delete a comment.
 
     Args:
         id (int): The comment ID.
     """
-    from app.models import Comment
-
     comment = Comment.get_by_id(id)
     if comment is None:
         flash("Comment not found.")
         return redirect(url_for("main.index"))
 
     assert comment.soundboard_id is not None
-    s = Soundboard.get_by_id(comment.soundboard_id)
-    assert s is not None
+    soundboard = Soundboard.get_by_id(comment.soundboard_id)
+    assert soundboard is not None
 
     # Permission check: Author OR Board Owner OR Admin
     assert current_user.id is not None
     if (
         comment.user_id != current_user.id
-        and s.user_id != current_user.id
+        and soundboard.user_id != current_user.id
         and current_user.role != UserRole.ADMIN
     ):
         flash("Permission denied.")
-        return redirect(url_for("soundboard.view", id=s.id))
+        return redirect(url_for("soundboard.view", id=soundboard.id))
 
     comment.delete()
     flash("Comment deleted.")
-    assert s.id is not None
-    return redirect(url_for("soundboard.view", id=s.id))
+    assert soundboard.id is not None
+    return redirect(url_for("soundboard.view", id=soundboard.id))
 
 
-@bp.route("/<int:id>/reorder", methods=["POST"])
-@login_required
-def reorder_sounds(id):
+@bp.route("/<int:id>/reorder", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def reorder_sounds(id: int) -> Any:
     """
     Update the display order of sounds in a board.
 
@@ -270,67 +271,57 @@ def reorder_sounds(id):
     """
     from flask import jsonify
 
-    s = Soundboard.get_by_id(id)
-    if s is None:
+    soundboard = Soundboard.get_by_id(id)
+    if soundboard is None:
         return jsonify({"error": "Soundboard not found"}), 404
 
     assert current_user.id is not None
-    if s.user_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if soundboard.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         return jsonify({"error": "Permission denied"}), 403
 
-    data = request.get_json()
-    if not data or "ids" not in data:
+    request_data = request.get_json()
+    if not request_data or "ids" not in request_data:
         return jsonify({"error": "Invalid data"}), 400
 
-    sound_ids = data["ids"]
-    db = get_soundboards_db()
-    cur = db.cursor()
+    sound_ids = request_data["ids"]
 
     try:
-        assert s.id is not None
-        for index, sound_id in enumerate(sound_ids):
-            cur.execute(
-                "UPDATE sounds SET display_order = ? WHERE id = ? AND soundboard_id = ?",
-                (index + 1, sound_id, s.id),
-            )
-        db.commit()
-        broadcast_board_update(s.id, "sound_reordered")
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": str(e)}), 500
+        assert soundboard.id is not None
+        Sound.reorder_multiple(soundboard.id, sound_ids)
+        broadcast_board_update(soundboard.id, "sound_reordered")
+    except Exception as error:
+        return jsonify({"error": str(error)}), 500
 
     return jsonify({"status": "success"})
 
 
-@bp.route("/gallery")
-def gallery():
+@bp.route("/gallery")  # type: ignore
+def gallery() -> Any:
     """
     Render the public gallery of soundboards.
 
     Query Args:
         sort (str): Sorting criteria ('recent', 'top', etc.).
     """
-    sort = request.args.get("sort", "recent")
-    sbs = Soundboard.get_public(order_by=sort)
+    sort_criteria = request.args.get("sort", "recent")
+    public_soundboards = Soundboard.get_public(order_by=sort_criteria)
     return render_template(
         "soundboard/gallery.html",
         title="Public Gallery",
-        soundboards=sbs,
-        current_sort=sort,
+        soundboards=public_soundboards,
+        current_sort=sort_criteria,
     )
 
 
-@bp.route("/<int:id>/collaborators/add", methods=["POST"])
-@login_required
-def add_collaborator(id):
+@bp.route("/<int:id>/collaborators/add", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def add_collaborator(id: int) -> Any:
     """
     Add a collaborator to a soundboard.
 
     Args:
         id (int): The soundboard ID.
     """
-    from app.models import BoardCollaborator, User
-
     soundboard = Soundboard.get_by_id(id)
     if soundboard is None:
         flash("Soundboard not found.")
@@ -369,26 +360,26 @@ def add_collaborator(id):
     from app.models import Notification
     from app.socket_events import send_instant_notification
 
-    msg = f'{current_user.username} invited you to collaborate on "{soundboard.name}"'
+    notification_message = (
+        f'{current_user.username} invited you to collaborate on "{soundboard.name}"'
+    )
     link = url_for("soundboard.view", id=soundboard.id)
-    Notification.add(user.id, "collab_invite", msg, link)
-    send_instant_notification(user.id, msg, link)
+    Notification.add(user.id, "collab_invite", notification_message, link)
+    send_instant_notification(user.id, notification_message, link)
 
     flash(f"{username} added as collaborator.")
     return redirect(url_for("soundboard.edit", id=soundboard.id))
 
 
-@bp.route("/collaborators/<int:id>/delete", methods=["POST"])
-@login_required
-def delete_collaborator(id):
+@bp.route("/collaborators/<int:id>/delete", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def delete_collaborator(id: int) -> Any:
     """
     Remove a collaborator from a soundboard.
 
     Args:
         id (int): The user ID of the collaborator (from URL).
     """
-    from app.models import BoardCollaborator
-
     u_id_raw = request.form.get("user_id")
     b_id_raw = request.form.get("board_id")
     assert u_id_raw is not None
@@ -416,9 +407,9 @@ def delete_collaborator(id):
     return redirect(url_for("soundboard.edit", id=soundboard.id))
 
 
-@bp.route("/check-name")
-@login_required
-def check_name():
+@bp.route("/check-name")  # type: ignore
+@login_required  # type: ignore
+def check_name() -> Any:
     """
     Check if a soundboard name is available for the current user.
 
@@ -435,16 +426,18 @@ def check_name():
         return jsonify({"error": "Name required"}), 400
 
     # Check if this user already has a board with this name
-    from app.models import Soundboard
 
     assert current_user.id is not None
-    user_boards = Soundboard.get_by_user_id(current_user.id)
-    exists = any(sb.name and sb.name.lower() == name.lower() for sb in user_boards)
-    return jsonify({"available": not exists})
+    user_soundboards = Soundboard.get_by_user_id(current_user.id)
+    name_exists = any(
+        soundboard.name and soundboard.name.lower() == name.lower()
+        for soundboard in user_soundboards
+    )
+    return jsonify({"available": not name_exists})
 
 
-@bp.route("/search")
-def search():
+@bp.route("/search")  # type: ignore
+def search() -> Any:
     """
     Perform a global search for soundboards.
 
@@ -452,24 +445,24 @@ def search():
         q (str): Search query.
         sort (str): Sorting criteria.
     """
-    query = request.args.get("q", "")
-    sort = request.args.get("sort", "recent")
-    if query:
-        sbs = Soundboard.search(query, order_by=sort)
+    query_string = request.args.get("q", "")
+    sort_criteria = request.args.get("sort", "recent")
+    if query_string:
+        matching_soundboards = Soundboard.search(query_string, order_by=sort_criteria)
     else:
-        sbs = []
+        matching_soundboards = []
     return render_template(
         "soundboard/search.html",
         title="Search Results",
-        soundboards=sbs,
-        query=query,
-        current_sort=sort,
+        soundboards=matching_soundboards,
+        query=query_string,
+        current_sort=sort_criteria,
     )
 
 
-@bp.route("/create", methods=["GET", "POST"])
-@verification_required
-def create():
+@bp.route("/create", methods=["GET", "POST"])  # type: ignore
+@verification_required  # type: ignore
+def create() -> Any:
     """Handle soundboard creation."""
     import os
 
@@ -480,53 +473,57 @@ def create():
 
     form = SoundboardForm()
     if form.validate_on_submit():
-        icon = form.icon.data
+        icon_path_or_class = form.icon.data
         if form.icon_image.data:
-            f = form.icon_image.data
-            filename = secure_filename(f.filename)
-            icon_path = os.path.join("icons", filename)
-            full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], icon_path)
+            uploaded_file = form.icon_image.data
+            filename = secure_filename(uploaded_file.filename)
+            icon_relative_path = os.path.join("icons", filename)
+            full_path = os.path.join(
+                current_app.config["UPLOAD_FOLDER"], icon_relative_path
+            )
             if not os.path.exists(os.path.dirname(full_path)):
                 os.makedirs(os.path.dirname(full_path))
-            f.save(full_path)
-            icon = icon_path
+            uploaded_file.save(full_path)
+            icon_path_or_class = icon_relative_path
 
         assert current_user.id is not None
-        soundboard = Soundboard(
+        new_soundboard = Soundboard(
             name=form.name.data,
             user_id=current_user.id,
-            icon=icon,
+            icon=icon_path_or_class,
             is_public=form.is_public.data,
             theme_color=form.theme_color.data,
             theme_preset=form.theme_preset.data,
         )
-        soundboard.save()
+        new_soundboard.save()
 
         # Process tags
         if form.tags.data:
-            tag_data: str = form.tags.data
-            tag_list = [t.strip() for t in tag_data.split(",") if t.strip()]
-            for tag_name in tag_list:
-                soundboard.add_tag(tag_name)
-
-        from app.models import Activity
+            tag_data_string: str = form.tags.data
+            tag_name_list = [
+                tag_name.strip()
+                for tag_name in tag_data_string.split(",")
+                if tag_name.strip()
+            ]
+            for tag_name in tag_name_list:
+                new_soundboard.add_tag(tag_name)
 
         Activity.record(
             current_user.id,
             "create_soundboard",
-            f'Created a new soundboard: "{soundboard.name}"',
+            f'Created a new soundboard: "{new_soundboard.name}"',
         )
 
-        flash(f'Soundboard "{soundboard.name}" created!')
+        flash(f'Soundboard "{new_soundboard.name}" created!')
         return redirect(url_for("soundboard.dashboard"))
     return render_template(
         "soundboard/create.html", title="Create Soundboard", form=form
     )
 
 
-@bp.route("/edit/<int:id>", methods=["GET", "POST"])
-@login_required
-def edit(id):
+@bp.route("/edit/<int:id>", methods=["GET", "POST"])  # type: ignore
+@login_required  # type: ignore
+def edit(id: int) -> Any:
     """
     Handle soundboard editing.
 
@@ -559,14 +556,16 @@ def edit(id):
         soundboard.theme_color = form.theme_color.data
         soundboard.theme_preset = form.theme_preset.data
         if form.icon_image.data:
-            f = form.icon_image.data
-            filename = secure_filename(f.filename)
-            icon_path = os.path.join("icons", filename)
-            full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], icon_path)
+            uploaded_icon_file = form.icon_image.data
+            filename = secure_filename(uploaded_icon_file.filename)
+            icon_relative_path = os.path.join("icons", filename)
+            full_path = os.path.join(
+                current_app.config["UPLOAD_FOLDER"], icon_relative_path
+            )
             if not os.path.exists(os.path.dirname(full_path)):
                 os.makedirs(os.path.dirname(full_path))
-            f.save(full_path)
-            soundboard.icon = icon_path
+            uploaded_icon_file.save(full_path)
+            soundboard.icon = icon_relative_path
         else:
             soundboard.icon = form.icon.data
         soundboard.save()
@@ -613,10 +612,10 @@ def edit(id):
     )
 
 
-@bp.route("/<int:id>/upload", methods=["GET", "POST"])
-@verification_required
-@limiter.limit(UPLOAD_LIMIT)
-def upload_sound(id):
+@bp.route("/<int:id>/upload", methods=["GET", "POST"])  # type: ignore
+@verification_required  # type: ignore
+@limiter.limit(UPLOAD_LIMIT)  # type: ignore
+def upload_sound(id: int) -> Any:
     """
     Handle sound upload.
 
@@ -642,74 +641,74 @@ def upload_sound(id):
         return redirect(url_for("soundboard.dashboard"))
 
     form = SoundForm()
-    if form.validate_on_submit():
-        f = form.audio_file.data
-        filename = secure_filename(f.filename)
-
-        # Create directory for soundboard if it doesn't exist
-        assert soundboard.id is not None
-        sb_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], str(soundboard.id))
-        if not os.path.exists(sb_dir):
-            os.makedirs(sb_dir)
-
-        file_path = os.path.join(str(soundboard.id), filename)
-        full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], file_path)
-        f.save(full_path)
-
-        icon = form.icon.data
-        if form.icon_image.data:
-            fi = form.icon_image.data
-            iname = secure_filename(fi.filename)
-            icon_path = os.path.join("icons", iname)
-            if not os.path.exists(
-                os.path.join(current_app.config["UPLOAD_FOLDER"], "icons")
-            ):
-                os.makedirs(os.path.join(current_app.config["UPLOAD_FOLDER"], "icons"))
-            fi.save(os.path.join(current_app.config["UPLOAD_FOLDER"], icon_path))
-            icon = icon_path
-
-        sound = Sound(
-            soundboard_id=soundboard.id,
-            name=form.name.data,
-            file_path=file_path,
-            icon=icon,
+    if not form.validate_on_submit():
+        return render_template(
+            "soundboard/upload.html",
+            title="Upload Sound",
+            form=form,
+            soundboard=soundboard,
         )
 
-        # Audio Processing Hooks
-        metadata = AudioProcessor.get_metadata(full_path)
-        if metadata:
-            sound.end_time = metadata.get("duration")
-            sound.bitrate = metadata.get("bitrate")
-            sound.file_size = metadata.get("file_size")
-            sound.format = metadata.get("format")
+    uploaded_audio_file = form.audio_file.data
+    audio_filename = secure_filename(uploaded_audio_file.filename)
 
-        AudioProcessor.normalize(full_path)
+    # Create directory for soundboard if it doesn't exist
+    assert soundboard.id is not None
+    sb_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], str(soundboard.id))
+    if not os.path.exists(sb_dir):
+        os.makedirs(sb_dir)
 
-        sound.save()
-        broadcast_board_update(soundboard.id, "sound_uploaded", {"name": sound.name})
+    file_path = os.path.join(str(soundboard.id), audio_filename)
+    full_audio_path = os.path.join(current_app.config["UPLOAD_FOLDER"], file_path)
+    uploaded_audio_file.save(full_audio_path)
 
-        from app.models import Activity
-
-        Activity.record(
-            current_user.id,
-            "upload_sound",
-            f'Uploaded sound "{sound.name}" to "{soundboard.name}"',
+    icon_path_or_class = form.icon.data
+    if form.icon_image.data:
+        uploaded_icon_file = form.icon_image.data
+        icon_filename = secure_filename(uploaded_icon_file.filename)
+        icon_relative_path = os.path.join("icons", icon_filename)
+        if not os.path.exists(
+            os.path.join(current_app.config["UPLOAD_FOLDER"], "icons")
+        ):
+            os.makedirs(os.path.join(current_app.config["UPLOAD_FOLDER"], "icons"))
+        uploaded_icon_file.save(
+            os.path.join(current_app.config["UPLOAD_FOLDER"], icon_relative_path)
         )
+        icon_path_or_class = icon_relative_path
 
-        flash(f'Sound "{sound.name}" uploaded!')
-        return redirect(url_for("soundboard.edit", id=soundboard.id))
-
-    return render_template(
-        "soundboard/upload.html",
-        title="Upload Sound",
-        form=form,
-        soundboard=soundboard,
+    sound = Sound(
+        soundboard_id=soundboard.id,
+        name=form.name.data,
+        file_path=file_path,
+        icon=icon_path_or_class,
     )
 
+    # Audio Processing Hooks
+    metadata = AudioProcessor.get_metadata(full_audio_path)
+    if metadata:
+        sound.end_time = metadata.get("duration")
+        sound.bitrate = metadata.get("bitrate")
+        sound.file_size = metadata.get("file_size")
+        sound.format = metadata.get("format")
 
-@bp.route("/sound/<int:id>/delete", methods=["POST"])
-@login_required
-def delete_sound(id):
+    AudioProcessor.normalize(full_audio_path)
+
+    sound.save()
+    broadcast_board_update(soundboard.id, "sound_uploaded", {"name": sound.name})
+
+    Activity.record(
+        current_user.id,
+        "upload_sound",
+        f'Uploaded sound "{sound.name}" to "{soundboard.name}"',
+    )
+
+    flash(f'Sound "{sound.name}" uploaded!')
+    return redirect(url_for("soundboard.edit", id=soundboard.id))
+
+
+@bp.route("/sound/<int:id>/delete", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def delete_sound(id: int) -> Any:
     """
     Delete a sound.
 
@@ -737,9 +736,9 @@ def delete_sound(id):
     return redirect(url_for("soundboard.edit", id=soundboard.id))
 
 
-@bp.route("/sound/<int:id>/settings", methods=["POST"])
-@login_required
-def update_sound_settings(id):
+@bp.route("/sound/<int:id>/settings", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def update_sound_settings(id: int) -> Any:
     """
     Update sound settings (volume, loop, start/end time, hotkey).
 
@@ -784,9 +783,9 @@ def update_sound_settings(id):
     return jsonify({"status": "success"})
 
 
-@bp.route("/delete/<int:id>", methods=["POST"])
-@login_required
-def delete(id):
+@bp.route("/delete/<int:id>", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def delete(id: int) -> Any:
     """
     Delete a soundboard.
 
@@ -810,12 +809,10 @@ def delete(id):
 
 
 # Playlist Routes
-@bp.route("/playlists")
-@login_required
-def playlists():
+@bp.route("/playlists")  # type: ignore
+@login_required  # type: ignore
+def playlists() -> Any:
     """Render the playlists management page."""
-    from app.models import Playlist
-
     assert current_user.id is not None
     user_playlists = Playlist.get_by_user_id(current_user.id)
     return render_template(
@@ -823,33 +820,32 @@ def playlists():
     )
 
 
-@bp.route("/playlist/create", methods=["GET", "POST"])
-@login_required
-def create_playlist():
+@bp.route("/playlist/create", methods=["GET", "POST"])  # type: ignore
+@login_required  # type: ignore
+def create_playlist() -> Any:
     """Handle playlist creation."""
-    from app.models import Playlist
     from app.soundboard.forms import PlaylistForm
 
     form = PlaylistForm()
     if form.validate_on_submit():
         assert current_user.id is not None
-        pl = Playlist(
+        new_playlist = Playlist(
             user_id=current_user.id,
             name=form.name.data,
             description=form.description.data,
             is_public=form.is_public.data,
         )
-        pl.save()
-        flash(f'Playlist "{pl.name}" created!')
+        new_playlist.save()
+        flash(f'Playlist "{new_playlist.name}" created!')
         return redirect(url_for("soundboard.playlists"))
     return render_template(
         "soundboard/create_playlist.html", title="Create Playlist", form=form
     )
 
 
-@bp.route("/playlist/<int:playlist_id>/add/<int:sound_id>", methods=["POST"])
-@login_required
-def add_to_playlist(playlist_id, sound_id):
+@bp.route("/playlist/<int:playlist_id>/add/<int:sound_id>", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def add_to_playlist(playlist_id: int, sound_id: int) -> Any:
     """
     Add a sound to a playlist.
 
@@ -862,14 +858,12 @@ def add_to_playlist(playlist_id, sound_id):
     """
     from flask import jsonify
 
-    from app.models import Playlist, Sound
-
-    pl = Playlist.get_by_id(playlist_id)
-    if pl is None:
+    playlist = Playlist.get_by_id(playlist_id)
+    if playlist is None:
         return jsonify({"error": "Playlist not found"}), 404
 
     assert current_user.id is not None
-    if pl.user_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if playlist.user_id != current_user.id and current_user.role != UserRole.ADMIN:
         return jsonify({"error": "Permission denied"}), 403
 
     sound = Sound.get_by_id(sound_id)
@@ -888,20 +882,18 @@ def add_to_playlist(playlist_id, sound_id):
         return jsonify({"error": "Sound is private"}), 403
 
     assert sound.id is not None
-    pl.add_sound(sound.id)
+    playlist.add_sound(sound.id)
     return jsonify({"status": "success"})
 
 
-@bp.route("/playlist/<int:id>")
-def view_playlist(id):
+@bp.route("/playlist/<int:id>")  # type: ignore
+def view_playlist(id: int) -> Any:
     """
     Render the playlist view page.
 
     Args:
         id (int): The playlist ID.
     """
-    from app.models import Playlist
-
     playlist = Playlist.get_by_id(id)
     if playlist is None:
         flash("Playlist not found.")
@@ -921,17 +913,15 @@ def view_playlist(id):
     )
 
 
-@bp.route("/playlist/<int:id>/delete", methods=["POST"])
-@login_required
-def delete_playlist(id):
+@bp.route("/playlist/<int:id>/delete", methods=["POST"])  # type: ignore
+@login_required  # type: ignore
+def delete_playlist(id: int) -> Any:
     """
     Delete a playlist.
 
     Args:
         id (int): The playlist ID.
     """
-    from app.models import Playlist
-
     playlist = Playlist.get_by_id(id)
     if playlist is None:
         flash("Playlist not found.")
@@ -947,16 +937,14 @@ def delete_playlist(id):
     return redirect(url_for("soundboard.playlists"))
 
 
-@bp.route("/tag/<tag_name>")
-def tag_search(tag_name):
+@bp.route("/tag/<tag_name>")  # type: ignore
+def tag_search(tag_name: str) -> Any:
     """
     Search soundboards by tag.
 
     Args:
         tag_name (str): The tag name.
     """
-    from app.models import Soundboard
-
     assert tag_name is not None
     soundboards = Soundboard.get_by_tag(tag_name)
 
@@ -968,9 +956,9 @@ def tag_search(tag_name):
     )
 
 
-@bp.route("/<int:id>/export")
-@login_required
-def export_soundboard(id):
+@bp.route("/<int:id>/export")  # type: ignore
+@login_required  # type: ignore
+def export_soundboard(id: int) -> Any:
     """
     Export a soundboard as a ZIP pack.
 
@@ -1011,11 +999,10 @@ def export_soundboard(id):
     )
 
 
-@bp.route("/import", methods=["GET", "POST"])
-@verification_required
-def import_soundboard():
+@bp.route("/import", methods=["GET", "POST"])  # type: ignore
+@verification_required  # type: ignore
+def import_soundboard() -> Any:
     """Handle soundboard import from a ZIP pack."""
-    from app.models import Activity
     from app.soundboard.forms import ImportPackForm
     from app.utils.importer import Importer
 

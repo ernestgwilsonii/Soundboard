@@ -1,26 +1,17 @@
-"""Admin forms."""
+"""Administrative forms."""
 
-import sqlite3
+from typing import Any
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, PasswordField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
-
-from config import Config
+from wtforms import BooleanField, SelectField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, Length, ValidationError
 
 
 class AdminPasswordResetForm(FlaskForm):
     """Form to reset a user's password as an admin."""
 
-    password = PasswordField("New Password", validators=[DataRequired(), Length(min=3)])
-    password_confirm = PasswordField(
-        "Confirm New Password",
-        validators=[
-            DataRequired(),
-            EqualTo("password", message="Passwords must match"),
-        ],
-    )
-    submit = SubmitField("Reset Password")
+
+...
 
 
 class AdminUpdateEmailForm(FlaskForm):
@@ -31,23 +22,19 @@ class AdminUpdateEmailForm(FlaskForm):
     )
     submit = SubmitField("Update Email")
 
-    def __init__(self, user_id, *args, **kwargs):
+    def __init__(self, user_id: int, *args: Any, **kwargs: Any) -> None:
         """Initialize the form with the user's ID."""
         super(AdminUpdateEmailForm, self).__init__(*args, **kwargs)
         self.user_id = user_id
 
-    def validate_email(self, email):
-        """Validate that the email is unique."""
-        with sqlite3.connect(Config.ACCOUNTS_DB) as conn:
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT id FROM users WHERE email = ? AND id != ?",
-                (email.data, self.user_id),
-            )
-            if cur.fetchone():
-                raise ValidationError(
-                    "This email is already in use by another account."
-                )
+    def validate_email(self, email: StringField) -> None:
+        """Ensure the new email is not already taken by another user."""
+        from app.models.user import User
+
+        user_to_update = User.get_by_id(self.user_id)
+        if user_to_update and email.data != user_to_update.email:
+            if User.exists_by_email(email.data):
+                raise ValidationError("This email is already in use by another user.")
 
 
 class PlatformSettingsForm(FlaskForm):

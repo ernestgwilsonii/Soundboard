@@ -5,9 +5,9 @@ This module defines the server-side event handlers for real-time communication,
 including joining/leaving boards, presence tracking, and action synchronization.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, cast
 
-from flask import request
+from flask import current_app, request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
@@ -20,22 +20,22 @@ active_users: Dict[int, Dict[int, Dict[str, Any]]] = {}
 global_users: Dict[int, List[str]] = {}
 
 
-@socketio.on("connect")
-def on_connect():
+@socketio.on("connect")  # type: ignore
+def on_connect() -> None:
     """Handle a client connection."""
     if current_user.is_authenticated:
         if current_user.id not in global_users:
             global_users[current_user.id] = []
-        global_users[current_user.id].append(request.sid)  # type: ignore
-        print(f"User {current_user.username} connected globally.")
+        global_users[current_user.id].append(cast(Any, request).sid)
+        current_app.logger.info(f"User {current_user.username} connected globally.")
 
 
-@socketio.on("join_board")
-def on_join(data):
+@socketio.on("join_board")  # type: ignore
+def on_join(data: Dict[str, Any]) -> None:
     """Handle a client joining a board room."""
     board_id = data.get("board_id")
-    print(
-        f"DEBUG: on_join board_id={board_id}, user={current_user.username if current_user.is_authenticated else 'Anonymous'}"
+    current_app.logger.debug(
+        f"on_join board_id={board_id}, user={current_user.username if current_user.is_authenticated else 'Anonymous'}"
     )
     if not board_id:
         return
@@ -46,7 +46,7 @@ def on_join(data):
         user_info = {
             "id": current_user.id,
             "username": current_user.username,
-            "sid": request.sid,  # type: ignore
+            "sid": cast(Any, request).sid,
         }
 
         if board_id not in active_users:
@@ -57,11 +57,11 @@ def on_join(data):
         # Broadcast presence update to everyone in the room
         emit("presence_update", list(active_users[board_id].values()), to=str(board_id))
 
-        print(f"User {current_user.username} joined board {board_id}")
+        current_app.logger.info(f"User {current_user.username} joined board {board_id}")
 
 
-@socketio.on("leave_board")
-def on_leave(data):
+@socketio.on("leave_board")  # type: ignore
+def on_leave(data: Dict[str, Any]) -> None:
     """Handle a client leaving a board room."""
     board_id = data.get("board_id")
     if not board_id:
@@ -79,20 +79,20 @@ def on_leave(data):
             )
 
 
-@socketio.on("disconnect")
-def on_disconnect():
+@socketio.on("disconnect")  # type: ignore
+def on_disconnect() -> None:
     """Handle a client disconnection."""
     # Cleanup global users
     if current_user.is_authenticated and current_user.id in global_users:
-        if request.sid in global_users[current_user.id]:  # type: ignore
-            global_users[current_user.id].remove(request.sid)  # type: ignore
+        if cast(Any, request).sid in global_users[current_user.id]:
+            global_users[current_user.id].remove(cast(Any, request).sid)
         if not global_users[current_user.id]:
             del global_users[current_user.id]
 
     # Cleanup presence from all boards
     for board_id, users in list(active_users.items()):
         for user_id, info in list(users.items()):
-            if info["sid"] == request.sid:  # type: ignore
+            if info["sid"] == cast(Any, request).sid:
                 del users[user_id]
                 emit("presence_update", list(users.values()), to=str(board_id))
 
@@ -100,14 +100,18 @@ def on_disconnect():
 # --- Action Synchronization ---
 
 
-def broadcast_board_update(board_id, action, data=None):
+def broadcast_board_update(
+    board_id: int, action: str, data: Optional[Dict[str, Any]] = None
+) -> None:
     """Utility to notify all collaborators that the board state has changed."""
     username = "System"
     try:
         if current_user and current_user.is_authenticated:
             username = current_user.username
     except Exception:
-        pass
+        current_app.logger.debug(
+            "Failed to get current_user for board update broadcast"
+        )
 
     socketio.emit(
         "board_updated",
@@ -116,7 +120,9 @@ def broadcast_board_update(board_id, action, data=None):
     )
 
 
-def send_instant_notification(user_id, message, link=None):
+def send_instant_notification(
+    user_id: int, message: str, link: Optional[str] = None
+) -> None:
     """Pushes a notification event to all connected sessions of a user."""
     if user_id in global_users:
         for sid in global_users[user_id]:
@@ -125,8 +131,8 @@ def send_instant_notification(user_id, message, link=None):
             )
 
 
-@socketio.on("request_lock")
-def on_request_lock(data):
+@socketio.on("request_lock")  # type: ignore
+def on_request_lock(data: Dict[str, Any]) -> None:
     """Handle a request to lock a sound slot."""
     board_id = data.get("board_id")
     sound_id = data.get("sound_id")
@@ -150,8 +156,8 @@ def on_request_lock(data):
     )
 
 
-@socketio.on("release_lock")
-def on_release_lock(data):
+@socketio.on("release_lock")  # type: ignore
+def on_release_lock(data: Dict[str, Any]) -> None:
     """Handle a request to release a lock on a sound slot."""
     board_id = data.get("board_id")
     sound_id = data.get("sound_id")
@@ -163,8 +169,8 @@ def on_release_lock(data):
     )
 
 
-@socketio.on("sound_reordered")
-def on_reorder(data):
+@socketio.on("sound_reordered")  # type: ignore
+def on_reorder(data: Dict[str, Any]) -> None:
     """Handle sound reordering."""
     board_id = data.get("board_id")
     sound_ids = data.get("sound_ids")
@@ -180,8 +186,8 @@ def on_reorder(data):
     )
 
 
-@socketio.on("send_reaction")
-def on_send_reaction(data):
+@socketio.on("send_reaction")  # type: ignore
+def on_send_reaction(data: Dict[str, Any]) -> None:
     """Handle sending a reaction."""
     board_id = data.get("board_id")
     emoji = data.get("emoji")

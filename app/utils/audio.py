@@ -7,7 +7,7 @@ and performing normalization.
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import mutagen
 from pydub import AudioSegment
@@ -38,8 +38,13 @@ class AudioProcessor:
                 return None
 
             return AudioProcessor._build_metadata_dict(audio, file_path)
-        except Exception as e:
-            logger.error(f"Error processing audio metadata for {file_path}: {e}")
+        except (mutagen.MutagenError, FileNotFoundError):
+            logger.warning(f"Could not read audio file at {file_path}")
+            return None
+        except Exception:
+            logger.exception(
+                f"Unexpected error processing audio metadata for {file_path}"
+            )
             return None
 
     @staticmethod
@@ -57,7 +62,7 @@ class AudioProcessor:
     def _extract_bitrate(info: Any) -> int:
         """Extract bitrate in kbps from mutagen info object."""
         if hasattr(info, "bitrate") and info.bitrate:
-            return info.bitrate // 1000
+            return cast(int, info.bitrate // 1000)
         return 0
 
     @staticmethod
@@ -81,8 +86,11 @@ class AudioProcessor:
             normalized_audio.export(file_path, format=format_ext)
             logger.info(f"Normalized {file_path} to {target_dbfs} dBFS")
             return True
-        except Exception as e:
-            logger.error(f"Error normalizing audio for {file_path}: {e}")
+        except FileNotFoundError:
+            logger.error(f"Audio file not found for normalization: {file_path}")
+            return False
+        except Exception:
+            logger.exception(f"Unexpected error normalizing audio for {file_path}")
             return False
 
     @staticmethod

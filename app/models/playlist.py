@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
+
+if TYPE_CHECKING:
+    from .soundboard import Sound
 
 from app.db import get_soundboards_db
 
@@ -28,7 +31,7 @@ class Playlist:
         description: Optional[str] = None,
         is_public: bool = False,
         created_at: Optional[str] = None,
-    ):
+    ) -> None:
         self.id = id
         self.user_id = user_id
         self.name = name
@@ -38,29 +41,43 @@ class Playlist:
 
     def save(self) -> None:
         """Save the playlist to the database."""
-        db = get_soundboards_db()
-        cur = db.cursor()
+        database_connection = get_soundboards_db()
+        database_cursor = database_connection.cursor()
         if self.id is None:
-            cur.execute(
+            database_cursor.execute(
                 "INSERT INTO playlists (user_id, name, description, is_public) VALUES (?, ?, ?, ?)",
                 (self.user_id, self.name, self.description, int(self.is_public)),
             )
-            self.id = cur.lastrowid
+            self.id = database_cursor.lastrowid
         else:
-            cur.execute(
+            database_cursor.execute(
                 "UPDATE playlists SET name=?, description=?, is_public=? WHERE id=?",
                 (self.name, self.description, int(self.is_public), self.id),
             )
-        db.commit()
+        database_connection.commit()
 
     def delete(self) -> None:
         """Delete the playlist and its items."""
         if self.id:
-            db = get_soundboards_db()
-            cur = db.cursor()
-            cur.execute("DELETE FROM playlist_items WHERE playlist_id = ?", (self.id,))
-            cur.execute("DELETE FROM playlists WHERE id = ?", (self.id,))
-            db.commit()
+            database_connection = get_soundboards_db()
+            database_cursor = database_connection.cursor()
+            database_cursor.execute(
+                "DELETE FROM playlist_items WHERE playlist_id = ?", (self.id,)
+            )
+            database_cursor.execute("DELETE FROM playlists WHERE id = ?", (self.id,))
+            database_connection.commit()
+
+    @classmethod
+    def _from_row(cls, row: Any) -> Playlist:
+        """Helper to create a Playlist instance from a database row."""
+        return cls(
+            id=row["id"],
+            user_id=row["user_id"],
+            name=row["name"],
+            description=row["description"],
+            is_public=row["is_public"],
+            created_at=row["created_at"],
+        )
 
     @staticmethod
     def get_by_id(playlist_id: int) -> Optional[Playlist]:
@@ -73,19 +90,12 @@ class Playlist:
         Returns:
             Playlist or None: The Playlist object if found.
         """
-        db = get_soundboards_db()
-        cur = db.cursor()
-        cur.execute("SELECT * FROM playlists WHERE id = ?", (playlist_id,))
-        row = cur.fetchone()
+        database_connection = get_soundboards_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute("SELECT * FROM playlists WHERE id = ?", (playlist_id,))
+        row = database_cursor.fetchone()
         if row:
-            return Playlist(
-                id=row["id"],
-                user_id=row["user_id"],
-                name=row["name"],
-                description=row["description"],
-                is_public=row["is_public"],
-                created_at=row["created_at"],
-            )
+            return Playlist._from_row(row)
         return None
 
     @staticmethod
@@ -97,65 +107,38 @@ class Playlist:
             user_id (int): The user ID.
 
         Returns:
-            list[Playlist]: A list of Playlist objects.
+            list[Playlist]: A list of Playlist objects belonging to the user.
         """
-        db = get_soundboards_db()
-        cur = db.cursor()
-        cur.execute(
+        database_connection = get_soundboards_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute(
             "SELECT * FROM playlists WHERE user_id = ? ORDER BY name ASC", (user_id,)
         )
-        rows = cur.fetchall()
-        return [
-            Playlist(
-                id=row["id"],
-                user_id=row["user_id"],
-                name=row["name"],
-                description=row["description"],
-                is_public=row["is_public"],
-                created_at=row["created_at"],
-            )
-            for row in rows
-        ]
+        rows = database_cursor.fetchall()
+        return [Playlist._from_row(row) for row in rows]
 
-    def get_sounds(self) -> List:
+    def get_sounds(self) -> List["Sound"]:
         """
         Retrieve all sounds in the playlist.
 
         Returns:
             list[Sound]: A list of Sound objects.
         """
-        from app.models.soundboard import Sound
+        from .soundboard import Sound
 
-        db = get_soundboards_db()
-        cur = db.cursor()
-        cur.execute(
+        database_connection = get_soundboards_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute(
             """
-            SELECT s.* FROM sounds s
-            JOIN playlist_items pi ON s.id = pi.sound_id
-            WHERE pi.playlist_id = ?
-            ORDER BY pi.display_order ASC
+            SELECT sound.* FROM sounds sound
+            JOIN playlist_items playlist_items ON sound.id = playlist_items.sound_id
+            WHERE playlist_items.playlist_id = ?
+            ORDER BY playlist_items.display_order ASC
         """,
             (self.id,),
         )
-        rows = cur.fetchall()
-        return [
-            Sound(
-                id=row["id"],
-                soundboard_id=row["soundboard_id"],
-                name=row["name"],
-                file_path=row["file_path"],
-                icon=row["icon"],
-                display_order=row["display_order"],
-                volume=row["volume"],
-                is_loop=row["is_loop"],
-                start_time=row["start_time"],
-                end_time=row["end_time"],
-                bitrate=row["bitrate"],
-                file_size=row["file_size"],
-                format=row["format"],
-            )
-            for row in rows
-        ]
+        rows = database_cursor.fetchall()
+        return [Sound._from_row(row) for row in rows]
 
     def add_sound(self, sound_id: int) -> None:
         """
@@ -166,20 +149,20 @@ class Playlist:
         Args:
             sound_id (int): The ID of the sound to add.
         """
-        db = get_soundboards_db()
-        cur = db.cursor()
-        cur.execute(
+        database_connection = get_soundboards_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute(
             "SELECT MAX(display_order) FROM playlist_items WHERE playlist_id = ?",
             (self.id,),
         )
-        max_row = cur.fetchone()
+        max_row = database_cursor.fetchone()
         order = (max_row[0] + 1) if max_row and max_row[0] is not None else 1
 
-        cur.execute(
+        database_cursor.execute(
             "INSERT INTO playlist_items (playlist_id, sound_id, display_order) VALUES (?, ?, ?)",
             (self.id, sound_id, order),
         )
-        db.commit()
+        database_connection.commit()
 
     def remove_sound(self, sound_id: int) -> None:
         """
@@ -188,13 +171,13 @@ class Playlist:
         Args:
             sound_id (int): The ID of the sound to remove.
         """
-        db = get_soundboards_db()
-        cur = db.cursor()
-        cur.execute(
+        database_connection = get_soundboards_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute(
             "DELETE FROM playlist_items WHERE playlist_id = ? AND sound_id = ?",
             (self.id, sound_id),
         )
-        db.commit()
+        database_connection.commit()
 
 
 class PlaylistItem:
@@ -214,7 +197,7 @@ class PlaylistItem:
         playlist_id: Optional[int] = None,
         sound_id: Optional[int] = None,
         display_order: int = 0,
-    ):
+    ) -> None:
         self.id = id
         self.playlist_id = playlist_id
         self.sound_id = sound_id

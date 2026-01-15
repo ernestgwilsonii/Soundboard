@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict
 
 from app.db import get_accounts_db
 
@@ -22,13 +22,24 @@ class AdminSettings:
         Returns:
             any: The setting value or default.
         """
-        db = get_accounts_db()
-        cur = db.cursor()
-        cur.execute("SELECT value FROM admin_settings WHERE key = ?", (key,))
-        row = cur.fetchone()
+        database_connection = get_accounts_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute(
+            "SELECT value FROM admin_settings WHERE key = ?", (key,)
+        )
+        row = database_cursor.fetchone()
         if row:
             return row["value"]
         return default
+
+    @staticmethod
+    def get_all_settings() -> Dict[str, Any]:
+        """Retrieve all settings as a dictionary."""
+        database_connection = get_accounts_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute("SELECT key, value FROM admin_settings")
+        rows = database_cursor.fetchall()
+        return {row["key"]: row["value"] for row in rows}
 
     @staticmethod
     def set_setting(key: str, value: Any) -> None:
@@ -39,10 +50,10 @@ class AdminSettings:
             key (str): The setting key.
             value (any): The value to store.
         """
-        db = get_accounts_db()
-        cur = db.cursor()
-        cur.execute(
+        database_connection = get_accounts_db()
+        database_cursor = database_connection.cursor()
+        database_cursor.execute(
             "INSERT INTO admin_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
             (key, value),
         )
-        db.commit()
+        database_connection.commit()
