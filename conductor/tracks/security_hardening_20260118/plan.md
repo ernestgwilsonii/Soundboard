@@ -3,9 +3,9 @@
 This plan focuses on integrating security tooling and establishing a scanning workflow.
 
 ## Phase 1: Tooling & Integration
-- [x] Add `bandit` and `pip-audit` to `requirements.txt` and install.
-- [x] Create `scripts/security_scan.sh` with proper error handling.
-- [x] Update `Makefile` to include the `scan` target.
+- [x] Add `bandit` and `pip-audit` to `requirements.txt` and install. 85fc82d
+- [x] Create `scripts/security_scan.sh` with proper error handling. 85fc82d
+- [x] Update `Makefile` to include the `scan` target. 85fc82d
 
 ## Phase 2: Baseline Scan & Remediation
 - [ ] Run the first comprehensive scan.
