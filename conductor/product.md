@@ -30,7 +30,7 @@ The Soundboard Website is a professional and intuitive platform that empowers us
 - **Intelligent Organization:** Comprehensive tagging system for soundboards, enabling users to categorize content and discover popular themes via tag-based search and navigation.
 - **Advanced Playback Control:** Per-sound customization including volume normalization, looping, visual waveform trimming (WaveSurfer.js), keyboard hotkeys, and custom visual themes for individual soundboards. Advanced search filtering by name, rating, and recency.
 - **AI-Ready Architecture:** Automated audio normalization and metadata generation pipeline during content ingestion.
-- **Hardened Security:** Mandatory email verification for new accounts, secure token-based password resets, automatic account lockout, and IP-based rate limiting to prevent automated abuse.
+- **Hardened Security:** Mandatory email verification for new accounts, secure token-based password resets, automatic account lockout, and IP-based rate limiting. Continuously protected by automated Static Application Security Testing (SAST) and Software Composition Analysis (SCA) to identify vulnerabilities and outdated dependencies.
 - **Self-Verifying Architecture:** Robust E2E automation suite (Playwright) ensuring every user flow—from auth to visual trimming—is verified on every change.
 - **Standardized Excellence:** Strict adherence to PEP 8, PEP 257, and type safety, combined with a core philosophy that human-readable, self-documenting code is paramount. This is enforced by modular architecture and a comprehensive suite of automated quality gates.
 - **Responsive Design:** A polished, professional UI that adapts perfectly to desktop and mobile environments, including custom-themed error pages.

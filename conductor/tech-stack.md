@@ -28,4 +28,4 @@
 - **Configuration:** Environment-based settings via `.env` or Flask configuration objects.
 - **Server:** Gunicorn for production-ready serving.
 - **Testing:** **Pytest** for unit/integration testing and **Playwright** for end-to-end automation and visual verification.
-- **Code Quality:** **Black** (formatting), **Isort** (imports), **Flake8** (linting), **Pydocstyle** (Google-style docstrings), and **Mypy** (strict static typing).
+- **Code Quality:** **Black** (formatting), **Isort** (imports), **Flake8** (linting), **Pydocstyle** (Google-style docstrings), **Mypy** (strict static typing), **Bandit** (SAST), and **Pip-Audit** (dependency scanning).
