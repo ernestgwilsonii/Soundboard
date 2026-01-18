@@ -13,5 +13,5 @@ This plan focuses on integrating security tooling and establishing a scanning wo
 - [x] Update any dependencies flagged by Pip-Audit. b1a9e9b
 
 ## Phase 3: Documentation & Finalize
-- [ ] Update `CONTRIBUTING.md` to mention the `make scan` command.
-- [ ] Commit all changes and verify the workflow.
+- [x] Update `CONTRIBUTING.md` to mention the `make scan` command. 991d223
+- [x] Commit all changes and verify the workflow. 991d223
