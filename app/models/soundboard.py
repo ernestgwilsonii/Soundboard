@@ -199,7 +199,7 @@ class Soundboard(SoundboardSocialMixin, SoundboardDiscoveryMixin):
         database_cursor = database_connection.cursor()
         placeholders = ",".join(["?"] * len(user_ids))
         database_cursor.execute(
-            f"SELECT * FROM soundboards WHERE user_id IN ({placeholders}) AND is_public = 1 ORDER BY created_at DESC",
+            f"SELECT * FROM soundboards WHERE user_id IN ({placeholders}) AND is_public = 1 ORDER BY created_at DESC",  # nosec
             user_ids,
         )
         rows = database_cursor.fetchall()

@@ -338,7 +338,7 @@ class Activity:
         database_cursor = database_connection.cursor()
         placeholders = ",".join(["?"] * len(user_ids))
         database_cursor.execute(
-            f"SELECT * FROM activities WHERE user_id IN ({placeholders}) ORDER BY created_at DESC LIMIT ?",
+            f"SELECT * FROM activities WHERE user_id IN ({placeholders}) ORDER BY created_at DESC LIMIT ?",  # nosec
             (*user_ids, limit),
         )
         rows = database_cursor.fetchall()
