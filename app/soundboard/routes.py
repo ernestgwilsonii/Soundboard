@@ -27,7 +27,9 @@ from app.models import (
 )
 from app.socket_events import broadcast_board_update
 from app.soundboard import bp
+from app.soundboard.forms import CommentForm, SoundboardForm, SoundForm
 from app.utils.audio import AudioProcessor
+from app.utils.storage import Storage
 
 
 @bp.route("/dashboard")  # type: ignore
@@ -185,8 +187,6 @@ def post_comment(id: int) -> Any:
     Args:
         id (int): The soundboard ID.
     """
-    from app.soundboard.forms import CommentForm
-
     soundboard = Soundboard.get_by_id(id)
     if soundboard is None:
         flash("Soundboard not found.")
@@ -465,27 +465,13 @@ def search() -> Any:
 @verification_required  # type: ignore
 def create() -> Any:
     """Handle soundboard creation."""
-    import os
-
-    from flask import current_app
-    from werkzeug.utils import secure_filename
-
-    from app.soundboard.forms import SoundboardForm
-
     form = SoundboardForm()
     if form.validate_on_submit():
         icon_path_or_class = form.icon.data
         if form.icon_image.data:
-            uploaded_file = form.icon_image.data
-            filename = secure_filename(uploaded_file.filename)
-            icon_relative_path = os.path.join("icons", filename)
-            full_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"], icon_relative_path
+            icon_path_or_class = Storage.save_file(
+                form.icon_image.data, subfolder="icons", use_uuid=True
             )
-            if not os.path.exists(os.path.dirname(full_path)):
-                os.makedirs(os.path.dirname(full_path))
-            uploaded_file.save(full_path)
-            icon_path_or_class = icon_relative_path
 
         assert current_user.id is not None
         new_soundboard = Soundboard(
@@ -531,13 +517,6 @@ def edit(id: int) -> Any:
     Args:
         id (int): The soundboard ID.
     """
-    import os
-
-    from flask import current_app
-    from werkzeug.utils import secure_filename
-
-    from app.soundboard.forms import SoundboardForm
-
     soundboard = Soundboard.get_by_id(id)
     if soundboard is None:
         flash("Soundboard not found.")
@@ -557,16 +536,9 @@ def edit(id: int) -> Any:
         soundboard.theme_color = form.theme_color.data
         soundboard.theme_preset = form.theme_preset.data
         if form.icon_image.data:
-            uploaded_icon_file = form.icon_image.data
-            filename = secure_filename(uploaded_icon_file.filename)
-            icon_relative_path = os.path.join("icons", filename)
-            full_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"], icon_relative_path
+            soundboard.icon = Storage.save_file(
+                form.icon_image.data, subfolder="icons", use_uuid=True
             )
-            if not os.path.exists(os.path.dirname(full_path)):
-                os.makedirs(os.path.dirname(full_path))
-            uploaded_icon_file.save(full_path)
-            soundboard.icon = icon_relative_path
         else:
             soundboard.icon = form.icon.data
         soundboard.save()
@@ -623,13 +595,6 @@ def upload_sound(id: int) -> Any:
     Args:
         id (int): The soundboard ID.
     """
-    import os
-
-    from flask import current_app
-    from werkzeug.utils import secure_filename
-
-    from app.soundboard.forms import SoundForm
-
     soundboard = Soundboard.get_by_id(id)
     if soundboard is None:
         flash("Soundboard not found.")
@@ -650,32 +615,18 @@ def upload_sound(id: int) -> Any:
             soundboard=soundboard,
         )
 
-    uploaded_audio_file = form.audio_file.data
-    audio_filename = secure_filename(uploaded_audio_file.filename)
-
-    # Create directory for soundboard if it doesn't exist
     assert soundboard.id is not None
-    sb_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], str(soundboard.id))
-    if not os.path.exists(sb_dir):
-        os.makedirs(sb_dir)
-
-    file_path = os.path.join(str(soundboard.id), audio_filename)
-    full_audio_path = os.path.join(current_app.config["UPLOAD_FOLDER"], file_path)
-    uploaded_audio_file.save(full_audio_path)
+    # Save audio file
+    file_path = Storage.save_file(
+        form.audio_file.data, subfolder=str(soundboard.id), use_uuid=False
+    )
+    full_audio_path = Storage.get_full_path(file_path)
 
     icon_path_or_class = form.icon.data
     if form.icon_image.data:
-        uploaded_icon_file = form.icon_image.data
-        icon_filename = secure_filename(uploaded_icon_file.filename)
-        icon_relative_path = os.path.join("icons", icon_filename)
-        if not os.path.exists(
-            os.path.join(current_app.config["UPLOAD_FOLDER"], "icons")
-        ):
-            os.makedirs(os.path.join(current_app.config["UPLOAD_FOLDER"], "icons"))
-        uploaded_icon_file.save(
-            os.path.join(current_app.config["UPLOAD_FOLDER"], icon_relative_path)
+        icon_path_or_class = Storage.save_file(
+            form.icon_image.data, subfolder="icons", use_uuid=True
         )
-        icon_path_or_class = icon_relative_path
 
     sound = Sound(
         soundboard_id=soundboard.id,
