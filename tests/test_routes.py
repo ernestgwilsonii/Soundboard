@@ -1,7 +1,9 @@
 """Tests for application routes."""
 
 import os
+import shutil
 import sqlite3
+import tempfile
 
 import pytest
 
@@ -12,7 +14,7 @@ from config import Config
 @pytest.fixture
 def client(monkeypatch):
     """
-    Test client fixture with temporary databases.
+    Test client fixture with temporary databases and upload folder.
 
     Args:
         monkeypatch: Pytest monkeypatch fixture.
@@ -20,10 +22,12 @@ def client(monkeypatch):
     # Use temporary DBs for route tests
     accounts_db = os.path.abspath("test_accounts_routes.sqlite3")
     soundboards_db = os.path.abspath("test_soundboards_routes.sqlite3")
+    temp_upload_folder = tempfile.mkdtemp()
 
     # Patch Config before app creation
     monkeypatch.setattr(Config, "ACCOUNTS_DB", accounts_db)
     monkeypatch.setattr(Config, "SOUNDBOARDS_DB", soundboards_db)
+    monkeypatch.setattr(Config, "UPLOAD_FOLDER", temp_upload_folder)
 
     app = create_app()
     app.config["TESTING"] = True
@@ -50,6 +54,8 @@ def client(monkeypatch):
     for db_path in [accounts_db, soundboards_db]:
         if os.path.exists(db_path):
             os.remove(db_path)
+    if os.path.exists(temp_upload_folder):
+        shutil.rmtree(temp_upload_folder)
 
 
 def test_index_route(client):
