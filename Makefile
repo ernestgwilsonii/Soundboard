@@ -9,6 +9,7 @@ help:
 	@echo "  make run      - Start the application (localhost:5000)"
 	@echo "  make stop     - Stop the application"
 	@echo "  make test     - Run the full test suite in Docker"
+	@echo "  make scan     - Run security scans (Bandit + Safety)"
 	@echo "  make debug    - Get a shell inside the test container (for troubleshooting)"
 	@echo "  make clean    - Remove containers and volumes (resets DB)"
 	@echo "  make promote user=NAME - Promote a user to admin"
@@ -41,6 +42,11 @@ test:
 test:
 	@echo "Running tests..."
 	docker compose run --rm test pytest
+
+.PHONY: scan
+scan:
+	@echo "Running security scan..."
+	docker compose run --rm test ./scripts/security_scan.sh
 
 .PHONY: debug
 debug:
