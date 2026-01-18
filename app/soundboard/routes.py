@@ -7,7 +7,7 @@ It also includes playlist functionality and social interactions (likes, comments
 
 from typing import Any, List
 
-from flask import flash, redirect, render_template, request, url_for
+from flask import current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import limiter
@@ -290,6 +290,7 @@ def reorder_sounds(id: int) -> Any:
         Sound.reorder_multiple(soundboard.id, sound_ids)
         broadcast_board_update(soundboard.id, "sound_reordered")
     except Exception as error:
+        current_app.logger.exception(f"Sound reordering failed: {error}")
         return jsonify({"error": str(error)}), 500
 
     return jsonify({"status": "success"})
@@ -1021,6 +1022,7 @@ def import_soundboard() -> Any:
             flash(f'Soundboard "{new_sb.name}" successfully imported!')
             return redirect(url_for("soundboard.dashboard"))
         except Exception as e:
+            current_app.logger.exception(f"Soundboard import failed: {e}")
             flash(f"Error importing soundboard: {e}")
 
     return render_template(

@@ -143,7 +143,11 @@ def on_request_lock(data: Dict[str, Any]) -> None:
     try:
         if current_user and current_user.is_authenticated:
             username = current_user.username
+    except (RuntimeError, AttributeError):
+        # Fallback if accessed outside request context
+        pass
     except Exception:
+        current_app.logger.debug("Failed to get current_user for lock request")
         pass
 
     # In a production app, we'd store this in Redis/DB.
@@ -198,7 +202,11 @@ def on_send_reaction(data: Dict[str, Any]) -> None:
     try:
         if current_user and current_user.is_authenticated:
             username = current_user.username
+    except (RuntimeError, AttributeError):
+        # Fallback if accessed outside request context
+        pass
     except Exception:
+        current_app.logger.debug("Failed to get current_user for reaction")
         pass
 
     # Broadcast to EVERYONE in the room including sender
