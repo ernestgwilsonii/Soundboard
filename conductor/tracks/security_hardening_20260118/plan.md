@@ -8,9 +8,9 @@ This plan focuses on integrating security tooling and establishing a scanning wo
 - [x] Update `Makefile` to include the `scan` target. 85fc82d
 
 ## Phase 2: Baseline Scan & Remediation
-- [ ] Run the first comprehensive scan.
-- [ ] Triage and fix any "High" severity issues found by Bandit.
-- [ ] Update any dependencies flagged by Safety (if possible without breaking changes).
+- [x] Run the first comprehensive scan. 85fc82d
+- [x] Triage and fix any "High" severity issues found by Bandit. b1a9e9b
+- [x] Update any dependencies flagged by Pip-Audit. b1a9e9b
 
 ## Phase 3: Documentation & Finalize
 - [ ] Update `CONTRIBUTING.md` to mention the `make scan` command.
