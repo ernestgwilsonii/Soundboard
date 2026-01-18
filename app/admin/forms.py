@@ -3,15 +3,22 @@
 from typing import Any
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, ValidationError
+from wtforms import BooleanField, PasswordField, SelectField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 
 
 class AdminPasswordResetForm(FlaskForm):
     """Form to reset a user's password as an admin."""
 
-
-...
+    password = PasswordField("New Password", validators=[DataRequired(), Length(min=3)])
+    password_confirm = PasswordField(
+        "Confirm New Password",
+        validators=[
+            DataRequired(),
+            EqualTo("password", message="Passwords must match"),
+        ],
+    )
+    submit = SubmitField("Reset Password")
 
 
 class AdminUpdateEmailForm(FlaskForm):

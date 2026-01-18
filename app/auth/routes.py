@@ -125,7 +125,13 @@ def login() -> Any:
     return redirect(next_page)
 
 
-...
+@bp.route("/logout")  # type: ignore
+def logout() -> Any:
+    """Log out the current user and redirect to the index page."""
+    from flask_login import logout_user
+
+    logout_user()
+    return redirect(url_for("main.index"))
 
 
 @bp.route("/register", methods=["GET", "POST"])  # type: ignore
