@@ -39,8 +39,12 @@ Large monolithic files are discouraged. We prefer a modular structure where logi
     ```bash
     ./scripts/check_quality.sh
     ```
-4.  **Documentation:** Update relevant documentation and ensure all new public functions have clear docstrings.
-5.  **Commit Messages:** Follow the conventional commit format: `<type>(<scope>): <description>`.
+4.  **Security Scan:** Run the automated security scans:
+    ```bash
+    make scan
+    ```
+5.  **Documentation:** Update relevant documentation and ensure all new public functions have clear docstrings.
+6.  **Commit Messages:** Follow the conventional commit format: `<type>(<scope>): <description>`.
 
 ## Style Guide
 
