@@ -19,6 +19,23 @@ class Config:
         basedir, "soundboards.sqlite3"
     )
 
+    # SQLAlchemy Configuration
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "SQLALCHEMY_DATABASE_URI"
+    ) or "sqlite:///" + os.path.abspath(ACCOUNTS_DB)
+
+    SQLALCHEMY_BINDS = {
+        "soundboards": os.environ.get("SQLALCHEMY_BINDS_SOUNDBOARDS")
+        or "sqlite:///" + os.path.abspath(SOUNDBOARDS_DB)
+    }
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = os.environ.get("WTF_CSRF_ENABLED", "True").lower() in [
+        "true",
+        "1",
+        "t",
+    ]
+
     # Email settings
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
     MAIL_PORT = int(os.environ.get("MAIL_PORT") or 25)

@@ -1,45 +1,8 @@
-import os
-import sqlite3
-
-import pytest
-
-from app import create_app
 from app.models import Comment, Rating, Soundboard, User
-from config import Config
 
 
-@pytest.fixture
-def app_context(monkeypatch):
-    accounts_db = os.path.abspath("test_accounts_social.sqlite3")
-    soundboards_db = os.path.abspath("test_soundboards_social.sqlite3")
-
-    monkeypatch.setattr(Config, "ACCOUNTS_DB", accounts_db)
-    monkeypatch.setattr(Config, "SOUNDBOARDS_DB", soundboards_db)
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["WTF_CSRF_ENABLED"] = False
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
+def test_ratings_model(app):
     with app.app_context():
-        with sqlite3.connect(accounts_db) as conn:
-            with open("app/schema_accounts.sql", "r") as f:
-                conn.executescript(f.read())
-        with sqlite3.connect(soundboards_db) as conn:
-            with open("app/schema_soundboards.sql", "r") as f:
-                conn.executescript(f.read())
-        yield app
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-
-def test_ratings_model(app_context):
-    with app_context.app_context():
         u1 = User(username="u1", email="u1@example.com", is_verified=True)
         u1.set_password("p")
         u1.save()
@@ -69,8 +32,8 @@ def test_ratings_model(app_context):
         assert stats["average"] == 3.5
 
 
-def test_comments_model(app_context):
-    with app_context.app_context():
+def test_comments_model(app):
+    with app.app_context():
         u = User(username="commenter", email="c@example.com", is_verified=True)
         u.set_password("p")
         u.save()
@@ -91,9 +54,9 @@ def test_comments_model(app_context):
         assert len(sb.get_comments()) == 0
 
 
-def test_rating_api(app_context):
-    client = app_context.test_client()
-    with app_context.app_context():
+def test_rating_api(app):
+    client = app.test_client()
+    with app.app_context():
         u = User(username="rater", email="r@example.com", is_verified=True)
         u.set_password("p")
         u.save()
@@ -120,9 +83,9 @@ def test_rating_api(app_context):
     assert data["count"] == 1
 
 
-def test_comment_routes(app_context):
-    client = app_context.test_client()
-    with app_context.app_context():
+def test_comment_routes(app):
+    client = app.test_client()
+    with app.app_context():
         u = User(username="commenter2", email="c2@example.com", is_verified=True)
         u.set_password("p")
         u.save()
@@ -146,12 +109,11 @@ def test_comment_routes(app_context):
     assert b"Route Comment" in response.data
 
     # Verify DB
-    with client.application.app_context():
-        sb_fetched = Soundboard.get_by_id(sb_id)
-        assert sb_fetched is not None
-        comments = sb_fetched.get_comments()
-        assert len(comments) == 1
-        comment_id = comments[0].id
+    with app.app_context():
+        comment = Comment.get_by_id(1)
+        assert comment is not None
+        assert comment.text == "Route Comment"
+        comment_id = comment.id
 
     # Delete comment
     response = client.post(

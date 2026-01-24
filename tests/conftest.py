@@ -1,11 +1,17 @@
 import os
+import shutil
 import signal
 import socket
-import sqlite3
 import subprocess
+import tempfile
 import time
+import uuid
 
 import pytest
+
+from app import create_app
+from app.extensions import db_orm
+from config import Config
 
 
 def get_open_port():
@@ -28,6 +34,7 @@ def live_server_url():
     # Use a dedicated test DB for automation to avoid side effects
     test_accounts_db = os.path.abspath("test_automation_accounts.sqlite3")
     test_soundboards_db = os.path.abspath("test_automation_soundboards.sqlite3")
+    temp_upload_folder = tempfile.mkdtemp()
 
     # Environment variables for the test server
     env = os.environ.copy()
@@ -37,6 +44,9 @@ def live_server_url():
     env["TESTING"] = "True"
     env["DEBUG"] = "False"
     env["WTF_CSRF_ENABLED"] = "False"  # Simplify E2E forms
+    env["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{test_accounts_db}"
+    env["SQLALCHEMY_BINDS_SOUNDBOARDS"] = f"sqlite:///{test_soundboards_db}"
+    env["UPLOAD_FOLDER"] = temp_upload_folder
 
     print(f"\n[Harness] Starting server on {url}...")
 
@@ -77,26 +87,112 @@ def live_server_url():
 
         print("[Harness] Stopping server...")
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        if os.path.exists(temp_upload_folder):
+            shutil.rmtree(temp_upload_folder)
 
 
 @pytest.fixture(scope="function")
-def test_db_setup(monkeypatch):
-    """Ensures fresh databases are initialized before each test."""
+def test_db_setup():
+    """Ensures fresh databases are initialized before each test for E2E."""
     test_accounts_db = os.path.abspath("test_automation_accounts.sqlite3")
     test_soundboards_db = os.path.abspath("test_automation_soundboards.sqlite3")
 
-    # Clean old files
-    for db in [test_accounts_db, test_soundboards_db]:
-        if os.path.exists(db):
-            os.remove(db)
+    # We don't change UPLOAD_FOLDER here because the server is already running with one.
+    # But we might want to clear it?
 
-    # Initialize schemas
-    with sqlite3.connect(test_accounts_db) as conn:
-        with open("app/schema_accounts.sql", "r") as f:
-            conn.executescript(f.read())
+    class TestConfig(Config):
+        TESTING = True
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{test_accounts_db}"
+        SQLALCHEMY_BINDS = {"soundboards": f"sqlite:///{test_soundboards_db}"}
+        WTF_CSRF_ENABLED = False
 
-    with sqlite3.connect(test_soundboards_db) as conn:
-        with open("app/schema_soundboards.sql", "r") as f:
-            conn.executescript(f.read())
+    app = create_app(TestConfig)
 
-    return test_accounts_db, test_soundboards_db
+    with app.app_context():
+        from app.models import (  # noqa: F401
+            Activity,
+            AdminSettings,
+            BoardCollaborator,
+            Comment,
+            Notification,
+            Playlist,
+            PlaylistItem,
+            Rating,
+            Sound,
+            Soundboard,
+            SoundboardTag,
+            User,
+        )
+
+        print(f"DEBUG: Registered tables: {list(db_orm.metadata.tables.keys())}")
+        db_orm.drop_all()
+        db_orm.create_all()
+        AdminSettings.set_setting("featured_soundboard_id", None)
+
+        yield test_accounts_db, test_soundboards_db
+
+        db_orm.session.remove()
+        # No drop_all here because we want the files to stay for the server to see them
+        # but we remove them at the start of next test anyway.
+
+    # Note: We don't remove files here because the server might still be using them
+    # between yield and next test setup.
+
+
+@pytest.fixture
+def app():
+    """App fixture for unit and integration tests."""
+    suffix = uuid.uuid4().hex[:8]
+    test_accounts_db = os.path.abspath(f"test_app_accounts_{suffix}.sqlite3")
+    test_soundboards_db = os.path.abspath(f"test_app_soundboards_{suffix}.sqlite3")
+    temp_upload_folder = tempfile.mkdtemp()
+
+    class TestConfig(Config):
+        TESTING = True
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{test_accounts_db}"
+        SQLALCHEMY_BINDS = {"soundboards": f"sqlite:///{test_soundboards_db}"}
+        WTF_CSRF_ENABLED = False
+        UPLOAD_FOLDER = temp_upload_folder
+        SECRET_KEY = "test-secret-key"
+
+    app = create_app(TestConfig)
+
+    with app.app_context():
+        from app.models import (  # noqa: F401
+            Activity,
+            AdminSettings,
+            BoardCollaborator,
+            Comment,
+            Notification,
+            Playlist,
+            PlaylistItem,
+            Rating,
+            Sound,
+            Soundboard,
+            SoundboardTag,
+            User,
+        )
+
+        print(f"DEBUG: Registered tables: {list(db_orm.metadata.tables.keys())}")
+        db_orm.create_all()
+        AdminSettings.set_setting("featured_soundboard_id", None)
+
+        yield app
+
+        db_orm.session.remove()
+        db_orm.drop_all()
+
+    for db_path in [test_accounts_db, test_soundboards_db]:
+        if os.path.exists(db_path):
+            try:
+                os.remove(db_path)
+            except OSError:
+                pass
+    if os.path.exists(temp_upload_folder):
+        shutil.rmtree(temp_upload_folder)
+
+
+@pytest.fixture
+def client(app):
+    """Client fixture for unit and integration tests."""
+    return app.test_client()
