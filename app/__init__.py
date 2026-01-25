@@ -63,6 +63,9 @@ def create_app(config_class: Any = Config) -> Flask:
     db_orm.init_app(flask_app)
     migrate.init_app(flask_app, db_orm)
 
+    # Load models to ensure they are registered with SQLAlchemy for migrations
+    from app import models  # noqa: F401
+
     # Bypass rate limiting for admins and testing
     @limiter.request_filter  # type: ignore
     def admin_whitelist() -> bool:
