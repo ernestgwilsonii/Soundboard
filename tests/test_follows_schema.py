@@ -1,17 +1,16 @@
 import sqlite3
 
-from config import Config
 
-
-def test_follows_table_exists():
+def test_follows_table_exists(app):
     # Use the accounts DB from config
-    db_path = Config.ACCOUNTS_DB
+    db_path = app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///", "")
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
     # Check if table exists
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='follows'")
-    table = cur.fetchone()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = [row[0] for row in cur.fetchall()]
+    print(f"DEBUG: Found tables in {db_path}: {tables}")
     conn.close()
 
-    assert table is not None, "Table 'follows' should exist in the accounts database"
+    assert "follows" in tables, f"Table 'follows' should exist in {tables}"

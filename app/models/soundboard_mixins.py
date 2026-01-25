@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .soundboard import Soundboard
 
 from app.constants import DEFAULT_PAGE_SIZE
-from app.db import get_accounts_db, get_soundboards_db
+from app.extensions import db_orm as db
 
 
 class SoundboardSocialMixin:
@@ -19,87 +19,79 @@ class SoundboardSocialMixin:
 
     def get_average_rating(self) -> Dict[str, Union[float, int]]:
         """Calculate average rating."""
-        database_connection = get_soundboards_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT AVG(score) as avg, COUNT(*) as count FROM ratings WHERE soundboard_id = ?",
-            (self.id,),
+        from app.models.social import Rating
+
+        result = (
+            db.session.query(db.func.avg(Rating.score), db.func.count(Rating.id))
+            .filter_by(soundboard_id=self.id)
+            .first()
         )
-        row = database_cursor.fetchone()
+
+        avg, count = result if result else (0, 0)
         return {
-            "average": round(row["avg"], 1) if row and row["avg"] else 0,
-            "count": row["count"] if row else 0,
+            "average": round(avg, 1) if avg else 0,
+            "count": count if count else 0,
         }
 
     def get_user_rating(self, user_id: int) -> int:
         """Get rating for a specific user."""
-        database_connection = get_soundboards_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT score FROM ratings WHERE soundboard_id = ? AND user_id = ?",
-            (self.id, user_id),
-        )
-        row = database_cursor.fetchone()
-        return int(row["score"]) if row else 0
+        from app.models.social import Rating
+
+        rating = Rating.query.filter_by(soundboard_id=self.id, user_id=user_id).first()
+        return int(rating.score) if rating else 0
 
     def get_comments(self) -> List["Comment"]:
         """Get all comments."""
-        from .social import Comment
+        from app.models.social import Comment
 
-        database_connection = get_soundboards_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT * FROM comments WHERE soundboard_id = ? ORDER BY created_at DESC",
-            (self.id,),
+        return (
+            Comment.query.filter_by(soundboard_id=self.id)
+            .order_by(Comment.created_at.desc())
+            .all()
         )
-        rows = database_cursor.fetchall()
-        return [Comment._from_row(row) for row in rows]
 
     def get_tags(self) -> List["Tag"]:
         """Get all tags."""
-        from .social import Tag
+        from app.models.social import Tag
+        from app.models.soundboard import SoundboardTag
 
-        database_connection = get_soundboards_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            """
-            SELECT tags.* FROM tags tags
-            JOIN soundboard_tags soundboard_tags ON tags.id = soundboard_tags.tag_id
-            WHERE soundboard_tags.soundboard_id = ?
-            ORDER BY tags.name ASC
-        """,
-            (self.id,),
+        stmt = (
+            db.select(Tag)
+            .join(SoundboardTag, Tag.id == SoundboardTag.tag_id)
+            .where(SoundboardTag.soundboard_id == self.id)
+            .order_by(Tag.name.asc())
         )
-        rows = database_cursor.fetchall()
-        return [Tag(id=row["id"], name=row["name"]) for row in rows]
+
+        return db.session.execute(stmt).scalars().all()
 
     def add_tag(self, tag_name: str) -> None:
         """Add a tag."""
-        from .social import Tag
+        from app.models.social import Tag
+        from app.models.soundboard import SoundboardTag
 
         tag = Tag.get_or_create(tag_name)
         if not tag:
             return
-        database_connection = get_soundboards_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "INSERT OR IGNORE INTO soundboard_tags (soundboard_id, tag_id) VALUES (?, ?)",
-            (self.id, tag.id),
-        )
-        database_connection.commit()
+
+        # Check if already tagged
+        exists = SoundboardTag.query.filter_by(
+            soundboard_id=self.id, tag_id=tag.id
+        ).first()
+
+        if not exists:
+            new_tag = SoundboardTag(soundboard_id=self.id, tag_id=tag.id)
+            db.session.add(new_tag)
+            db.session.commit()
 
     def remove_tag(self, tag_name: str) -> None:
         """Remove a tag."""
-        database_connection = get_soundboards_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            """
-            DELETE FROM soundboard_tags
-            WHERE soundboard_id = ? AND tag_id IN (SELECT id FROM tags WHERE name = ?)
-        """,
-            (self.id, tag_name.lower().strip()),
-        )
-        database_connection.commit()
+        from app.models.social import Tag
+        from app.models.soundboard import SoundboardTag
+
+        tag = Tag.query.filter_by(name=tag_name.lower().strip()).first()
+        if tag:
+            SoundboardTag.query.filter_by(soundboard_id=self.id, tag_id=tag.id).delete()
+            db.session.commit()
 
 
 class SoundboardDiscoveryMixin:
@@ -109,40 +101,39 @@ class SoundboardDiscoveryMixin:
     def get_trending(limit: int = DEFAULT_PAGE_SIZE) -> List[Soundboard]:
         """Get trending boards."""
         import app.models.soundboard as sb_models
+        from app.models.social import Rating
+        from app.models.user import User
 
-        database_connection_soundboards = get_soundboards_db()
-        database_connection_accounts = get_accounts_db()
-
-        database_cursor_soundboards = database_connection_soundboards.cursor()
-        database_cursor_soundboards.execute(
-            """
-            SELECT soundboard.id, AVG(rating.score) as avg_score, COUNT(rating.id) as rating_count
-            FROM soundboards soundboard
-            LEFT JOIN ratings rating ON soundboard.id = rating.soundboard_id
-            WHERE soundboard.is_public = 1
-            GROUP BY soundboard.id
-        """
-        )
-        soundboard_stats = {
-            row["id"]: (row["avg_score"] or 0, row["rating_count"])
-            for row in database_cursor_soundboards.fetchall()
-        }
-
-        all_public_soundboards = sb_models.Soundboard.get_public(order_by="recent")
-        scored_soundboards = []
-        for soundboard in all_public_soundboards:
-            avg_rating, rating_count = soundboard_stats.get(soundboard.id, (0, 0))
-            database_cursor_accounts = database_connection_accounts.cursor()
-            database_cursor_accounts.execute(
-                "SELECT COUNT(*) FROM follows WHERE followed_id = ?",
-                (soundboard.user_id,),
+        # 1. Get average scores and counts using SQLAlchemy
+        # We join Soundboard with Rating
+        stmt = (
+            db.select(
+                sb_models.Soundboard,
+                db.func.avg(Rating.score).label("avg_score"),
+                db.func.count(Rating.id).label("rating_count"),
             )
-            result = database_cursor_accounts.fetchone()
-            follower_count = result[0] if result else 0
+            .filter(sb_models.Soundboard.is_public.is_(True))
+            .outerjoin(Rating)
+            .group_by(sb_models.Soundboard.id)
+        )
+
+        results = db.session.execute(stmt).all()
+
+        scored_soundboards = []
+        for soundboard, avg_rating, rating_count in results:
+            avg_rating = avg_rating or 0
+            rating_count = rating_count or 0
+
+            user = User.get_by_id(soundboard.user_id)
+            follower_count = user.get_follower_count() if user else 0
+
+            # Use the same scoring formula: (avg_rating * rating_count) + (follower_count * 2)
             score = (avg_rating * rating_count) + (follower_count * 2)
             scored_soundboards.append((soundboard, score))
 
-        scored_soundboards.sort(key=lambda x: x[1], reverse=True)
+        scored_soundboards.sort(
+            key=lambda x: (x[1], x[0].created_at, x[0].id), reverse=True
+        )
         return [x[0] for x in scored_soundboards[:limit]]
 
     @staticmethod
@@ -166,73 +157,65 @@ class SoundboardDiscoveryMixin:
     def search(query_string: str, order_by: str = "recent") -> List[Soundboard]:
         """Search boards."""
         import app.models.soundboard as sb_models
+        from app.models.social import Tag
+        from app.models.soundboard import SoundboardTag
+        from app.models.user import User
 
-        user_ids = []
-        database_connection_accounts = get_accounts_db()
-        database_cursor_accounts = database_connection_accounts.cursor()
-        database_cursor_accounts.execute(
-            "SELECT id FROM users WHERE username LIKE ?", (f"%{query_string}%",)
-        )
-        user_ids = [row["id"] for row in database_cursor_accounts.fetchall()]
+        # 1. Search users by name
+        users = User.query.filter(User.username.like(f"%{query_string}%")).all()
+        user_ids = [u.id for u in users]
 
-        database_connection_soundboards = get_soundboards_db()
-        database_cursor_soundboards = database_connection_soundboards.cursor()
+        # 2. Search sounds by name to get soundboard IDs
+        sounds = sb_models.Sound.query.filter(
+            sb_models.Sound.name.like(f"%{query_string}%")
+        ).all()
+        ids_from_sounds = [s.soundboard_id for s in sounds]
 
-        sql_query = "SELECT DISTINCT id, name, user_id, icon, is_public, theme_color, theme_preset FROM soundboards WHERE is_public = 1 AND (name LIKE ?"
-        query_parameters = [f"%{query_string}%"]
+        # 3. Search tags by name to get soundboard IDs
+        tags = Tag.query.filter(Tag.name.like(f"%{query_string}%")).all()
+        tag_ids = [t.id for t in tags]
 
+        ids_from_tags = []
+        if tag_ids:
+            # Query the association table via model
+            results = SoundboardTag.query.filter(
+                SoundboardTag.tag_id.in_(tag_ids)
+            ).all()
+            ids_from_tags = [r.soundboard_id for r in results]
+
+        # 4. Build the final query for soundboards
+        query = sb_models.Soundboard.query.filter_by(is_public=True)
+
+        # Build OR conditions
+        filters = [sb_models.Soundboard.name.like(f"%{query_string}%")]
         if user_ids:
-            placeholders = ",".join(["?"] * len(user_ids))
-            sql_query += f" OR user_id IN ({placeholders})"
-            query_parameters.extend(user_ids)
-
-        database_cursor_soundboards.execute(
-            "SELECT DISTINCT soundboard_id FROM sounds WHERE name LIKE ?",
-            (f"%{query_string}%",),
-        )
-        ids_from_sounds = [
-            row["soundboard_id"] for row in database_cursor_soundboards.fetchall()
-        ]
-
+            filters.append(sb_models.Soundboard.user_id.in_(user_ids))
         if ids_from_sounds:
-            placeholders = ",".join(["?"] * len(ids_from_sounds))
-            sql_query += f" OR id IN ({placeholders})"
-            query_parameters.extend(ids_from_sounds)
-
-        database_cursor_soundboards.execute(
-            """
-            SELECT DISTINCT soundboard_id FROM soundboard_tags soundboard_tags
-            JOIN tags tags ON soundboard_tags.tag_id = tags.id
-            WHERE tags.name LIKE ?
-        """,
-            (f"%{query_string}%",),
-        )
-        ids_from_tags = [
-            row["soundboard_id"] for row in database_cursor_soundboards.fetchall()
-        ]
-
+            filters.append(sb_models.Soundboard.id.in_(ids_from_sounds))
         if ids_from_tags:
-            placeholders = ",".join(["?"] * len(ids_from_tags))
-            sql_query += f" OR id IN ({placeholders})"
-            query_parameters.extend(ids_from_tags)
+            filters.append(sb_models.Soundboard.id.in_(ids_from_tags))
 
-        sql_query += ")"
+        from sqlalchemy import or_
 
+        query = query.filter(or_(*filters))
+
+        # 5. Handle ordering
         if order_by == "top":
-            final_query = f"""
-                SELECT results.*, AVG(ratings.score) as avg_score
-                FROM ({sql_query}) as results
-                LEFT JOIN ratings ratings ON results.id = ratings.soundboard_id
-                GROUP BY results.id
-                ORDER BY avg_score DESC, results.name ASC
-            """
-            database_cursor_soundboards.execute(final_query, query_parameters)
-        elif order_by == "name":
-            sql_query += " ORDER BY name ASC"
-            database_cursor_soundboards.execute(sql_query, query_parameters)
-        else:  # recent
-            sql_query += " ORDER BY created_at DESC, id DESC"
-            database_cursor_soundboards.execute(sql_query, query_parameters)
+            from app.models.social import Rating
 
-        rows = database_cursor_soundboards.fetchall()
-        return [sb_models.Soundboard._from_row(row) for row in rows]
+            # Join with ratings and calculate average
+            query = (
+                query.outerjoin(Rating)
+                .group_by(sb_models.Soundboard.id)
+                .order_by(
+                    db.func.avg(Rating.score).desc(), sb_models.Soundboard.name.asc()
+                )
+            )
+        elif order_by == "name":
+            query = query.order_by(sb_models.Soundboard.name.asc())
+        else:  # recent
+            query = query.order_by(
+                sb_models.Soundboard.created_at.desc(), sb_models.Soundboard.id.desc()
+            )
+
+        return query.all()

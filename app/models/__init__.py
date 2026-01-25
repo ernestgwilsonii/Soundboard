@@ -10,7 +10,7 @@ from app.models.social import (
     Rating,
     Tag,
 )
-from app.models.soundboard import Sound, Soundboard
+from app.models.soundboard import Sound, Soundboard, SoundboardTag
 from app.models.user import User
 
 __all__ = [
@@ -26,4 +26,5 @@ __all__ = [
     "Notification",
     "AdminSettings",
     "BoardCollaborator",
+    "SoundboardTag",
 ]

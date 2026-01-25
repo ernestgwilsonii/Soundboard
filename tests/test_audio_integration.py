@@ -1,57 +1,5 @@
 import io
-import os
-import sqlite3
 from unittest.mock import patch
-
-import pytest
-
-from app import create_app
-from config import Config
-
-
-@pytest.fixture
-def client(monkeypatch):
-    # Use temporary DBs
-    accounts_db = os.path.abspath("test_accounts_audio.sqlite3")
-    soundboards_db = os.path.abspath("test_soundboards_audio.sqlite3")
-
-    monkeypatch.setattr(Config, "ACCOUNTS_DB", accounts_db)
-    monkeypatch.setattr(Config, "SOUNDBOARDS_DB", soundboards_db)
-
-    # Mock UPLOAD_FOLDER to a temp dir
-    import tempfile
-
-    upload_folder = tempfile.mkdtemp()
-    monkeypatch.setattr(Config, "UPLOAD_FOLDER", upload_folder)
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["WTF_CSRF_ENABLED"] = False
-
-    # Initialize DBs
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-    with app.app_context():
-        with sqlite3.connect(accounts_db) as conn:
-            with open("app/schema_accounts.sql", "r") as f:
-                conn.executescript(f.read())
-        with sqlite3.connect(soundboards_db) as conn:
-            with open("app/schema_soundboards.sql", "r") as f:
-                conn.executescript(f.read())
-
-    with app.test_client() as client:
-        yield client
-
-    # Cleanup
-    import shutil
-
-    if os.path.exists(upload_folder):
-        shutil.rmtree(upload_folder)
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
 
 
 def test_upload_sound_metadata_extraction(client):

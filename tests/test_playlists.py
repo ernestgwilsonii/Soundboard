@@ -1,54 +1,11 @@
 """Tests for playlist models and logic."""
 
-import os
-import sqlite3
-
-import pytest
-
-from app import create_app
 from app.models import Playlist, Sound, Soundboard, User
-from config import Config
 
 
-@pytest.fixture
-def app_context(monkeypatch):
-    """
-    App context fixture with temporary databases.
-
-    Args:
-        monkeypatch: Pytest monkeypatch fixture.
-    """
-    accounts_db = os.path.abspath("test_accounts_playlists.sqlite3")
-    soundboards_db = os.path.abspath("test_soundboards_playlists.sqlite3")
-
-    monkeypatch.setattr(Config, "ACCOUNTS_DB", accounts_db)
-    monkeypatch.setattr(Config, "SOUNDBOARDS_DB", soundboards_db)
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["WTF_CSRF_ENABLED"] = False
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-    with app.app_context():
-        with sqlite3.connect(accounts_db) as conn:
-            with open("app/schema_accounts.sql", "r") as f:
-                conn.executescript(f.read())
-        with sqlite3.connect(soundboards_db) as conn:
-            with open("app/schema_soundboards.sql", "r") as f:
-                conn.executescript(f.read())
-        yield app
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-
-def test_playlist_crud(app_context):
+def test_playlist_crud(app):
     """Test Create, Read, Update, and Delete operations for Playlist."""
-    with app_context.app_context():
+    with app.app_context():
         u = User(username="pl_user", email="pl@example.com")
         u.set_password("p")
         u.save()
@@ -81,9 +38,9 @@ def test_playlist_crud(app_context):
         assert Playlist.get_by_id(pl_id) is None
 
 
-def test_playlist_items(app_context):
+def test_playlist_items(app):
     """Test adding and removing sounds from a playlist."""
-    with app_context.app_context():
+    with app.app_context():
         u = User(username="item_user", email="i@example.com")
         u.set_password("p")
         u.save()

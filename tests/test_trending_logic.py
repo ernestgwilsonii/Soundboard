@@ -1,45 +1,13 @@
-import os
-import sqlite3
-
-import pytest
-
-from app import create_app
 from app.models import Rating, Soundboard, User
-from config import Config
-
-
-@pytest.fixture
-def client(monkeypatch):
-    accounts_db = os.path.abspath("test_accounts_trending.sqlite3")
-    soundboards_db = os.path.abspath("test_soundboards_trending.sqlite3")
-    monkeypatch.setattr(Config, "ACCOUNTS_DB", accounts_db)
-    monkeypatch.setattr(Config, "SOUNDBOARDS_DB", soundboards_db)
-    app = create_app()
-    app.config["TESTING"] = True
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-    with app.app_context():
-        with sqlite3.connect(accounts_db) as conn:
-            with open("app/schema_accounts.sql", "r") as f:
-                conn.executescript(f.read())
-        with sqlite3.connect(soundboards_db) as conn:
-            with open("app/schema_soundboards.sql", "r") as f:
-                conn.executescript(f.read())
-    with app.test_client() as client:
-        yield client
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
 
 
 def test_get_trending_logic(client):
     with client.application.app_context():
         # Setup users
-        u1 = User(username="u1", email="u1@t.com")
+        u1 = User(username="trend_u1", email="trend_u1@t.com")
         u1.set_password("p")
         u1.save()
-        u2 = User(username="u2", email="u2@t.com")
+        u2 = User(username="trend_u2", email="trend_u2@t.com")
         u2.set_password("p")
         u2.save()
 

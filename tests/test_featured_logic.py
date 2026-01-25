@@ -1,44 +1,8 @@
-import os
-import sqlite3
-
-import pytest
-
-from app import create_app
 from app.models import AdminSettings, Soundboard, User
-from config import Config
 
 
-@pytest.fixture
-def app_context(monkeypatch):
-    accounts_db = os.path.abspath("test_accounts_featured.sqlite3")
-    soundboards_db = os.path.abspath("test_soundboards_featured.sqlite3")
-
-    monkeypatch.setattr(Config, "ACCOUNTS_DB", accounts_db)
-    monkeypatch.setattr(Config, "SOUNDBOARDS_DB", soundboards_db)
-
-    app = create_app()
-    app.config["TESTING"] = True
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
+def test_get_featured_explicit(app):
     with app.app_context():
-        with sqlite3.connect(accounts_db) as conn:
-            with open("app/schema_accounts.sql", "r") as f:
-                conn.executescript(f.read())
-        with sqlite3.connect(soundboards_db) as conn:
-            with open("app/schema_soundboards.sql", "r") as f:
-                conn.executescript(f.read())
-        yield app
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-
-def test_get_featured_explicit(app_context):
-    with app_context.app_context():
         # Create a user and a soundboard
         u = User(username="testuser", email="test@example.com")
         u.set_password("password")
@@ -57,8 +21,8 @@ def test_get_featured_explicit(app_context):
         assert featured.id == sb2.id
 
 
-def test_get_featured_fallback_no_setting(app_context):
-    with app_context.app_context():
+def test_get_featured_fallback_no_setting(app):
+    with app.app_context():
         u = User(username="testuser", email="test@example.com")
         u.set_password("password")
         u.save()
@@ -76,8 +40,8 @@ def test_get_featured_fallback_no_setting(app_context):
         assert featured.id == sb2.id  # Should be the most recent one
 
 
-def test_get_featured_fallback_invalid_id(app_context):
-    with app_context.app_context():
+def test_get_featured_fallback_invalid_id(app):
+    with app.app_context():
         u = User(username="testuser", email="test@example.com")
         u.set_password("password")
         u.save()
@@ -93,9 +57,9 @@ def test_get_featured_fallback_invalid_id(app_context):
         assert featured.id == sb1.id  # Should fallback since 999 is invalid
 
 
-def test_index_route_featured(app_context):
-    client = app_context.test_client()
-    with app_context.app_context():
+def test_index_route_featured(app):
+    client = app.test_client()
+    with app.app_context():
         u = User(username="testuser", email="test@example.com")
         u.set_password("password")
         u.save()

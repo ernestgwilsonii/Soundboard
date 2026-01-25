@@ -1,6 +1,6 @@
-"""Tests for application constants."""
-
 import pytest
+
+"""Tests for application constants."""
 
 
 def test_constants_file_exists():

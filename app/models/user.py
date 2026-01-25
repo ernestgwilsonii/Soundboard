@@ -2,94 +2,81 @@
 
 from __future__ import annotations
 
+import os
+from datetime import datetime
 from typing import Any, List, Optional
 
 from flask import current_app
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy.sql import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.constants import DEFAULT_PAGE_SIZE
-from app.db import get_accounts_db, get_soundboards_db
+from app.db import get_soundboards_db
 from app.enums import UserRole
+from app.extensions import db_orm as db
+from app.models.base import BaseModel
+
+# Association Tables
+follows = db.Table(
+    "follows",
+    db.Column("follower_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+    db.Column("followed_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+    db.Column("created_at", db.DateTime, server_default=func.now()),
+)
+
+favorites = db.Table(
+    "favorites",
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+    db.Column("soundboard_id", db.Integer, primary_key=True),
+    db.Column("created_at", db.DateTime, server_default=func.now()),
+)
 
 
-class User(UserMixin):
-    """
-    Represents a user in the system.
+class User(BaseModel, UserMixin):
+    """Represents a user in the system."""
 
-    Attributes:
-        id (int): Unique identifier for the user.
-        username (str): The user's username.
-        email (str): The user's email address.
-        password_hash (str): Hashed password.
-        role (UserRole): User role (e.g., ADMIN, USER).
-        active (bool): Whether the account is active.
-        is_verified (bool): Whether the email is verified.
-        avatar_path (str): Path to the user's avatar image.
-        failed_login_attempts (int): Count of consecutive failed logins.
-        lockout_until (str): Timestamp until which the account is locked.
-        bio (str): User biography.
-        social_x (str): X (Twitter) profile URL.
-        social_youtube (str): YouTube channel URL.
-        social_website (str): Personal website URL.
-    """
+    __tablename__ = "users"
 
-    def __init__(
-        self,
-        id: Optional[int] = None,
-        username: Optional[str] = None,
-        email: Optional[str] = None,
-        password_hash: Optional[str] = None,
-        role: UserRole = UserRole.USER,
-        active: bool = True,
-        is_verified: bool = False,
-        avatar_path: Optional[str] = None,
-        failed_login_attempts: int = 0,
-        lockout_until: Optional[str] = None,
-        bio: Optional[str] = None,
-        social_x: Optional[str] = None,
-        social_youtube: Optional[str] = None,
-        social_website: Optional[str] = None,
-    ) -> None:
-        """
-        Initialize a new User instance.
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(128))
+    role = db.Column(db.Enum(UserRole), default=UserRole.USER)
+    active = db.Column(db.Boolean, default=True)
+    is_verified = db.Column(db.Boolean, default=False)
+    avatar_path = db.Column(db.String(256), nullable=True)
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    lockout_until = db.Column(db.String(32), nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    social_x = db.Column(db.String(256), nullable=True)
+    social_youtube = db.Column(db.String(256), nullable=True)
+    social_website = db.Column(db.String(256), nullable=True)
+    created_at = db.Column(db.DateTime, server_default=func.now())
 
-        Args:
-            id (int, optional): User ID.
-            username (str, optional): Username.
-            email (str, optional): Email address.
-            password_hash (str, optional): Hashed password.
-            role (UserRole, optional): User role. Defaults to UserRole.USER.
-            active (bool, optional): Is account active. Defaults to True.
-            is_verified (bool, optional): Is email verified. Defaults to False.
-            avatar_path (str, optional): Path to avatar.
-            failed_login_attempts (int, optional): Failed login count. Defaults to 0.
-            lockout_until (str, optional): Lockout timestamp.
-            bio (str, optional): User bio.
-            social_x (str, optional): X profile link.
-            social_youtube (str, optional): YouTube profile link.
-            social_website (str, optional): Website link.
-        """
-        self.id = id
-        self.username = username
-        self.email = email
-        self.password_hash = password_hash
-        self.role = role
-        self.active = bool(active)
-        self.is_verified = bool(is_verified)
-        self.avatar_path = avatar_path
-        self.failed_login_attempts = int(failed_login_attempts)
-        self.lockout_until = lockout_until
-        self.bio = bio
-        self.social_x = social_x
-        self.social_youtube = social_youtube
-        self.social_website = social_website
+    # Relationships
+    followed = db.relationship(
+        "User",
+        secondary=follows,
+        primaryjoin=(follows.c.follower_id == id),
+        secondaryjoin=(follows.c.followed_id == id),
+        backref=db.backref("followers", lazy="dynamic"),
+        lazy="dynamic",
+    )
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
 
     @property
     def is_active(self) -> bool:
         """Check if the user account is active."""
-        return self.active
+        return self.active if self.active is not None else True
+
+    @property
+    def is_authenticated(self) -> bool:
+        """User is authenticated."""
+        return True
 
     @property
     def is_admin(self) -> bool:
@@ -97,63 +84,14 @@ class User(UserMixin):
         return self.role == UserRole.ADMIN
 
     def set_password(self, password: str) -> None:
-        """
-        Set the password for the user.
-
-        Args:
-            password (str): The plain text password to hash and store.
-        """
+        """Set the password for the user."""
         self.password_hash = generate_password_hash(password)
 
-    def save(self) -> None:
-        """
-        Save the user to the database.
-
-        Inserts a new record if id is None, otherwise updates the existing record.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        if self.id is None:
-            database_cursor.execute(
-                "INSERT INTO users (username, email, password_hash, role, active, is_verified, avatar_path, failed_login_attempts, lockout_until, bio, social_x, social_youtube, social_website) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    self.username,
-                    self.email,
-                    self.password_hash,
-                    self.role,
-                    int(self.active),
-                    int(self.is_verified),
-                    self.avatar_path,
-                    self.failed_login_attempts,
-                    self.lockout_until,
-                    self.bio,
-                    self.social_x,
-                    self.social_youtube,
-                    self.social_website,
-                ),
-            )
-            self.id = database_cursor.lastrowid
-        else:
-            database_cursor.execute(
-                "UPDATE users SET username=?, email=?, password_hash=?, role=?, active=?, is_verified=?, avatar_path=?, failed_login_attempts=?, lockout_until=?, bio=?, social_x=?, social_youtube=?, social_website=? WHERE id=?",
-                (
-                    self.username,
-                    self.email,
-                    self.password_hash,
-                    self.role,
-                    int(self.active),
-                    int(self.is_verified),
-                    self.avatar_path,
-                    self.failed_login_attempts,
-                    self.lockout_until,
-                    self.bio,
-                    self.social_x,
-                    self.social_youtube,
-                    self.social_website,
-                    self.id,
-                ),
-            )
-        database_connection.commit()
+    def check_password(self, password: str) -> bool:
+        """Check if the provided password matches the user's password hash."""
+        if self.password_hash is None:
+            return False
+        return check_password_hash(self.password_hash, password)
 
     def delete(self) -> None:
         """Permanently deletes the user and all associated data."""
@@ -163,10 +101,8 @@ class User(UserMixin):
         from .playlist import Playlist
         from .soundboard import Soundboard
 
-        database_connection_accounts = get_accounts_db()
-        database_connection_soundboards = get_soundboards_db()
-
         # 1. Delete Soundboards (this handles sounds and files via Soundboard.delete)
+        # Note: These models are not yet migrated, so they use their own DB connection logic
         soundboards = Soundboard.get_by_user_id(self.id)
         for soundboard in soundboards:
             soundboard.delete()
@@ -176,7 +112,8 @@ class User(UserMixin):
         for playlist in playlists:
             playlist.delete()
 
-        # 3. Cleanup social records
+        # 3. Cleanup social records in Soundboards DB (Manual SQL for now)
+        database_connection_soundboards = get_soundboards_db()
         database_connection_soundboards.execute(
             "DELETE FROM ratings WHERE user_id = ?", (self.id,)
         )
@@ -188,181 +125,62 @@ class User(UserMixin):
         )
         database_connection_soundboards.commit()
 
-        # 4. Cleanup account records
-        database_connection_accounts.execute(
-            "DELETE FROM favorites WHERE user_id = ?", (self.id,)
-        )
-        database_connection_accounts.execute(
-            "DELETE FROM notifications WHERE user_id = ?", (self.id,)
-        )
-        database_connection_accounts.execute(
-            "DELETE FROM users WHERE id = ?", (self.id,)
-        )
-        database_connection_accounts.commit()
-
-        # 5. Delete avatar file if exists
+        # 4. Delete avatar file if exists
         if self.avatar_path:
-            import os
-
-            from flask import current_app
-
             full_path = os.path.join(
                 current_app.config["UPLOAD_FOLDER"], self.avatar_path
             )
             if os.path.exists(full_path):
                 os.remove(full_path)
 
-    def add_favorite(self, soundboard_id: int) -> None:
-        """
-        Add a soundboard to the user's favorites.
+        # 5. Delete self (Cascade will handle follows/favorites if configured, but explicit is fine)
+        super().delete()
 
-        Args:
-            soundboard_id (int): The ID of the soundboard to favorite.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "INSERT OR IGNORE INTO favorites (user_id, soundboard_id) VALUES (?, ?)",
-            (self.id, soundboard_id),
-        )
-        database_connection.commit()
+    def add_favorite(self, soundboard_id: int) -> None:
+        """Add a soundboard to the user's favorites."""
+        stmt = favorites.insert().values(user_id=self.id, soundboard_id=soundboard_id)
+        # Ignore conflicts (already exists)
+        try:
+            db.session.execute(stmt)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
     def remove_favorite(self, soundboard_id: int) -> None:
-        """
-        Remove a soundboard from the user's favorites.
-
-        Args:
-            soundboard_id (int): The ID of the soundboard to unfavorite.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "DELETE FROM favorites WHERE user_id = ? AND soundboard_id = ?",
-            (self.id, soundboard_id),
+        """Remove a soundboard from the user's favorites."""
+        stmt = favorites.delete().where(
+            (favorites.c.user_id == self.id)
+            & (favorites.c.soundboard_id == soundboard_id)
         )
-        database_connection.commit()
+        db.session.execute(stmt)
+        db.session.commit()
 
     def get_favorites(self) -> List[int]:
-        """
-        Retrieve a list of the user's favorite soundboard IDs.
-
-        Returns:
-            list[int]: A list of soundboard IDs.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT soundboard_id FROM favorites WHERE user_id = ?", (self.id,)
+        """Retrieve a list of the user's favorite soundboard IDs."""
+        stmt = db.select(favorites.c.soundboard_id).where(
+            favorites.c.user_id == self.id
         )
-        rows = database_cursor.fetchall()
-        return [row["soundboard_id"] for row in rows]
-
-    def check_password(self, password: str) -> bool:
-        """
-        Check if the provided password matches the user's password hash.
-
-        Args:
-            password (str): The password to check.
-
-        Returns:
-            bool: True if password matches, False otherwise.
-        """
-        if self.password_hash is None:
-            return False
-        return check_password_hash(self.password_hash, password)
-
-    @classmethod
-    def _from_row(cls, row: Any) -> User:
-        """Helper to create a User instance from a database row."""
-        return cls(
-            id=row["id"],
-            username=row["username"],
-            email=row["email"],
-            password_hash=row["password_hash"],
-            role=row["role"],
-            active=row["active"],
-            is_verified=row["is_verified"],
-            avatar_path=row["avatar_path"],
-            failed_login_attempts=row["failed_login_attempts"],
-            lockout_until=row["lockout_until"],
-            bio=row["bio"],
-            social_x=row["social_x"],
-            social_youtube=row["social_youtube"],
-            social_website=row["social_website"],
-        )
+        return [row[0] for row in db.session.execute(stmt)]
 
     @staticmethod
     def get_by_username(username: str) -> Optional[User]:
-        """
-        Retrieve a user by their username.
-
-        Args:
-            username (str): The username to search for.
-
-        Returns:
-            User or None: The User object if found, else None.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-        row = database_cursor.fetchone()
-        if row:
-            return User._from_row(row)
-        return None
+        """Retrieve a user by their username."""
+        return User.query.filter_by(username=username).first()
 
     @staticmethod
     def get_by_email(email: str) -> Optional[User]:
-        """
-        Retrieve a user by their email address.
-
-        Args:
-            email (str): The email address to search for.
-
-        Returns:
-            User or None: The User object if found, else None.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-        row = database_cursor.fetchone()
-        if row:
-            return User._from_row(row)
-        return None
-
-    @staticmethod
-    def get_by_id(user_id: int) -> Optional[User]:
-        """
-        Retrieve a user by their ID.
-
-        Args:
-            user_id (int): The user ID to search for.
-
-        Returns:
-            User or None: The User object if found, else None.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        row = database_cursor.fetchone()
-        if row:
-            return User._from_row(row)
-        return None
+        """Retrieve a user by their email address."""
+        return User.query.filter_by(email=email).first()
 
     @staticmethod
     def exists_by_username(username: str) -> bool:
         """Check if a user with the given username exists."""
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute("SELECT 1 FROM users WHERE username = ?", (username,))
-        return database_cursor.fetchone() is not None
+        return User.query.filter_by(username=username).first() is not None
 
     @staticmethod
     def exists_by_email(email: str) -> bool:
         """Check if a user with the given email exists."""
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute("SELECT 1 FROM users WHERE email = ?", (email,))
-        return database_cursor.fetchone() is not None
+        return User.query.filter_by(email=email).first() is not None
 
     @staticmethod
     def get_all(
@@ -371,101 +189,51 @@ class User(UserMixin):
         sort_by: str = "newest",
         search_query: Optional[str] = None,
     ) -> List[User]:
-        """
-        Retrieve a list of users with pagination, sorting, and search.
-
-        Args:
-            limit (int, optional): Maximum number of users to return. Defaults to DEFAULT_PAGE_SIZE.
-            offset (int, optional): Number of users to skip. Defaults to 0.
-            sort_by (str, optional): Sorting criteria ('newest', 'oldest', 'alpha', 'popular'). Defaults to "newest".
-            search_query (str, optional): Search string for username.
-
-        Returns:
-            list[User]: A list of User objects.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-
-        sql = "SELECT * FROM users WHERE 1=1"
-        params: List[Any] = []
+        """Retrieve a list of users with pagination, sorting, and search."""
+        query = User.query
 
         if search_query:
-            sql += " AND username LIKE ?"
-            params.append(f"%{search_query}%")
+            query = query.filter(User.username.like(f"%{search_query}%"))
 
         if sort_by == "popular":
-            sql = f"""
-                SELECT users.*, COUNT(follows.follower_id) as follower_count
-                FROM ({sql}) users
-                LEFT JOIN follows follows ON users.id = follows.followed_id
-                GROUP BY users.id
-                ORDER BY follower_count DESC, users.username ASC
-            """
+            # Sort by follower count
+            # Use outerjoin to count followers
+            subquery = (
+                db.select(
+                    follows.c.followed_id,
+                    func.count(follows.c.follower_id).label("count"),
+                )
+                .group_by(follows.c.followed_id)
+                .subquery()
+            )
+
+            query = query.outerjoin(subquery, User.id == subquery.c.followed_id)
+            query = query.order_by(subquery.c.count.desc(), User.username.asc())
         elif sort_by == "oldest":
-            sql += " ORDER BY created_at ASC"
+            query = query.order_by(User.created_at.asc())
         elif sort_by == "alpha":
-            sql += " ORDER BY username ASC"
+            query = query.order_by(User.username.asc())
         else:  # newest
-            sql += " ORDER BY created_at DESC"
+            query = query.order_by(User.created_at.desc())
 
-        sql += " LIMIT ? OFFSET ?"
-        params.extend([limit, offset])
-
-        database_cursor.execute(sql, params)
-        rows = database_cursor.fetchall()
-        return [User._from_row(row) for row in rows]
+        return query.limit(limit).offset(offset).all()
 
     @staticmethod
     def count_all(search_query: Optional[str] = None) -> int:
-        """
-        Count the total number of users matching a search query.
-
-        Args:
-            search_query (str, optional): Search string for username.
-
-        Returns:
-            int: The total count of users.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        sql = "SELECT COUNT(*) FROM users WHERE 1=1"
-        params = []
+        """Count the total number of users matching a search query."""
+        query = User.query
         if search_query:
-            sql += " AND username LIKE ?"
-            params.append(f"%{search_query}%")
-        database_cursor.execute(sql, params)
-        result = database_cursor.fetchone()
-        return int(result[0]) if result else 0
-
-    def __repr__(self) -> str:
-        return f"<User {self.username}>"
+            query = query.filter(User.username.like(f"%{search_query}%"))
+        return query.count()
 
     def get_token(self, salt: str) -> str:
-        """
-        Generate a secure token for the user.
-
-        Args:
-            salt (str): The salt to use for token generation.
-
-        Returns:
-            str: The generated token.
-        """
+        """Generate a secure token for the user."""
         serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
         return serializer.dumps(self.email, salt=salt)
 
     @staticmethod
     def verify_token(token: str, salt: str, expiration: int = 3600) -> Optional[User]:
-        """
-        Verify a token and retrieve the associated user.
-
-        Args:
-            token (str): The token to verify.
-            salt (str): The salt used for token generation.
-            expiration (int, optional): Token expiration in seconds. Defaults to 3600.
-
-        Returns:
-            User or None: The User object if token is valid, else None.
-        """
+        """Verify a token and retrieve the associated user."""
         from itsdangerous import BadSignature, SignatureExpired
 
         serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
@@ -479,8 +247,9 @@ class User(UserMixin):
         """Increment failed login attempts and lock account if threshold reached."""
         self.failed_login_attempts += 1
         if self.failed_login_attempts >= 5:
-            from datetime import datetime, timedelta
+            from datetime import timedelta
 
+            # Store as string to match legacy format
             self.lockout_until = (datetime.now() + timedelta(minutes=15)).strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -493,140 +262,50 @@ class User(UserMixin):
         self.save()
 
     def is_locked(self) -> bool:
-        """
-        Check if the account is currently locked out.
-
-        Returns:
-            bool: True if locked out, False otherwise.
-        """
+        """Check if the account is currently locked out."""
         if not self.lockout_until:
             return False
-        from datetime import datetime
 
         lockout_time = datetime.strptime(self.lockout_until, "%Y-%m-%d %H:%M:%S")
         if datetime.now() > lockout_time:
-            # Lock expired
             return False
         return True
 
     def follow(self, user_id: int) -> None:
-        """
-        Follow another user.
-
-        Args:
-            user_id (int): The ID of the user to follow.
-        """
+        """Follow another user."""
         if self.id == user_id:
             return
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "INSERT OR IGNORE INTO follows (follower_id, followed_id) VALUES (?, ?)",
-            (self.id, user_id),
-        )
-        database_connection.commit()
+        user_to_follow = User.get_by_id(user_id)
+        if user_to_follow:
+            self.followed.append(user_to_follow)
+            db.session.commit()
 
     def unfollow(self, user_id: int) -> None:
-        """
-        Unfollow another user.
-
-        Args:
-            user_id (int): The ID of the user to unfollow.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "DELETE FROM follows WHERE follower_id = ? AND followed_id = ?",
-            (self.id, user_id),
-        )
-        database_connection.commit()
+        """Unfollow another user."""
+        user_to_unfollow = User.get_by_id(user_id)
+        if user_to_unfollow:
+            self.followed.remove(user_to_unfollow)
+            db.session.commit()
 
     def is_following(self, user_id: int) -> bool:
-        """
-        Check if currently following another user.
-
-        Args:
-            user_id (int): The ID of the user to check.
-
-        Returns:
-            bool: True if following, False otherwise.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT 1 FROM follows WHERE follower_id = ? AND followed_id = ?",
-            (self.id, user_id),
-        )
-        return database_cursor.fetchone() is not None
+        """Check if currently following another user."""
+        return self.followed.filter(follows.c.followed_id == user_id).count() > 0
 
     def get_followers(self) -> List[User]:
-        """
-        Retrieve a list of followers.
-
-        Returns:
-            list[User]: List of User objects who follow this user.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            """
-            SELECT users.* FROM users users
-            JOIN follows follows ON users.id = follows.follower_id
-            WHERE follows.followed_id = ?
-            ORDER BY users.username ASC
-        """,
-            (self.id,),
-        )
-        rows = database_cursor.fetchall()
-        return [User._from_row(row) for row in rows]
+        """Retrieve a list of followers."""
+        return self.followers.all()
 
     def get_following(self) -> List[User]:
-        """
-        Retrieve a list of users being followed.
-
-        Returns:
-            list[User]: List of User objects this user follows.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            """
-            SELECT users.* FROM users users
-            JOIN follows follows ON users.id = follows.followed_id
-            WHERE follows.follower_id = ?
-            ORDER BY users.username ASC
-        """,
-            (self.id,),
-        )
-        rows = database_cursor.fetchall()
-        return [User._from_row(row) for row in rows]
+        """Retrieve a list of users being followed."""
+        return self.followed.all()
 
     def get_follower_count(self) -> int:
-        """
-        Get the number of followers.
-
-        Returns:
-            int: Count of followers.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT COUNT(*) FROM follows WHERE followed_id = ?", (self.id,)
-        )
-        result = database_cursor.fetchone()
-        return int(result[0]) if result else 0
+        """Get the number of followers."""
+        return self.followers.count()
 
     def get_following_count(self) -> int:
-        """
-        Get the number of users followed.
+        """Get the number of users followed."""
+        return self.followed.count()
 
-        Returns:
-            int: Count of users followed.
-        """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT COUNT(*) FROM follows WHERE follower_id = ?", (self.id,)
-        )
-        result = database_cursor.fetchone()
-        return int(result[0]) if result else 0
+    def __repr__(self) -> str:
+        return f"<User {self.username}>"

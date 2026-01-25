@@ -1,54 +1,11 @@
 """Tests for sound reordering and playback fields persistence."""
 
-import os
-import sqlite3
-
-import pytest
-
-from app import create_app
 from app.models import Sound, Soundboard, User
-from config import Config
 
 
-@pytest.fixture
-def app_context(monkeypatch):
-    """
-    App context fixture with temporary databases.
-
-    Args:
-        monkeypatch: Pytest monkeypatch fixture.
-    """
-    accounts_db = os.path.abspath("test_accounts_reorder.sqlite3")
-    soundboards_db = os.path.abspath("test_soundboards_reorder.sqlite3")
-
-    monkeypatch.setattr(Config, "ACCOUNTS_DB", accounts_db)
-    monkeypatch.setattr(Config, "SOUNDBOARDS_DB", soundboards_db)
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["WTF_CSRF_ENABLED"] = False
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-    with app.app_context():
-        with sqlite3.connect(accounts_db) as conn:
-            with open("app/schema_accounts.sql", "r") as f:
-                conn.executescript(f.read())
-        with sqlite3.connect(soundboards_db) as conn:
-            with open("app/schema_soundboards.sql", "r") as f:
-                conn.executescript(f.read())
-        yield app
-
-    for db_path in [accounts_db, soundboards_db]:
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-
-def test_sound_default_ordering(app_context):
+def test_sound_default_ordering(app):
     """Test default sound ordering when sounds are added to a board."""
-    with app_context.app_context():
+    with app.app_context():
         u = User(username="test", email="test@example.com")
         u.set_password("pass")
         u.save()
@@ -72,9 +29,9 @@ def test_sound_default_ordering(app_context):
         assert sounds[1].name == "Second"
 
 
-def test_explicit_ordering(app_context):
+def test_explicit_ordering(app):
     """Test sound retrieval based on explicit display_order."""
-    with app_context.app_context():
+    with app.app_context():
         u = User(username="test2", email="test2@example.com")
         u.set_password("pass")
         u.save()
@@ -100,12 +57,12 @@ def test_explicit_ordering(app_context):
         assert sounds[1].name == "Later"
 
 
-def test_reorder_api(app_context):
+def test_reorder_api(app):
     """Test the sound reordering API endpoint."""
-    client = app_context.test_client()
+    client = app.test_client()
     from app.models import Sound, Soundboard, User
 
-    with app_context.app_context():
+    with app.app_context():
         u = User(username="reorder", email="reorder@example.com")
         u.set_password("pass")
         u.save()
@@ -141,7 +98,7 @@ def test_reorder_api(app_context):
     response = client.post(f"/soundboard/{sb_id}/reorder", json={"ids": [s2_id, s1_id]})
     assert response.status_code == 200
 
-    with app_context.app_context():
+    with app.app_context():
         sb_loaded = Soundboard.get_by_id(sb_id)
         assert sb_loaded is not None
         sounds = sb_loaded.get_sounds()
@@ -151,9 +108,9 @@ def test_reorder_api(app_context):
         assert sounds[1].display_order == 2
 
 
-def test_playback_fields_persistence(app_context):
+def test_playback_fields_persistence(app):
     """Test that volume, loop, and time fields are correctly persisted."""
-    with app_context.app_context():
+    with app.app_context():
         u = User(username="pb", email="pb@example.com")
         u.set_password("p")
         u.save()
@@ -176,7 +133,7 @@ def test_playback_fields_persistence(app_context):
         sid = s.id
         assert sid is not None
 
-    with app_context.app_context():
+    with app.app_context():
         s_loaded = Sound.get_by_id(sid)
         assert s_loaded is not None
         assert s_loaded.volume == 0.5

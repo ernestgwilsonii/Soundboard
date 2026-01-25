@@ -1,15 +1,4 @@
-import pytest
-
-from app import create_app
 from app.auth.forms import LoginForm, RegistrationForm
-
-
-@pytest.fixture
-def app():
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["WTF_CSRF_ENABLED"] = False
-    return app
 
 
 def test_registration_form(app):

@@ -4,11 +4,17 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from app.db import get_accounts_db
+from app.extensions import db_orm as db
+from app.models.base import BaseModel
 
 
-class AdminSettings:
+class AdminSettings(BaseModel):
     """Manages global application settings stored in the database."""
+
+    __tablename__ = "admin_settings"
+
+    key = db.Column(db.String(64), primary_key=True)
+    value = db.Column(db.Text)
 
     @staticmethod
     def get_setting(key: str, default: Any = None) -> Any:
@@ -22,24 +28,14 @@ class AdminSettings:
         Returns:
             any: The setting value or default.
         """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "SELECT value FROM admin_settings WHERE key = ?", (key,)
-        )
-        row = database_cursor.fetchone()
-        if row:
-            return row["value"]
-        return default
+        setting = db.session.get(AdminSettings, key)
+        return setting.value if setting else default
 
     @staticmethod
     def get_all_settings() -> Dict[str, Any]:
         """Retrieve all settings as a dictionary."""
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute("SELECT key, value FROM admin_settings")
-        rows = database_cursor.fetchall()
-        return {row["key"]: row["value"] for row in rows}
+        settings = AdminSettings.query.all()
+        return {s.key: s.value for s in settings}
 
     @staticmethod
     def set_setting(key: str, value: Any) -> None:
@@ -50,10 +46,14 @@ class AdminSettings:
             key (str): The setting key.
             value (any): The value to store.
         """
-        database_connection = get_accounts_db()
-        database_cursor = database_connection.cursor()
-        database_cursor.execute(
-            "INSERT INTO admin_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-            (key, value),
-        )
-        database_connection.commit()
+        # Ensure value is string if stored as Text (SQLite is loose, but let's be safe)
+        if value is not None and not isinstance(value, str):
+            value = str(value)
+
+        setting = db.session.get(AdminSettings, key)
+        if setting:
+            setting.value = value
+        else:
+            setting = AdminSettings(key=key, value=value)
+            db.session.add(setting)
+        db.session.commit()
