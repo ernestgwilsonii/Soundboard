@@ -65,10 +65,13 @@ The easiest way to run the application is using Docker.
     ```
     *Note: Update `.env` with your specific configuration (email, secret keys, etc).*
 
-4.  **Initialize Database:**
+4.  **Initialize/Update Database:**
     ```bash
-    PYTHONPATH=. venv/bin/python3 manage.py
+    # Run migrations to bring DB to latest version
+    export FLASK_APP=soundboard.py
+    venv/bin/flask db upgrade
     ```
+    *Note: For a fresh installation, you can also use `venv/bin/python3 manage.py` to create tables directly.*
 
 5.  **Run Server:**
     ```bash

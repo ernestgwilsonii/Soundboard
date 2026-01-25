@@ -31,6 +31,21 @@ Never use hardcoded string literals or numbers in business logic.
 
 Large monolithic files are discouraged. We prefer a modular structure where logic is grouped into logical packages (e.g., `app/models/` package instead of a single `models.py` file).
 
+### Database Migrations
+
+We use **SQLAlchemy ORM** and **Alembic** (via Flask-Migrate) for database management.
+- **NEVER** modify database schemas directly using raw SQL.
+- **To create a migration:**
+  ```bash
+  export FLASK_APP=soundboard.py
+  venv/bin/flask db migrate -m "Description of change"
+  ```
+- **To apply migrations:**
+  ```bash
+  venv/bin/flask db upgrade
+  ```
+- All new models or changes to existing models MUST include a corresponding migration file in the `migrations/versions` directory.
+
 ## Development Workflow
 
 1.  **Fork and Clone:** Create your own branch from `main`.

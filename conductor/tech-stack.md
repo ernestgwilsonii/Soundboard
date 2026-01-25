@@ -12,7 +12,9 @@
 - **System Dependencies:** **FFmpeg** (required for `pydub` to process MP3 and OGG formats).
 
 ## Data Storage
-- **Database:** SQLite (two distinct database files for isolation: `accounts.sqlite3` and `soundboards.sqlite3`).
+- **ORM:** SQLAlchemy (via **Flask-SQLAlchemy**).
+- **Migrations:** Alembic (via **Flask-Migrate**).
+- **Database:** SQLite (two distinct database files for isolation via SQLAlchemy Binds: `accounts.sqlite3` and `soundboards.sqlite3`).
 - **File System:** Structured local directory storage for user-uploaded audio files (MP3, WAV, OGG).
 
 ## Frontend
