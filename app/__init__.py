@@ -11,22 +11,10 @@ from logging.handlers import RotatingFileHandler
 from typing import Any, Dict
 
 from flask import Flask, render_template
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask_login import LoginManager
-from flask_mail import Mail
-from flask_socketio import SocketIO
-from flask_wtf.csrf import CSRFProtect
 
 from app.enums import UserRole
+from app.extensions import csrf, db_orm, limiter, login, mail, migrate, socketio
 from config import Config
-
-login = LoginManager()
-login.login_view = "auth.login"
-csrf = CSRFProtect()
-mail = Mail()
-limiter = Limiter(key_func=get_remote_address)
-socketio = SocketIO(cors_allowed_origins="*", async_mode="eventlet")
 
 
 @login.user_loader  # type: ignore
@@ -66,12 +54,14 @@ def create_app(config_class: Any = Config) -> Flask:
     flask_app = Flask(__name__, template_folder="../templates")
     flask_app.config.from_object(config_class)
 
-    # Initialize Flask extensions here (if any)
+    # Initialize Flask extensions
     login.init_app(flask_app)
     csrf.init_app(flask_app)
     mail.init_app(flask_app)
     limiter.init_app(flask_app)
     socketio.init_app(flask_app)
+    db_orm.init_app(flask_app)
+    migrate.init_app(flask_app, db_orm)
 
     # Bypass rate limiting for admins and testing
     @limiter.request_filter  # type: ignore
@@ -84,9 +74,10 @@ def create_app(config_class: Any = Config) -> Flask:
             current_user.is_authenticated and current_user.role == UserRole.ADMIN
         )
 
-    from app import db
+    # Initialize legacy SQLite connection handler
+    import app.db as legacy_db
 
-    db.init_app(flask_app)
+    legacy_db.init_app(flask_app)
 
     @flask_app.context_processor  # type: ignore
     def inject_enums() -> Dict[str, Any]:
