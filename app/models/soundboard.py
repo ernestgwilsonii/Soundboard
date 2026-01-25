@@ -132,28 +132,21 @@ class Soundboard(BaseModel, SoundboardSocialMixin, SoundboardDiscoveryMixin):
     @staticmethod
     def get_by_tag(tag_name: str) -> List[Soundboard]:
         """Retrieve public soundboards associated with a specific tag."""
-        # This requires SoundboardTags (not migrated).
-        # We can use raw SQL via db.session.execute OR migrate Tag/SoundboardTag.
-        # For now, let's fallback to Mixin logic if it was there? No, it was here.
-        # We will need to migrate Tags soon.
-        # Let's use raw SQL on the bind for now to keep it working.
-        from sqlalchemy import text
+        from .social import Tag
 
-        stmt = text(
-            """
-            SELECT soundboards.id FROM soundboards
-            JOIN soundboard_tags ON soundboards.id = soundboard_tags.soundboard_id
-            JOIN tags ON soundboard_tags.tag_id = tags.id
-            WHERE tags.name = :tag_name AND soundboards.is_public = 1
-            ORDER BY soundboards.name ASC
-        """
+        stmt = (
+            db.select(Soundboard.id)
+            .join(SoundboardTag, Soundboard.id == SoundboardTag.soundboard_id)
+            .join(Tag, SoundboardTag.tag_id == Tag.id)
+            .where(Tag.name == tag_name.lower().strip())
+            .where(Soundboard.is_public.is_(True))
+            .order_by(Soundboard.name.asc())
         )
-        result = db.session.execute(
-            stmt,
-            {"tag_name": tag_name.lower().strip()},
-            bind=db.get_engine(bind="soundboards"),
-        )
+        result = db.session.execute(stmt)
         ids = [row[0] for row in result]
+        if not ids:
+            return []
+
         return (
             Soundboard.query.filter(Soundboard.id.in_(ids))
             .order_by(Soundboard.name.asc())

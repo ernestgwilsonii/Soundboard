@@ -77,11 +77,6 @@ def create_app(config_class: Any = Config) -> Flask:
             current_user.is_authenticated and current_user.role == UserRole.ADMIN
         )
 
-    # Initialize legacy SQLite connection handler
-    import app.db as legacy_db
-
-    legacy_db.init_app(flask_app)
-
     @flask_app.context_processor  # type: ignore
     def inject_enums() -> Dict[str, Any]:
         return {"UserRole": UserRole}
@@ -110,9 +105,6 @@ def create_app(config_class: Any = Config) -> Flask:
 
     @flask_app.errorhandler(500)  # type: ignore
     def internal_error(error: Any) -> Any:
-        from app.db import close_db
-
-        close_db()  # Ensure DB connection is closed on error
         return render_template("500.html"), 500
 
     # Configure logging

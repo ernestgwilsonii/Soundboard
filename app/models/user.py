@@ -13,7 +13,6 @@ from sqlalchemy.sql import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.constants import DEFAULT_PAGE_SIZE
-from app.db import get_soundboards_db
 from app.enums import UserRole
 from app.extensions import db_orm as db
 from app.models.base import BaseModel
@@ -112,18 +111,13 @@ class User(BaseModel, UserMixin):
         for playlist in playlists:
             playlist.delete()
 
-        # 3. Cleanup social records in Soundboards DB (Manual SQL for now)
-        database_connection_soundboards = get_soundboards_db()
-        database_connection_soundboards.execute(
-            "DELETE FROM ratings WHERE user_id = ?", (self.id,)
-        )
-        database_connection_soundboards.execute(
-            "DELETE FROM comments WHERE user_id = ?", (self.id,)
-        )
-        database_connection_soundboards.execute(
-            "DELETE FROM activities WHERE user_id = ?", (self.id,)
-        )
-        database_connection_soundboards.commit()
+        # 3. Cleanup social records in Soundboards DB
+        from .social import Activity, Comment, Rating
+
+        Rating.query.filter_by(user_id=self.id).delete()
+        Comment.query.filter_by(user_id=self.id).delete()
+        Activity.query.filter_by(user_id=self.id).delete()
+        db.session.commit()
 
         # 4. Delete avatar file if exists
         if self.avatar_path:
