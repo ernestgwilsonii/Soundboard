@@ -67,7 +67,7 @@ The easiest way to run the application is using Docker.
 
 4.  **Initialize Database:**
     ```bash
-    PYTHONPATH=. venv/bin/python3 init_db.py
+    PYTHONPATH=. venv/bin/python3 manage.py
     ```
 
 5.  **Run Server:**

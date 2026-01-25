@@ -22,16 +22,16 @@ if ! table_exists "$DB_PATH_ACCOUNTS" "users" || ! table_exists "$DB_PATH_SOUNDB
     echo "One or more tables missing. Initializing Databases..."
     export ACCOUNTS_DB=$DB_PATH_ACCOUNTS
     export SOUNDBOARDS_DB=$DB_PATH_SOUNDBOARDS
-    python3 init_db.py
+    python3 manage.py
 else
     echo "Databases already initialized."
 fi
 
 # Run any pending migrations
 echo "Running migrations..."
-export ACCOUNTS_DB=$DB_PATH_ACCOUNTS
-export SOUNDBOARDS_DB=$DB_PATH_SOUNDBOARDS
-python3 migrate.py
+# export ACCOUNTS_DB=$DB_PATH_ACCOUNTS
+# export SOUNDBOARDS_DB=$DB_PATH_SOUNDBOARDS
+# python3 migrate.py
 
 # Execute the CMD from Dockerfile
 exec "$@"
