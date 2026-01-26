@@ -1,0 +1,13 @@
+{
+    "track_id": "sqlalchemy_migration_20260119",
+    "name": "SQLAlchemy Migration",
+    "description": "Migrate from raw SQLite to SQLAlchemy ORM for database abstraction and flexibility.",
+    "status": "active",
+    "created_at": "2026-01-19T10:00:00Z",
+    "updated_at": "2026-01-19T10:00:00Z",
+    "version": "1.0",
+    "files": [
+        "spec.md",
+        "plan.md"
+    ]
+}
