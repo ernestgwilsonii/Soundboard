@@ -5,28 +5,22 @@ This module defines the server-side event handlers for real-time communication,
 including joining/leaving boards, presence tracking, and action synchronization.
 """
 
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 from flask import current_app, request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
 from app import socketio
-
-# Presence tracking
-# active_users: { board_id: { user_id: { username, sid } } }
-active_users: Dict[int, Dict[int, Dict[str, Any]]] = {}
-# global_users: { user_id: [sid1, sid2, ...] } (A user might have multiple tabs)
-global_users: Dict[int, List[str]] = {}
+from app.utils.redis_store import get_redis_store
 
 
 @socketio.on("connect")  # type: ignore
 def on_connect() -> None:
     """Handle a client connection."""
     if current_user.is_authenticated:
-        if current_user.id not in global_users:
-            global_users[current_user.id] = []
-        global_users[current_user.id].append(cast(Any, request).sid)
+        store = get_redis_store()
+        store.add_global_connection(current_user.id, cast(Any, request).sid)
         current_app.logger.info(f"User {current_user.username} connected globally.")
 
 
@@ -49,13 +43,12 @@ def on_join(data: Dict[str, Any]) -> None:
             "sid": cast(Any, request).sid,
         }
 
-        if board_id not in active_users:
-            active_users[board_id] = {}
-
-        active_users[board_id][current_user.id] = user_info
+        store = get_redis_store()
+        store.add_board_user(str(board_id), current_user.id, user_info)
 
         # Broadcast presence update to everyone in the room
-        emit("presence_update", list(active_users[board_id].values()), to=str(board_id))
+        members = store.get_board_members(str(board_id))
+        emit("presence_update", members, to=str(board_id))
 
         current_app.logger.info(f"User {current_user.username} joined board {board_id}")
 
@@ -69,32 +62,29 @@ def on_leave(data: Dict[str, Any]) -> None:
 
     leave_room(str(board_id))
 
-    if current_user.is_authenticated and board_id in active_users:
-        if current_user.id in active_users[board_id]:
-            del active_users[board_id][current_user.id]
-            emit(
-                "presence_update",
-                list(active_users[board_id].values()),
-                to=str(board_id),
-            )
+    if current_user.is_authenticated:
+        store = get_redis_store()
+        store.remove_board_user(
+            str(board_id), current_user.id, sid=cast(Any, request).sid
+        )
+        members = store.get_board_members(str(board_id))
+        emit(
+            "presence_update",
+            members,
+            to=str(board_id),
+        )
 
 
 @socketio.on("disconnect")  # type: ignore
 def on_disconnect() -> None:
     """Handle a client disconnection."""
-    # Cleanup global users
-    if current_user.is_authenticated and current_user.id in global_users:
-        if cast(Any, request).sid in global_users[current_user.id]:
-            global_users[current_user.id].remove(cast(Any, request).sid)
-        if not global_users[current_user.id]:
-            del global_users[current_user.id]
+    store = get_redis_store()
+    affected_boards = store.handle_disconnect(cast(Any, request).sid)
 
-    # Cleanup presence from all boards
-    for board_id, users in list(active_users.items()):
-        for user_id, info in list(users.items()):
-            if info["sid"] == cast(Any, request).sid:
-                del users[user_id]
-                emit("presence_update", list(users.values()), to=str(board_id))
+    # Update presence for all affected boards
+    for board_id in affected_boards:
+        members = store.get_board_members(board_id)
+        emit("presence_update", members, to=str(board_id))
 
 
 # --- Action Synchronization ---
@@ -124,11 +114,10 @@ def send_instant_notification(
     user_id: int, message: str, link: Optional[str] = None
 ) -> None:
     """Pushes a notification event to all connected sessions of a user."""
-    if user_id in global_users:
-        for sid in global_users[user_id]:
-            socketio.emit(
-                "new_notification", {"message": message, "link": link}, to=sid
-            )
+    store = get_redis_store()
+    sids = store.get_user_sids(user_id)
+    for sid in sids:
+        socketio.emit("new_notification", {"message": message, "link": link}, to=sid)
 
 
 @socketio.on("request_lock")  # type: ignore

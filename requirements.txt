@@ -36,6 +36,7 @@ psutil==6.1.1
 flask-socketio==5.5.1
 python-socketio==5.14.0
 eventlet==0.40.3
+redis==5.0.1
 
 # Security
 bandit==1.8.3

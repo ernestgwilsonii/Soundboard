@@ -63,6 +63,10 @@ def create_app(config_class: Any = Config) -> Flask:
     db_orm.init_app(flask_app)
     migrate.init_app(flask_app, db_orm)
 
+    from app.utils.redis_store import init_redis_store
+
+    init_redis_store(flask_app)
+
     # Load models to ensure they are registered with SQLAlchemy for migrations
     from app import models  # noqa: F401
 

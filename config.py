@@ -19,6 +19,9 @@ class Config:
         basedir, "soundboards.sqlite3"
     )
 
+    # Redis
+    REDIS_URL = os.environ.get("REDIS_URL") or "redis://localhost:6379/0"
+
     # SQLAlchemy Configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "SQLALCHEMY_DATABASE_URI"
