@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
 
 if TYPE_CHECKING:
     from app.models.social import Comment, Tag
@@ -44,10 +44,11 @@ class SoundboardSocialMixin:
         """Get all comments."""
         from app.models.social import Comment
 
-        return (
+        return cast(
+            List["Comment"],
             Comment.query.filter_by(soundboard_id=self.id)
             .order_by(Comment.created_at.desc())
-            .all()
+            .all(),
         )
 
     def get_tags(self) -> List["Tag"]:
@@ -62,7 +63,7 @@ class SoundboardSocialMixin:
             .order_by(Tag.name.asc())
         )
 
-        return db.session.execute(stmt).scalars().all()
+        return cast(List["Tag"], list(db.session.execute(stmt).scalars().all()))
 
     def add_tag(self, tag_name: str) -> None:
         """Add a tag."""
@@ -218,4 +219,4 @@ class SoundboardDiscoveryMixin:
                 sb_models.Soundboard.created_at.desc(), sb_models.Soundboard.id.desc()
             )
 
-        return query.all()
+        return cast(List[Soundboard], query.all())

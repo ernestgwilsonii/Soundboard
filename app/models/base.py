@@ -33,4 +33,6 @@ class BaseModel(db.Model):  # type: ignore
     @classmethod
     def get_all(cls: Type[T]) -> List[T]:
         """Fetch all records for this model."""
-        return cls.query.all()
+        from typing import cast
+
+        return cast(List[T], cls.query.all())

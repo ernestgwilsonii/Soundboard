@@ -55,10 +55,13 @@ class Playlist(BaseModel):
     @staticmethod
     def get_by_user_id(user_id: int) -> List[Playlist]:
         """Retrieve all playlists created by a specific user."""
-        return (
+        from typing import cast
+
+        return cast(
+            List[Playlist],
             Playlist.query.filter_by(user_id=user_id)
             .order_by(Playlist.name.asc())
-            .all()
+            .all(),
         )
 
     def get_sounds(self) -> List["Sound"]:

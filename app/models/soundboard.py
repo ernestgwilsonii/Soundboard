@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any, List, cast
 
 from flask import current_app
 from sqlalchemy.sql import func
@@ -78,10 +78,11 @@ class Soundboard(BaseModel, SoundboardSocialMixin, SoundboardDiscoveryMixin):
     @staticmethod
     def get_by_user_id(user_id: int) -> List[Soundboard]:
         """Retrieve all soundboards created by a specific user."""
-        return (
+        return cast(
+            List[Soundboard],
             Soundboard.query.filter_by(user_id=user_id)
             .order_by(Soundboard.name.asc())
-            .all()
+            .all(),
         )
 
     @staticmethod
@@ -89,11 +90,12 @@ class Soundboard(BaseModel, SoundboardSocialMixin, SoundboardDiscoveryMixin):
         """Retrieve public soundboards from a list of followed users."""
         if not user_ids:
             return []
-        return (
+        return cast(
+            List[Soundboard],
             Soundboard.query.filter(Soundboard.user_id.in_(user_ids))
             .filter_by(is_public=True)
             .order_by(Soundboard.created_at.desc())
-            .all()
+            .all(),
         )
 
     @staticmethod
@@ -119,15 +121,18 @@ class Soundboard(BaseModel, SoundboardSocialMixin, SoundboardDiscoveryMixin):
             # Let's defer 'top' sort or implement it suboptimally until Rating is migrated.
             # Or assume Rating will be migrated soon.
             # Let's fall back to recent for safety until Rating is migrated.
-            return query.order_by(
-                Soundboard.created_at.desc(), Soundboard.id.desc()
-            ).all()
+            return cast(
+                List[Soundboard],
+                query.order_by(
+                    Soundboard.created_at.desc(), Soundboard.id.desc()
+                ).all(),
+            )
         elif order_by == "name":
             query = query.order_by(Soundboard.name.asc())
         else:  # recent
             query = query.order_by(Soundboard.created_at.desc(), Soundboard.id.desc())
 
-        return query.all()
+        return cast(List[Soundboard], query.all())
 
     @staticmethod
     def get_by_tag(tag_name: str) -> List[Soundboard]:
@@ -147,32 +152,37 @@ class Soundboard(BaseModel, SoundboardSocialMixin, SoundboardDiscoveryMixin):
         if not ids:
             return []
 
-        return (
+        return cast(
+            List[Soundboard],
             Soundboard.query.filter(Soundboard.id.in_(ids))
             .order_by(Soundboard.name.asc())
-            .all()
+            .all(),
         )
 
     @staticmethod
     def get_recent_public(limit: int = 6) -> List[Soundboard]:
         """Retrieve the most recently created public soundboards."""
-        return (
+        return cast(
+            List[Soundboard],
             Soundboard.query.filter_by(is_public=True)
             .order_by(Soundboard.created_at.desc(), Soundboard.id.desc())
             .limit(limit)
-            .all()
+            .all(),
         )
 
     def get_sounds(self) -> List[Sound]:
         """Retrieve all sounds associated with this soundboard."""
-        return self.sounds.order_by(Sound.display_order.asc(), Sound.name.asc()).all()
+        return cast(
+            List[Sound],
+            self.sounds.order_by(Sound.display_order.asc(), Sound.name.asc()).all(),  # type: ignore
+        )
 
     def get_creator_username(self) -> str:
         """Retrieve the username of the soundboard's creator."""
         from app.models.user import User
 
         user = User.get_by_id(self.user_id)
-        return user.username if user else "Unknown"
+        return str(user.username) if user else "Unknown"
 
     def get_collaborators(self) -> List["BoardCollaborator"]:
         """Retrieve all collaborators for the soundboard."""
@@ -263,7 +273,7 @@ class Sound(BaseModel):
     def reorder_multiple(soundboard_id: int, sound_ids: List[int]) -> None:
         """Update the display order for multiple sounds."""
         for index, sound_id in enumerate(sound_ids):
-            sound = Sound.query.get(sound_id)
+            sound = db.session.get(Sound, sound_id)
             if sound and sound.soundboard_id == soundboard_id:
                 sound.display_order = index + 1
         db.session.commit()

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, cast
 
 from sqlalchemy.sql import func
 
@@ -78,7 +78,7 @@ class Comment(BaseModel):
         from .user import User
 
         user = User.get_by_id(self.user_id)
-        return user.username if user else "Unknown"
+        return str(user.username) if user else "Unknown"
 
     def get_author(self) -> Optional["User"]:
         """Retrieve the User object of the comment author."""
@@ -107,7 +107,7 @@ class Tag(BaseModel):
         name = name.lower().strip()
         if not name:
             return None
-        tag = Tag.query.filter_by(name=name).first()
+        tag = cast(Optional[Tag], Tag.query.filter_by(name=name).first())
         if not tag:
             tag = Tag(name=name)
             db.session.add(tag)
@@ -117,7 +117,7 @@ class Tag(BaseModel):
     @staticmethod
     def get_all() -> List[Tag]:
         """Retrieve all tags."""
-        return Tag.query.order_by(Tag.name.asc()).all()
+        return cast(List[Tag], Tag.query.order_by(Tag.name.asc()).all())
 
     @staticmethod
     def get_popular(limit: int = DEFAULT_PAGE_SIZE) -> List[Tag]:
@@ -163,18 +163,22 @@ class Activity(BaseModel):
     @staticmethod
     def get_recent(limit: int = LARGE_PAGE_SIZE) -> List[Activity]:
         """Retrieve recent activities."""
-        return Activity.query.order_by(Activity.created_at.desc()).limit(limit).all()
+        return cast(
+            List[Activity],
+            Activity.query.order_by(Activity.created_at.desc()).limit(limit).all(),
+        )
 
     @staticmethod
     def get_from_following(user_ids: List[int], limit: int = 10) -> List[Activity]:
         """Retrieve recent activities from a list of followed users."""
         if not user_ids:
             return []
-        return (
+        return cast(
+            List[Activity],
             Activity.query.filter(Activity.user_id.in_(user_ids))
             .order_by(Activity.created_at.desc())
             .limit(limit)
-            .all()
+            .all(),
         )
 
     def get_user(self) -> Optional["User"]:
@@ -214,16 +218,19 @@ class Notification(BaseModel):
     @staticmethod
     def get_unread_for_user(user_id: int) -> List[Notification]:
         """Retrieve all unread notifications for a user."""
-        return (
+        return cast(
+            List[Notification],
             Notification.query.filter_by(user_id=user_id, is_read=False)
             .order_by(Notification.created_at.desc())
-            .all()
+            .all(),
         )
 
     @staticmethod
     def count_unread_for_user(user_id: int) -> int:
         """Count the number of unread notifications for a user."""
-        return Notification.query.filter_by(user_id=user_id, is_read=False).count()
+        return cast(
+            int, Notification.query.filter_by(user_id=user_id, is_read=False).count()
+        )
 
     @staticmethod
     def mark_all_read(user_id: int) -> None:
@@ -254,16 +261,22 @@ class BoardCollaborator(BaseModel):
     @staticmethod
     def get_for_board(soundboard_id: int) -> List[BoardCollaborator]:
         """Retrieve all collaborators for a specific soundboard."""
-        return BoardCollaborator.query.filter_by(soundboard_id=soundboard_id).all()
+        return cast(
+            List[BoardCollaborator],
+            BoardCollaborator.query.filter_by(soundboard_id=soundboard_id).all(),
+        )
 
     @staticmethod
     def get_by_user_and_board(
         user_id: int, soundboard_id: int
     ) -> Optional[BoardCollaborator]:
         """Retrieve a specific collaborator record."""
-        return BoardCollaborator.query.filter_by(
-            user_id=user_id, soundboard_id=soundboard_id
-        ).first()
+        return cast(
+            Optional[BoardCollaborator],
+            BoardCollaborator.query.filter_by(
+                user_id=user_id, soundboard_id=soundboard_id
+            ).first(),
+        )
 
     def get_user(self) -> Optional["User"]:
         """Retrieve the User object for this collaborator."""

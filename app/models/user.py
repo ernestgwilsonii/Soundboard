@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, cast
 
 from flask import current_app
 from flask_login import UserMixin
@@ -70,7 +70,7 @@ class User(BaseModel, UserMixin):
     @property
     def is_active(self) -> bool:
         """Check if the user account is active."""
-        return self.active if self.active is not None else True
+        return cast(bool, self.active if self.active is not None else True)
 
     @property
     def is_authenticated(self) -> bool:
@@ -80,7 +80,7 @@ class User(BaseModel, UserMixin):
     @property
     def is_admin(self) -> bool:
         """Check if the user has admin privileges."""
-        return self.role == UserRole.ADMIN
+        return cast(bool, self.role == UserRole.ADMIN)
 
     def set_password(self, password: str) -> None:
         """Set the password for the user."""
@@ -101,7 +101,6 @@ class User(BaseModel, UserMixin):
         from .soundboard import Soundboard
 
         # 1. Delete Soundboards (this handles sounds and files via Soundboard.delete)
-        # Note: These models are not yet migrated, so they use their own DB connection logic
         soundboards = Soundboard.get_by_user_id(self.id)
         for soundboard in soundboards:
             soundboard.delete()
@@ -159,22 +158,22 @@ class User(BaseModel, UserMixin):
     @staticmethod
     def get_by_username(username: str) -> Optional[User]:
         """Retrieve a user by their username."""
-        return User.query.filter_by(username=username).first()
+        return cast(Optional[User], User.query.filter_by(username=username).first())
 
     @staticmethod
     def get_by_email(email: str) -> Optional[User]:
         """Retrieve a user by their email address."""
-        return User.query.filter_by(email=email).first()
+        return cast(Optional[User], User.query.filter_by(email=email).first())
 
     @staticmethod
     def exists_by_username(username: str) -> bool:
         """Check if a user with the given username exists."""
-        return User.query.filter_by(username=username).first() is not None
+        return cast(bool, User.query.filter_by(username=username).first() is not None)
 
     @staticmethod
     def exists_by_email(email: str) -> bool:
         """Check if a user with the given email exists."""
-        return User.query.filter_by(email=email).first() is not None
+        return cast(bool, User.query.filter_by(email=email).first() is not None)
 
     @staticmethod
     def get_all(
@@ -210,7 +209,7 @@ class User(BaseModel, UserMixin):
         else:  # newest
             query = query.order_by(User.created_at.desc())
 
-        return query.limit(limit).offset(offset).all()
+        return cast(List[User], query.limit(limit).offset(offset).all())
 
     @staticmethod
     def count_all(search_query: Optional[str] = None) -> int:
@@ -218,7 +217,7 @@ class User(BaseModel, UserMixin):
         query = User.query
         if search_query:
             query = query.filter(User.username.like(f"%{search_query}%"))
-        return query.count()
+        return cast(int, query.count())
 
     def get_token(self, salt: str) -> str:
         """Generate a secure token for the user."""
@@ -283,23 +282,25 @@ class User(BaseModel, UserMixin):
 
     def is_following(self, user_id: int) -> bool:
         """Check if currently following another user."""
-        return self.followed.filter(follows.c.followed_id == user_id).count() > 0
+        return cast(
+            bool, self.followed.filter(follows.c.followed_id == user_id).count() > 0
+        )
 
     def get_followers(self) -> List[User]:
         """Retrieve a list of followers."""
-        return self.followers.all()
+        return cast(List[User], self.followers.all())
 
     def get_following(self) -> List[User]:
         """Retrieve a list of users being followed."""
-        return self.followed.all()
+        return cast(List[User], self.followed.all())
 
     def get_follower_count(self) -> int:
         """Get the number of followers."""
-        return self.followers.count()
+        return cast(int, self.followers.count())
 
     def get_following_count(self) -> int:
         """Get the number of users followed."""
-        return self.followed.count()
+        return cast(int, self.followed.count())
 
     def __repr__(self) -> str:
         return f"<User {self.username}>"
