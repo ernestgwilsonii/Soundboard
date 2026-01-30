@@ -3,7 +3,7 @@
 This file tracks all major tracks for the project. Each track has its own detailed plan in its respective folder.
 
 
-- [~] [Horizontal Scaling with Redis (Docker)](tracks/horizontal_scaling_redis_20260130/plan.md)
+- [x] [Horizontal Scaling with Redis (Docker)](tracks/horizontal_scaling_redis_20260130/plan.md)
 
 - [x] [Architectural Polish & Semantic Excellence](archive/architectural_polish_20260111/plan.md)
 
