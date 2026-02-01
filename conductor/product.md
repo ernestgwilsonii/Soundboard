@@ -4,7 +4,7 @@ The Soundboard Website is a Flask-based platform for creating, customizing, and 
 # Product Guide - Soundboard Website
 
 ## Vision
-The Soundboard Website is a professional and intuitive platform that empowers users to create, manage, and share personalized soundboards. It serves as a versatile tool for casual entertainment and content creation, supported by a secure and scalable architecture.
+The Soundboard Website is a professional and intuitive platform that empowers users to create, manage, and share personalized soundboards. It serves as a versatile tool for casual entertainment and content creation, supported by a secure and horizontally scalable distributed architecture.
 
 ## Target Audience
 - **Casual Users:** Individuals looking for a fun and easy way to organize and play their favorite sounds.
@@ -25,7 +25,7 @@ The Soundboard Website is a professional and intuitive platform that empowers us
 - **Administrative Control:** Advanced tools for user role management, account moderation, featured content curation, global announcements, and system maintenance mode.
 - **Enhanced Discovery:** A dynamic sidebar, "Browse Members" list, and "Featured" section to easily find personal favorites and explore community content.
 - **Social Engagement:** Quick-share capability for public soundboards.
-- **Community Interaction:** Integrated star-rating system, comments, user following system, and real-time in-app notifications for social engagement.
+- **Community Interaction:** Integrated star-rating system, comments, user following system, and real-time in-app notifications for social engagement, powered by a distributed Redis-based synchronization engine.
 - **Community Feed:** A real-time activity feed on the home page highlighting recent creations and community actions.
 - **Intelligent Organization:** Comprehensive tagging system for soundboards, enabling users to categorize content and discover popular themes via tag-based search and navigation.
 - **Advanced Playback Control:** Per-sound customization including volume normalization, looping, visual waveform trimming (WaveSurfer.js), keyboard hotkeys, and custom visual themes for individual soundboards. Advanced search filtering by name, rating, and recency.
