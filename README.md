@@ -12,7 +12,8 @@ The Soundboard Website allows users to create personalized soundboards, upload a
 *   **Audio Management:** Upload, normalize, and trim audio files (MP3, WAV, OGG).
 *   **User Accounts:** Secure registration, login, and profile management.
 *   **Social Features:** Follow users, favorite boards, rate, and comment.
-*   **Real-time Updates:** Live collaboration support (sockets).
+*   **Real-time Updates:** Live collaboration support (sockets) with Redis-backed horizontal scaling.
+*   **Distributed Architecture:** Ready for multi-node deployments.
 *   **Admin Dashboard:** Manage users and content efficiently.
 *   **Responsive Design:** Works on desktop and mobile.
 
@@ -85,6 +86,10 @@ The application is configured via the `.env` file. Key settings include:
 *   **Database Paths:** `ACCOUNTS_DB`, `SOUNDBOARDS_DB`
 *   **Email Settings:** `MAIL_SERVER`, `MAIL_PORT`, etc. (Required for verification/password reset)
 *   **Security:** `SECRET_KEY`
+*   **Redis (Scaling):** `REDIS_URL` (default: `redis://localhost:6379/0`), `USE_REDIS_QUEUE` (set to `true` to enable distributed Socket.IO).
+
+### Horizontal Scaling
+The application is designed to scale horizontally. By setting `USE_REDIS_QUEUE=true` and providing a valid `REDIS_URL`, multiple app instances can share state and broadcast WebSocket events globally. This is handled automatically in the Docker setup.
 
 ### Email Setup (Gmail Example)
 To enable email features, use an App Password from your Google Account:
