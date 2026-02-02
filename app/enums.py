@@ -9,7 +9,8 @@ except ImportError:
     class StrEnum(str, Enum):
         """String enum backport."""
 
-        pass
+        def __str__(self) -> str:
+            return str(self.value)
 
 
 class UserRole(StrEnum):

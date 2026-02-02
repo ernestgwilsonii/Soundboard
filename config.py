@@ -21,6 +21,12 @@ class Config:
 
     # Redis
     REDIS_URL = os.environ.get("REDIS_URL") or "redis://localhost:6379/0"
+    USE_REDIS_QUEUE = os.environ.get("USE_REDIS_QUEUE", "False").lower() in [
+        "true",
+        "1",
+        "t",
+    ]
+    SOCKETIO_MESSAGE_QUEUE = REDIS_URL if USE_REDIS_QUEUE else None
 
     # SQLAlchemy Configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get(

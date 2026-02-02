@@ -12,14 +12,14 @@ from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
 from app import socketio
-from app.utils.redis_store import get_redis_store
+from app.utils.state_store import get_state_store
 
 
 @socketio.on("connect")  # type: ignore
 def on_connect() -> None:
     """Handle a client connection."""
     if current_user.is_authenticated:
-        store = get_redis_store()
+        store = get_state_store()
         store.add_global_connection(current_user.id, cast(Any, request).sid)
         current_app.logger.info(f"User {current_user.username} connected globally.")
 
@@ -43,7 +43,7 @@ def on_join(data: Dict[str, Any]) -> None:
             "sid": cast(Any, request).sid,
         }
 
-        store = get_redis_store()
+        store = get_state_store()
         store.add_board_user(str(board_id), current_user.id, user_info)
 
         # Broadcast presence update to everyone in the room
@@ -63,7 +63,7 @@ def on_leave(data: Dict[str, Any]) -> None:
     leave_room(str(board_id))
 
     if current_user.is_authenticated:
-        store = get_redis_store()
+        store = get_state_store()
         store.remove_board_user(
             str(board_id), current_user.id, sid=cast(Any, request).sid
         )
@@ -78,7 +78,7 @@ def on_leave(data: Dict[str, Any]) -> None:
 @socketio.on("disconnect")  # type: ignore
 def on_disconnect() -> None:
     """Handle a client disconnection."""
-    store = get_redis_store()
+    store = get_state_store()
     affected_boards = store.handle_disconnect(cast(Any, request).sid)
 
     # Update presence for all affected boards
@@ -114,7 +114,7 @@ def send_instant_notification(
     user_id: int, message: str, link: Optional[str] = None
 ) -> None:
     """Pushes a notification event to all connected sessions of a user."""
-    store = get_redis_store()
+    store = get_state_store()
     sids = store.get_user_sids(user_id)
     for sid in sids:
         socketio.emit("new_notification", {"message": message, "link": link}, to=sid)

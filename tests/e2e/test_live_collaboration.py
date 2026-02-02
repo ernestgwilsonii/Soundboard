@@ -32,6 +32,9 @@ def test_instant_invite_notification(browser: Browser, live_server_url, test_db_
     # 2. SETUP BOB (Collaborator)
     ctx_b = browser.new_context()
     page_b = ctx_b.new_page()
+    page_b.on("console", lambda msg: print(f"[Bob Console] {msg.type}: {msg.text}"))
+    page_b.on("pageerror", lambda exc: print(f"[Bob Page Error] {exc}"))
+    page_b.on("requestfailed", lambda req: print(f"[Bob Request Failed] {req.url}"))
     helper_b = PlaywrightHelper(page_b, live_server_url, accounts_db)
     helper_b.register_and_login("Bob", "bob@test.com", "pass123")
 

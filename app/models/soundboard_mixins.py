@@ -219,4 +219,4 @@ class SoundboardDiscoveryMixin:
                 sb_models.Soundboard.created_at.desc(), sb_models.Soundboard.id.desc()
             )
 
-        return cast(List[Soundboard], query.all())
+        return cast(List["Soundboard"], query.all())

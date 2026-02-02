@@ -23,7 +23,7 @@ limiter = Limiter(key_func=get_remote_address)
 socketio = SocketIO(
     cors_allowed_origins="*",
     async_mode="eventlet",
-    message_queue=Config.REDIS_URL,
+    message_queue=Config.SOCKETIO_MESSAGE_QUEUE,
 )
 db_orm = SQLAlchemy()
 migrate = Migrate(render_as_batch=True, multidb=True)

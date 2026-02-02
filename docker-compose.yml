@@ -18,6 +18,7 @@ services:
       - ACCOUNTS_DB=/app/data/accounts.sqlite3
       - SOUNDBOARDS_DB=/app/data/soundboards.sqlite3
       - REDIS_URL=redis://redis:6379/0
+      - USE_REDIS_QUEUE=true
       - SECRET_KEY=dev-secret-key-change-in-prod
     depends_on:
       - redis
@@ -44,6 +45,10 @@ services:
       # Use a temporary DB location or memory for tests (managed by conftest)
     environment:
       - TESTING=true
+      - REDIS_URL=redis://redis:6379/0
+      - USE_REDIS_QUEUE=false
+    depends_on:
+      - redis
     # Keep container alive if you want to exec into it, or just run pytest
     command: pytest
 
