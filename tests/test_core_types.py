@@ -16,11 +16,10 @@ def test_core_modules_type_hints():
     ]
 
     command = [
-        "venv/bin/mypy",
+        "mypy",
         "--disallow-untyped-defs",
         "--ignore-missing-imports",  # Keep this to avoid failures from missing stubs for external libs
     ] + target_files
-
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:

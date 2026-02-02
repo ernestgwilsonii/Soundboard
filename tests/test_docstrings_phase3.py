@@ -62,9 +62,17 @@ def test_soundboard_docstring():
     "filepath",
     [
         "app/main/routes.py",
-        "app/auth/routes.py",
         "app/admin/routes.py",
-        "app/soundboard/routes.py",
+        "app/auth/routes/auth_flow.py",
+        "app/auth/routes/profile.py",
+        "app/auth/routes/social.py",
+        "app/auth/routes/verification.py",
+        "app/soundboard/routes/board_mgmt.py",
+        "app/soundboard/routes/collaborators.py",
+        "app/soundboard/routes/discovery.py",
+        "app/soundboard/routes/playlists.py",
+        "app/soundboard/routes/social.py",
+        "app/soundboard/routes/sound_mgmt.py",
     ],
 )
 def test_routes_docstrings(filepath):

@@ -22,6 +22,6 @@ def test_mypy_config_exists():
 def test_mypy_installed():
     """Check if mypy is installed."""
     try:
-        subprocess.run(["venv/bin/mypy", "--version"], check=True, capture_output=True)
+        subprocess.run(["mypy", "--version"], check=True, capture_output=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        pytest.fail("mypy is not installed in venv/bin")
+        pytest.fail("mypy is not installed")

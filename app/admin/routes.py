@@ -11,7 +11,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user
 
 from app.admin import bp
-from app.auth.routes import admin_required
+from app.auth.decorators import admin_required
 from app.enums import UserRole
 from app.models import AdminSettings, Soundboard, User
 

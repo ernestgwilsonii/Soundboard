@@ -18,7 +18,7 @@ def test_upload_sound_metadata_extraction(client):
     client.post("/auth/login", data={"username": "audiouser", "password": "password"})
 
     # Mock AudioProcessor
-    with patch("app.soundboard.routes.AudioProcessor") as MockProcessor:
+    with patch("app.soundboard.routes.sound_mgmt.AudioProcessor") as MockProcessor:
         # Configure mock to return specific metadata
         MockProcessor.get_metadata.return_value = {
             "duration": 123.45,

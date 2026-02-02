@@ -4,4 +4,6 @@ from flask import Blueprint
 
 bp = Blueprint("soundboard", __name__, url_prefix="/soundboard")
 
-from app.soundboard import routes  # noqa: F401, E402
+from .routes import register_routes  # noqa: E402
+
+register_routes(bp)

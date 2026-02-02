@@ -22,8 +22,6 @@ def test_quality_script_executable():
 def test_pre_commit_installed():
     """Check if pre-commit is installed."""
     try:
-        subprocess.run(
-            ["venv/bin/pre-commit", "--version"], check=True, capture_output=True
-        )
+        subprocess.run(["pre-commit", "--version"], check=True, capture_output=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        pytest.fail("pre-commit is not installed in venv/bin")
+        pytest.fail("pre-commit is not installed")
