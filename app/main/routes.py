@@ -75,6 +75,77 @@ def index() -> Any:
 
     Handles 'tab' parameter to switch between 'explore' and 'following' views.
     """
+    # Create Demo Soundboard for unauthenticated/landing users
+    demo_sounds_data = [
+        {
+            "name": "Airhorn",
+            "file": "demo_sounds/airhorn.mp3",
+            "icon": "fas fa-bullhorn",
+            "hotkey": "1",
+        },
+        {
+            "name": "Vine Boom",
+            "file": "demo_sounds/vine_boom.mp3",
+            "icon": "fas fa-bomb",
+            "hotkey": "2",
+        },
+        {
+            "name": "Sad Violin",
+            "file": "demo_sounds/sad_violin.mp3",
+            "icon": "fas fa-music",
+            "hotkey": "3",
+        },
+        {
+            "name": "Wow",
+            "file": "demo_sounds/wow.mp3",
+            "icon": "fas fa-star",
+            "hotkey": "4",
+        },
+        {
+            "name": "Bruh",
+            "file": "demo_sounds/bruh.mp3",
+            "icon": "fas fa-frown",
+            "hotkey": "5",
+        },
+        {
+            "name": "Crickets",
+            "file": "demo_sounds/crickets.mp3",
+            "icon": "fas fa-bug",
+            "hotkey": "6",
+        },
+    ]
+
+    class MockSound:
+        def __init__(self, data):
+            self.name = data["name"]
+            # file_path relative to static/
+            self.file_path = data["file"]
+            self.icon = data["icon"]
+            self.hotkey = data["hotkey"]
+            self.volume = 1.0
+            self.is_loop = False
+            self.start_time = 0.0
+            self.end_time = None
+            self.id = 0  # Dummy ID
+
+    class MockSoundboard:
+        name = "Try It Now!"
+        theme_color = "#ffc107"  # Warning color / distinct
+        theme_preset = "default"
+        icon = "fas fa-gamepad"
+        id = 0
+        user_id = 0
+        is_public = True
+
+        @property
+        def sounds(self):
+            return [MockSound(s) for s in demo_sounds_data]
+
+        def get_creator_username(self):
+            return "Demo"
+
+    demo_soundboard = MockSoundboard()
+
     tab = request.args.get("tab", "explore")
     featured_soundboard = Soundboard.get_featured()
 
@@ -111,6 +182,7 @@ def index() -> Any:
         "index.html",
         title="Home",
         featured=featured_soundboard,
+        demo_soundboard=demo_soundboard if not current_user.is_authenticated else None,
         soundboards=soundboards,
         activities=activities,
         current_tab=tab,

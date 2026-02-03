@@ -1,6 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
+    {% if demo_soundboard %}
+    <div class="p-4 p-md-5 mb-5 bg-light rounded-3 shadow-sm border-start border-warning border-5">
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-4 mb-lg-0">
+                <h1 class="display-5 fw-bold mb-3">Welcome to Soundboard</h1>
+                <p class="fs-4 text-muted mb-4">Create, customize, and share your own unique soundboards. <span class="text-warning fw-bold">Try it out right now!</span></p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 me-md-2">Create My Own Account</a>
+                    <a href="#explore-section" class="btn btn-outline-secondary btn-lg px-4">Browse Others</a>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card bg-white shadow-lg border-0">
+                    <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold"><i class="{{ demo_soundboard.icon }}"></i> {{ demo_soundboard.name }}</span>
+                        <span class="badge bg-dark">DEMO</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row row-cols-3 g-2">
+                            {% for sound in demo_soundboard.sounds %}
+                            <div class="col">
+                                <div class="card h-100 sound-card text-center p-2" 
+                                     data-hotkey="{{ sound.hotkey }}"
+                                     onclick="playDemoSound('{{ url_for('static', filename=sound.file_path) }}')"
+                                     style="cursor: pointer; transition: transform 0.1s; min-height: 80px;">
+                                    <div class="card-body p-0 d-flex flex-column justify-content-center align-items-center">
+                                        <i class="{{ sound.icon }} fa-2x mb-2 text-primary"></i>
+                                        <h6 class="card-title mb-0" style="font-size: 0.8rem;">{{ sound.name }}</h6>
+                                        <span class="badge bg-light text-muted position-absolute bottom-0 end-0 m-1" style="font-size: 0.6rem;">{{ sound.hotkey }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-sm btn-link text-danger" onclick="stopAllDemoSounds()"><i class="fas fa-stop-circle"></i> Stop All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
     <div class="p-5 mb-4 bg-light rounded-3">
         <div class="container-fluid py-5 text-center">
             <h1 class="display-5 fw-bold">Welcome to Soundboard</h1>
@@ -12,6 +55,9 @@
             {% endif %}
         </div>
     </div>
+    {% endif %}
+
+    <div id="explore-section"></div>
 
     {% if featured %}
     <div class="row mb-5">
@@ -134,6 +180,38 @@
 
 {% block scripts %}
 <script>
+let demoActiveSounds = [];
+
+function playDemoSound(url) {
+    const audio = new Audio(url);
+    demoActiveSounds.push(audio);
+    audio.play().catch(e => console.error("Playback failed:", e));
+    audio.onended = () => {
+        demoActiveSounds = demoActiveSounds.filter(s => s !== audio);
+    };
+}
+
+function stopAllDemoSounds() {
+    demoActiveSounds.forEach(a => {
+        a.pause();
+        a.currentTime = 0;
+    });
+    demoActiveSounds = [];
+}
+
+// Hotkey listener for demo board
+document.addEventListener('keydown', function(event) {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+    const key = event.key.toUpperCase();
+    const soundCard = document.querySelector(`.sound-card[data-hotkey="${key}"]`);
+    if (soundCard) {
+        event.preventDefault();
+        soundCard.style.transform = 'scale(0.95)';
+        setTimeout(() => soundCard.style.transform = 'scale(1)', 100);
+        soundCard.click();
+    }
+});
+
 function refreshActivity() {
     fetch('{{ url_for("main.get_activities") }}')
         .then(response => response.json())
