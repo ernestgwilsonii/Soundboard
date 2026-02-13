@@ -24,4 +24,9 @@ def test_pre_commit_installed():
     try:
         subprocess.run(["pre-commit", "--version"], check=True, capture_output=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        pytest.fail("pre-commit is not installed")
+        # Try looking in venv/bin
+        venv_pre = os.path.join("venv", "bin", "pre-commit")
+        if os.path.exists(venv_pre):
+            subprocess.run([venv_pre, "--version"], check=True, capture_output=True)
+        else:
+            pytest.fail("pre-commit is not installed")

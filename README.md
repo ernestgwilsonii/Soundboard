@@ -29,12 +29,17 @@ The easiest way to run the application is using Docker.
     ```
     Access the site at `http://localhost:5000`.
 
-2.  **Run Tests:**
+2.  **Generate Demo Sounds (Optional but recommended):**
+    ```bash
+    docker compose exec app ./scripts/fetch_demo_sounds.sh
+    ```
+
+3.  **Run Tests:**
     ```bash
     make test
     ```
 
-3.  **Stop & Clean:**
+4.  **Stop & Clean:**
     ```bash
     make clean
     ```
@@ -42,9 +47,10 @@ The easiest way to run the application is using Docker.
 ### Option 2: Local Development
 
 **Prerequisites:**
-*   Python 3.9+
+*   Python 3.12+
 *   SQLite3
 *   FFmpeg (required for audio processing)
+*   Redis (optional, for horizontal scaling)
 
 **Setup:**
 
@@ -57,6 +63,8 @@ The easiest way to run the application is using Docker.
 2.  **Install Dependencies:**
     ```bash
     pip install -r requirements.txt
+    # If running E2E tests:
+    playwright install --with-deps chromium
     ```
 
 3.  **Environment Setup:**
@@ -68,13 +76,20 @@ The easiest way to run the application is using Docker.
 
 4.  **Initialize/Update Database:**
     ```bash
-    # Run migrations to bring DB to latest version
-    export FLASK_APP=soundboard.py
-    venv/bin/flask db upgrade
-    ```
-    *Note: For a fresh installation, you can also use `venv/bin/python3 manage.py` to create tables directly.*
+    # Option A: Quick init (creates tables directly)
+    python3 manage.py
 
-5.  **Run Server:**
+    # Option B: Run migrations (recommended for existing DBs)
+    export FLASK_APP=soundboard.py
+    flask db upgrade
+    ```
+
+5.  **Generate Demo Sounds:**
+    ```bash
+    ./scripts/fetch_demo_sounds.sh
+    ```
+
+6.  **Run Server:**
     ```bash
     ./dev.sh
     ```

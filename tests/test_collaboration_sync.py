@@ -1,13 +1,10 @@
-from app import create_app, socketio
+from app.extensions import socketio
 
 
-def test_broadcast_board_update_event():
-    flask_app = create_app()
-    flask_app.config["TESTING"] = True
-
+def test_broadcast_board_update_event(app):
     # Create two clients
-    client1 = socketio.test_client(flask_app)
-    client2 = socketio.test_client(flask_app)
+    client1 = socketio.test_client(app)
+    client2 = socketio.test_client(app)
 
     # Both join room 1
     client1.emit("join_board", {"board_id": 1})
@@ -20,7 +17,7 @@ def test_broadcast_board_update_event():
     # Simulate a backend broadcast (normally called from routes)
     from app.socket_events import broadcast_board_update
 
-    with flask_app.app_context():
+    with app.app_context():
         broadcast_board_update(1, "sound_uploaded", {"name": "Test Sound"})
 
     # Check if client 1 and 2 received the update
@@ -34,12 +31,9 @@ def test_broadcast_board_update_event():
     client2.disconnect()
 
 
-def test_slot_locking_events():
-    flask_app = create_app()
-    flask_app.config["TESTING"] = True
-
-    client1 = socketio.test_client(flask_app)
-    client2 = socketio.test_client(flask_app)
+def test_slot_locking_events(app):
+    client1 = socketio.test_client(app)
+    client2 = socketio.test_client(app)
     assert client1.is_connected()
     assert client2.is_connected()
 
@@ -75,12 +69,9 @@ def test_slot_locking_events():
     client2.disconnect()
 
 
-def test_emoji_reaction_event():
-    flask_app = create_app()
-    flask_app.config["TESTING"] = True
-
-    client1 = socketio.test_client(flask_app)
-    client2 = socketio.test_client(flask_app)
+def test_emoji_reaction_event(app):
+    client1 = socketio.test_client(app)
+    client2 = socketio.test_client(app)
 
     client1.emit("join_board", {"board_id": 1})
     client2.emit("join_board", {"board_id": 1})

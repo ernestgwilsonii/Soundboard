@@ -117,6 +117,7 @@ def index() -> Any:
 
     class MockSound:
         def __init__(self, data):
+            """Initialize mock sound with data."""
             self.name = data["name"]
             # file_path relative to static/
             self.file_path = data["file"]
@@ -139,9 +140,11 @@ def index() -> Any:
 
         @property
         def sounds(self):
+            """Return list of mock sounds."""
             return [MockSound(s) for s in demo_sounds_data]
 
         def get_creator_username(self):
+            """Return the username of the mock creator."""
             return "Demo"
 
     demo_soundboard = MockSoundboard()

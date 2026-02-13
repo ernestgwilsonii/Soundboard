@@ -47,6 +47,7 @@ def live_server_url():
     env["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{test_accounts_db}"
     env["SQLALCHEMY_BINDS_SOUNDBOARDS"] = f"sqlite:///{test_soundboards_db}"
     env["UPLOAD_FOLDER"] = temp_upload_folder
+    env["SOCKETIO_ASYNC_MODE"] = "eventlet"  # Force eventlet for live server
 
     print(f"\n[Harness] Starting server on {url}...")
 
@@ -105,6 +106,7 @@ def test_db_setup():
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{test_accounts_db}"
         SQLALCHEMY_BINDS = {"soundboards": f"sqlite:///{test_soundboards_db}"}
         WTF_CSRF_ENABLED = False
+        SOCKETIO_MESSAGE_QUEUE = None
 
     app = create_app(TestConfig)
 
@@ -152,6 +154,7 @@ def app():
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{test_accounts_db}"
         SQLALCHEMY_BINDS = {"soundboards": f"sqlite:///{test_soundboards_db}"}
         WTF_CSRF_ENABLED = False
+        SOCKETIO_MESSAGE_QUEUE = None
         UPLOAD_FOLDER = temp_upload_folder
         SECRET_KEY = "test-secret-key"
 

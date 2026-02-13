@@ -3,6 +3,8 @@
 Initializes Flask extensions used across the application.
 """
 
+import os
+
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager
@@ -22,7 +24,7 @@ mail = Mail()
 limiter = Limiter(key_func=get_remote_address)
 socketio = SocketIO(
     cors_allowed_origins="*",
-    async_mode="eventlet",
+    async_mode=os.environ.get("SOCKETIO_ASYNC_MODE", "eventlet"),
     message_queue=Config.SOCKETIO_MESSAGE_QUEUE,
 )
 db_orm = SQLAlchemy()

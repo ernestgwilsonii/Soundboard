@@ -129,8 +129,20 @@ def create_app(config_class: Any = Config) -> Flask:
         flask_app.logger.setLevel(logging.INFO)
         flask_app.logger.info("Soundboard startup")
 
+    # Register socket events
+    if flask_app.config.get("TESTING"):
+        import importlib
+        import sys
+
+        if "app.socket_events" in sys.modules:
+            importlib.reload(sys.modules["app.socket_events"])
+        else:
+            import app.socket_events  # noqa: F401
+    else:
+        import app.socket_events  # noqa: F401
+
     return flask_app
 
 
-# Register socket events
-import app.socket_events  # noqa: F401, E402
+# Remove top-level import to avoid circular issues during init
+# import app.socket_events  # noqa: F401, E402

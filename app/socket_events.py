@@ -11,7 +11,7 @@ from flask import current_app, request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
-from app import socketio
+from app.extensions import socketio
 from app.utils.state_store import get_state_store
 
 

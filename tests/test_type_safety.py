@@ -24,4 +24,9 @@ def test_mypy_installed():
     try:
         subprocess.run(["mypy", "--version"], check=True, capture_output=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        pytest.fail("mypy is not installed")
+        # Try looking in venv/bin
+        venv_mypy = os.path.join("venv", "bin", "mypy")
+        if os.path.exists(venv_mypy):
+            subprocess.run([venv_mypy, "--version"], check=True, capture_output=True)
+        else:
+            pytest.fail("mypy is not installed")

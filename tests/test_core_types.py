@@ -15,11 +15,27 @@ def test_core_modules_type_hints():
         "app/utils/packager.py",
     ]
 
-    command = [
-        "mypy",
-        "--disallow-untyped-defs",
-        "--ignore-missing-imports",  # Keep this to avoid failures from missing stubs for external libs
-    ] + target_files
+    command = ["mypy"]
+
+    # Try to find mypy binary
+    try:
+        subprocess.run(["mypy", "--version"], capture_output=True, check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        import os
+
+        venv_mypy = os.path.join("venv", "bin", "mypy")
+        if os.path.exists(venv_mypy):
+            command = [venv_mypy]
+        else:
+            pytest.fail("mypy binary not found in PATH or venv/bin")
+
+    command.extend(
+        [
+            "--disallow-untyped-defs",
+            "--ignore-missing-imports",  # Keep this to avoid failures from missing stubs for external libs
+        ]
+    )
+    command.extend(target_files)
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:
