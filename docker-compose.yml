@@ -20,8 +20,11 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - USE_REDIS_QUEUE=true
       - SECRET_KEY=dev-secret-key-change-in-prod
+      - MAIL_SERVER=mailpit
+      - MAIL_PORT=1025
     depends_on:
       - redis
+      - mailpit
     restart: unless-stopped
 
   redis:
@@ -31,6 +34,18 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: always
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP Port
+    environment:
+      - MP_MAX_MESSAGES=5000
+      - MP_DATABASE=/data/mailpit.db
+    volumes:
+      - mailpit_data:/data
 
   # The Test Runner (Troubleshooting & Verification)
   # Run with: docker compose run --rm test
@@ -47,8 +62,11 @@ services:
       - TESTING=true
       - REDIS_URL=redis://redis:6379/0
       - USE_REDIS_QUEUE=false
+      - MAIL_SERVER=mailpit
+      - MAIL_PORT=1025
     depends_on:
       - redis
+      - mailpit
     # Keep container alive if you want to exec into it, or just run pytest
     command: pytest
 
@@ -56,3 +74,4 @@ volumes:
   db_data:
   upload_data:
   redis_data:
+  mailpit_data:

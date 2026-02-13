@@ -103,6 +103,14 @@ The application is configured via the `.env` file. Key settings include:
 *   **Security:** `SECRET_KEY`
 *   **Redis (Scaling):** `REDIS_URL` (default: `redis://localhost:6379/0`), `USE_REDIS_QUEUE` (set to `true` to enable distributed Socket.IO).
 
+### Local Email (Mailpit)
+For development, we use **Mailpit** to capture outgoing emails without needing a real SMTP server.
+
+1.  **Start Services:** Run `make run`.
+2.  **View Emails:** Open `http://localhost:8025` in your browser.
+    *   All system emails (verification, password reset) will appear here instantly.
+    *   No username or password configuration is required.
+
 ### Social Login (Google)
 To enable "Sign in with Google", you must provide credentials from the [Google Cloud Console](https://console.cloud.google.com/):
 
@@ -118,21 +126,7 @@ To enable "Sign in with Google", you must provide credentials from the [Google C
     # Required for local development over HTTP:
     OAUTHLIB_INSECURE_TRANSPORT=1
     ```
-*Note: If these variables are missing, the Google login button will not be displayed.*
-
-### Horizontal Scaling
-The application is designed to scale horizontally. By setting `USE_REDIS_QUEUE=true` and providing a valid `REDIS_URL`, multiple app instances can share state and broadcast WebSocket events globally. This is handled automatically in the Docker setup.
-
-### Email Setup (Gmail Example)
-To enable email features, use an App Password from your Google Account:
-```env
-MAIL_SERVER=smtp.googlemail.com
-MAIL_PORT=587
-MAIL_USE_TLS=1
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
-MAIL_DEFAULT_SENDER=noreply@yourdomain.com
-```
+*Note: If these variables are missing, the Google login button will not be displayed. Documentation for additional providers will be added as they are implemented.*
 
 ## Administration
 
