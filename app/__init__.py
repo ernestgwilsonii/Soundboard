@@ -102,6 +102,10 @@ def create_app(config_class: Any = Config) -> Flask:
 
     flask_app.register_blueprint(admin_bp)
 
+    from app.auth.social_providers import init_social_providers
+
+    init_social_providers(flask_app)
+
     # Error Handlers
     @flask_app.errorhandler(404)  # type: ignore
     def not_found_error(error: Any) -> Any:

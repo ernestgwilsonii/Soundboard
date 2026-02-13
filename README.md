@@ -103,6 +103,23 @@ The application is configured via the `.env` file. Key settings include:
 *   **Security:** `SECRET_KEY`
 *   **Redis (Scaling):** `REDIS_URL` (default: `redis://localhost:6379/0`), `USE_REDIS_QUEUE` (set to `true` to enable distributed Socket.IO).
 
+### Social Login (Google)
+To enable "Sign in with Google", you must provide credentials from the [Google Cloud Console](https://console.cloud.google.com/):
+
+1.  **Create Project:** Create a new project for "Soundboard".
+2.  **OAuth Consent Screen:** Configure as "External". Add scopes `.../auth/userinfo.email` and `.../auth/userinfo.profile`.
+3.  **Credentials:** Create an "OAuth 2.0 Client ID" for a "Web application".
+    *   **Authorized JavaScript origins:** `http://localhost:5000`
+    *   **Authorized redirect URIs:** `http://localhost:5000/auth/login/google/authorized`
+4.  **Environment Setup:** Add the following to your `.env`:
+    ```env
+    GOOGLE_OAUTH_CLIENT_ID=your-client-id
+    GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret
+    # Required for local development over HTTP:
+    OAUTHLIB_INSECURE_TRANSPORT=1
+    ```
+*Note: If these variables are missing, the Google login button will not be displayed.*
+
 ### Horizontal Scaling
 The application is designed to scale horizontally. By setting `USE_REDIS_QUEUE=true` and providing a valid `REDIS_URL`, multiple app instances can share state and broadcast WebSocket events globally. This is handled automatically in the Docker setup.
 

@@ -38,6 +38,9 @@
                 {{ form.submit(class="btn btn-primary") }}
             </div>
         </form>
+        
+        {% include 'auth/_social_login.html' %}
+
         <p class="text-center mt-3">Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
     </div>
 </div>

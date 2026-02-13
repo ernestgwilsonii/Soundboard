@@ -113,3 +113,8 @@ def register_auth_flow_routes(bp: Any) -> None:
             "Congratulations, you are now a registered user! Please check your email to verify your account."
         )
         return redirect(url_for("auth.login"))
+
+    @bp.route("/google_login_success")  # type: ignore
+    def google_login_success() -> Any:
+        """Helper route to redirect after successful Google login."""
+        return redirect(url_for("main.index"))

@@ -42,6 +42,7 @@ class User(BaseModel, UserMixin):
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128))
+    google_id = db.Column(db.String(256), unique=True, nullable=True)
     role = db.Column(db.Enum(UserRole), default=UserRole.USER)
     active = db.Column(db.Boolean, default=True)
     is_verified = db.Column(db.Boolean, default=False)

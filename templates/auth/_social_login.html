@@ -1,0 +1,13 @@
+{% if config.GOOGLE_OAUTH_CLIENT_ID %}
+<div class="social-login-separator text-center my-4 position-relative">
+    <hr>
+    <span class="bg-white px-2 position-absolute top-50 start-50 translate-middle text-muted small">OR</span>
+</div>
+
+<div class="d-grid gap-2">
+    <a href="{{ url_for('google.login') }}" class="btn btn-outline-dark d-flex align-items-center justify-content-center">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google G" class="me-2" style="width: 18px; height: 18px;">
+        Sign in with Google
+    </a>
+</div>
+{% endif %}
