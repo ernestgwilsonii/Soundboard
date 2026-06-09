@@ -6,7 +6,7 @@ services:
       target: production
     image: soundboard-app:latest
     ports:
-      - "5000:8000"
+      - "80:8000"
     volumes:
       # Persist SQLite Databases
       - db_data:/app/data

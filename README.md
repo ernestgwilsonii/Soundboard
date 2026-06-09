@@ -27,7 +27,7 @@ The easiest way to run the application is using Docker.
     ```bash
     make run
     ```
-    Access the site at `http://localhost:5000`.
+    Access the site at `http://localhost` (port 80).
 
 2.  **Generate Demo Sounds (Optional but recommended):**
     ```bash
@@ -134,8 +134,8 @@ To enable "Sign in with Google", you must provide credentials from the [Google C
 1.  **Create Project:** Create a new project for "Soundboard".
 2.  **OAuth Consent Screen:** Configure as "External". Add scopes `.../auth/userinfo.email` and `.../auth/userinfo.profile`.
 3.  **Credentials:** Create an "OAuth 2.0 Client ID" for a "Web application".
-    *   **Authorized JavaScript origins:** `http://localhost:5000`
-    *   **Authorized redirect URIs:** `http://localhost:5000/auth/login/google/authorized`
+    *   **Authorized JavaScript origins:** `http://localhost`
+    *   **Authorized redirect URIs:** `http://localhost/auth/login/google/authorized`
 4.  **Environment Setup:** Add the following to your `.env`:
     ```env
     GOOGLE_OAUTH_CLIENT_ID=your-client-id

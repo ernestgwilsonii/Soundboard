@@ -6,7 +6,7 @@
 help:
 	@echo "Soundboard Development Commands:"
 	@echo "  make build    - Build the Docker images"
-	@echo "  make run      - Start the application (localhost:5000)"
+	@echo "  make run      - Start the application (http://localhost)"
 	@echo "  make stop     - Stop the application"
 	@echo "  make test     - Run the full test suite in Docker"
 	@echo "  make scan     - Run security scans (Bandit + Safety)"
@@ -22,7 +22,7 @@ build:
 run:
 	@echo "Starting app..."
 	docker compose up -d app
-	@echo "App running at http://localhost:5000"
+	@echo "App running at http://localhost"
 	docker compose logs -f app
 
 .PHONY: stop
