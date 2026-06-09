@@ -227,6 +227,41 @@ To enable "Sign in with Google", create credentials in the [Google Cloud Console
 *   The same `.env` pattern applies to any future provider: keep secrets out of git, register exact redirect URIs per environment.
 *   Documentation for additional providers will be added as they are implemented.
 
+## Backups & Disaster Recovery
+
+All user data lives in named Docker volumes on the host (`docker volume ls`): account and soundboard SQLite databases (`db_data`) and uploaded media (`upload_data`). Host/instance snapshots (e.g. Lightsail automatic snapshots) include these volumes, but a snapshot taken mid-write is only *crash-consistent*. For guaranteed-consistent copies, use the backup script:
+
+```bash
+make backup            # or: ./scripts/backup.sh [backup_root]
+```
+
+It performs, while the site keeps running:
+1.  A **SQLite online backup** of both databases (safe under concurrent writes) with an automatic `PRAGMA integrity_check` on each copy.
+2.  A tarball of all **uploaded media**.
+3.  A copy of **`.env`** (your runtime secrets, which are not in git).
+
+Backups land in timestamped directories under `~/soundboard-backups/` (override with `BACKUP_ROOT`), with the most recent 14 kept (`KEEP_BACKUPS`). Because they're plain files on the host disk, every instance snapshot automatically contains consistent copies — no data is "trapped" inside Docker.
+
+**Schedule it (cron):**
+```bash
+sudo dnf install -y cronie && sudo systemctl enable --now crond   # AL2023 ships without cron
+( crontab -l 2>/dev/null; \
+  echo "15 3 * * * cd $PWD && ./scripts/backup.sh >> $HOME/soundboard-backups/backup.log 2>&1" ) | crontab -
+```
+Pick a time shortly **before** your daily snapshot window so each snapshot includes a fresh backup.
+
+**Restore:**
+```bash
+make restore dir=~/soundboard-backups/20260609-031500
+```
+This stops the app, replaces both databases and all uploads from the backup, and restarts. To rebuild a server from scratch: clone the repo, copy the backup's `env` file to `.env`, run `make build && make run`, then restore.
+
+**Test your restores.** A backup is only proven when it has been restored at least once — run a restore after first setup and after major changes.
+
+*Offsite copies (optional, recommended):* host snapshots and on-disk backups both die with the AWS account/region. For true offsite protection, sync the backup directory to object storage, e.g. `aws s3 sync ~/soundboard-backups s3://your-backup-bucket/` (requires an instance role or credentials with S3 write access) — easy to add to the same cron line.
+
+*Not backed up (by design):* Redis (transient Socket.IO message queue), Mailpit (dev-only captured email), and TLS certificates (Traefik re-issues them automatically from Let's Encrypt).
+
 ## Administration
 
 **Auto-Admin:** The **first user** to register on a fresh installation is automatically granted the `admin` role and is verified.

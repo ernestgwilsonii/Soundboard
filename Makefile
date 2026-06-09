@@ -13,6 +13,8 @@ help:
 	@echo "  make debug    - Get a shell inside the test container (for troubleshooting)"
 	@echo "  make clean    - Remove containers and volumes (resets DB, uploads, TLS certs)"
 	@echo "  make promote user=NAME - Promote a user to admin"
+	@echo "  make backup   - Back up user data (DBs + uploads) to ~/soundboard-backups"
+	@echo "  make restore dir=PATH - Restore user data from a backup directory"
 
 .PHONY: build
 build:
@@ -48,6 +50,14 @@ scan:
 debug:
 	@echo "Starting debug shell..."
 	docker compose run --rm --entrypoint /bin/bash test
+
+.PHONY: backup
+backup:
+	./scripts/backup.sh
+
+.PHONY: restore
+restore:
+	./scripts/restore.sh $(dir)
 
 .PHONY: clean
 clean:
