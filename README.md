@@ -16,35 +16,59 @@ The Soundboard Website allows users to create personalized soundboards, upload a
 *   **Distributed Architecture:** Ready for multi-node deployments.
 *   **Admin Dashboard:** Manage users and content efficiently.
 *   **Responsive Design:** Works on desktop and mobile.
+*   **HTTPS Out of the Box:** Traefik reverse proxy with automatic Let's Encrypt certificates.
+
+## Architecture (Docker Stack)
+
+| Service   | Image                  | Purpose                                                       | Exposed Ports                  |
+|-----------|------------------------|---------------------------------------------------------------|--------------------------------|
+| `traefik` | `traefik:v3.3`         | Reverse proxy, TLS termination, Let's Encrypt, 80→443 redirect | `80`, `443` (public)           |
+| `app`     | built from `Dockerfile`| Flask + Socket.IO app (Gunicorn/eventlet on port 8000)         | none (only via Traefik)        |
+| `redis`   | `redis:7-alpine`       | Socket.IO message queue for horizontal scaling                 | `127.0.0.1:6379` (local only)  |
+| `mailpit` | `axllent/mailpit`      | Captures outgoing email for development                        | `127.0.0.1:8025`, `127.0.0.1:1025` (local only) |
+| `test`    | built from `Dockerfile`| Playwright-based test runner (`docker compose run --rm test`)  | none                           |
+
+Databases (SQLite), uploads, and TLS certificates persist in named Docker volumes (`db_data`, `upload_data`, `traefik_letsencrypt`, etc.) — nothing sensitive is stored in the repository.
 
 ## Quick Start
 
 ### Option 1: Docker (Recommended)
 
-The easiest way to run the application is using Docker.
+**Prerequisites:** Docker Engine with the Compose v2 plugin (`docker compose version` must work — see the Amazon Linux notes below if it doesn't).
 
-1.  **Start the Application:**
+1.  **Create your environment file:**
     ```bash
+    cp .env.example .env
+    ```
+    The defaults work for local use (`DOMAIN=localhost`). For a public deployment, see [Deploying to a Server](#deploying-to-a-server-any-domain).
+
+2.  **Build and start:**
+    ```bash
+    make build
     make run
     ```
-    Access the site at `https://localhost` (port 80 redirects to HTTPS).
+    Access the site at `https://localhost` — port 80 automatically redirects to HTTPS. Locally Traefik serves a self-signed certificate, so accept the browser warning (or use `curl -k`).
 
-2.  **Generate Demo Sounds (Optional but recommended):**
+3.  **Generate Demo Sounds (Optional but recommended):**
     ```bash
     docker compose exec app ./scripts/fetch_demo_sounds.sh
     ```
 
-3.  **Run Tests:**
+4.  **Run Tests:**
     ```bash
     make test
     ```
 
-4.  **Stop & Clean:**
+5.  **Stop:**
     ```bash
-    make clean
+    make stop
     ```
 
-### Option 2: Local Development
+**Make targets:** `make help` lists everything (`build`, `run`, `stop`, `test`, `scan`, `debug`, `clean`, `promote user=NAME`).
+
+> ⚠️ **`make clean` deletes all Docker volumes** — databases, uploaded sounds, **and the Let's Encrypt certificate**. On a production host prefer `make stop`. (If you do clean, a new certificate is requested on next start; Let's Encrypt rate-limits to 5 identical certificates per week.)
+
+### Option 2: Local Development (without Docker)
 
 **Prerequisites:**
 *   Python 3.12+
@@ -110,35 +134,59 @@ sudo install /tmp/ffmpeg-*-amd64-static/ffmpeg /tmp/ffmpeg-*-amd64-static/ffprob
     ```bash
     ./dev.sh
     ```
+    The development server listens on `http://localhost:5000` (plain HTTP, hot-reloading when `DEBUG=True`; change the port with `FLASK_RUN_PORT`). Traefik/HTTPS is part of the Docker stack only.
+
+## Deploying to a Server (Any Domain)
+
+A repeatable checklist for putting this site on the public internet under any domain name:
+
+1.  **Server:** any Linux host (EC2, Lightsail, VPS...) with Docker + Compose v2 installed and the repo cloned.
+2.  **DNS:** at your DNS provider (Route 53, Cloudflare, Namecheap...), create an **A record** for your domain — e.g. `soundboard.example.com` — pointing to the server's **public IP**. No TXT or other special records are needed. Verify with `getent hosts soundboard.example.com` (or `dig`/`nslookup`).
+3.  **Firewall:** allow inbound **TCP 80 and 443** from `0.0.0.0/0` (EC2: security group; Lightsail: instance Networking tab). Port 80 must stay open permanently — Let's Encrypt validates the domain over it (Traefik answers ACME challenges before the HTTPS redirect applies), including at every renewal.
+4.  **Configure `.env`** (never committed to git):
+    ```env
+    DOMAIN=soundboard.example.com
+    LETSENCRYPT_EMAIL=you@example.com
+    SECRET_KEY=<generate a long random string, e.g. `openssl rand -hex 32`>
+    ```
+5.  **Start:** `make build && make run`. Traefik requests the certificate within seconds of startup; check progress with `docker compose logs traefik`.
+6.  **Verify:**
+    ```bash
+    curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" http://soundboard.example.com/   # expect 301 -> https
+    curl -s -o /dev/null -w "%{http_code}\n" https://soundboard.example.com/                      # expect 200, trusted cert
+    ```
+
+The stack survives reboots without intervention: Docker is enabled at boot and every service uses a restart policy.
 
 ## HTTPS (Traefik + Let's Encrypt)
 
 The Docker stack includes a **Traefik** reverse proxy that terminates TLS on port 443 and permanently redirects all port-80 traffic to HTTPS.
 
-*   **Local development:** with `DOMAIN=localhost` (the default), Traefik serves its built-in self-signed certificate. Browse to `https://localhost` and accept the warning, or use `curl -k`.
-*   **Production:** set `DOMAIN` and `LETSENCRYPT_EMAIL` in `.env` and Traefik automatically obtains and renews a real Let's Encrypt certificate via the HTTP-01 challenge.
+*   **Local development:** with `DOMAIN=localhost` (the default), Traefik serves its built-in self-signed certificate. Browse to `https://localhost` and accept the warning, or use `curl -k`. (A log line about failing to obtain an ACME certificate for `localhost` is expected and harmless.)
+*   **Production:** set `DOMAIN` and `LETSENCRYPT_EMAIL` in `.env` and Traefik automatically obtains a real, browser-trusted Let's Encrypt certificate via the HTTP-01 challenge.
+*   **Renewal — no cron needed:** Traefik re-checks its certificates every 24 hours (and at startup) and automatically renews any with fewer than 30 days remaining, hot-swapping them with zero downtime. The only external requirements are that the DNS A record keeps pointing at the server and port 80 stays open.
+*   **Storage:** the ACME account key and certificates live in the `traefik_letsencrypt` Docker volume — never in the repository.
+*   **Proxy headers:** the app container sets `TRUST_PROXY=true` so Flask honors `X-Forwarded-*` headers from Traefik (correct `https://` URLs and OAuth redirects). Leave this off when the app is not behind a proxy.
 
-**Route 53 / AWS setup for Let's Encrypt:**
-
-1.  In Route 53, create an **A record** for your domain (e.g. `soundboard.example.com`) pointing to this server's **public IP**. No special/TXT records are needed for the HTTP-01 challenge.
-2.  Ensure the EC2/Lightsail firewall (security group) allows inbound **TCP 80 and 443** from `0.0.0.0/0`. Port 80 must stay open — Let's Encrypt uses it to validate the domain (Traefik answers the challenge before the HTTPS redirect applies).
-3.  In `.env`, set:
-    ```env
-    DOMAIN=soundboard.example.com
-    LETSENCRYPT_EMAIL=you@example.com
-    ```
-4.  Restart: `docker compose up -d`. The certificate is stored in the `traefik_letsencrypt` Docker volume (never in the repo) and renews automatically.
-
-*Tip: when testing repeatedly, uncomment the staging `caserver` line in `docker-compose.yml` to avoid Let's Encrypt rate limits, then comment it back out for the real certificate.*
+*Tip: when testing certificate issuance repeatedly, uncomment the staging `caserver` line in `docker-compose.yml` to avoid Let's Encrypt rate limits, then comment it back out (and clear the `traefik_letsencrypt` volume) for the real certificate.*
 
 ## Configuration
 
-The application is configured via the `.env` file. Key settings include:
+The application is configured via the `.env` file (see `.env.example` for a template). Key settings:
 
-*   **Database Paths:** `ACCOUNTS_DB`, `SOUNDBOARDS_DB`
-*   **Email Settings:** `MAIL_SERVER`, `MAIL_PORT`, etc. (Required for verification/password reset)
-*   **Security:** `SECRET_KEY`
-*   **Redis (Scaling):** `REDIS_URL` (default: `redis://localhost:6379/0`), `USE_REDIS_QUEUE` (set to `true` to enable distributed Socket.IO).
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `SECRET_KEY` | dev placeholder | Flask session/CSRF signing key. **Set a strong random value in production.** |
+| `DEBUG` | `False` | Enables Flask debug mode and hot-reloading (local dev only). |
+| `DOMAIN` | `localhost` | Public hostname Traefik routes and requests a certificate for. |
+| `LETSENCRYPT_EMAIL` | — | Contact email for Let's Encrypt (expiry notices). |
+| `ACCOUNTS_DB` / `SOUNDBOARDS_DB` | repo root | SQLite database paths (the Docker stack stores them in the `db_data` volume). |
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection for the Socket.IO message queue. |
+| `USE_REDIS_QUEUE` | `False` | Set `true` to enable distributed Socket.IO across multiple app instances. |
+| `TRUST_PROXY` | `False` | Honor `X-Forwarded-*` headers. Set automatically in the Docker stack; only enable behind a reverse proxy. |
+| `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER` | Mailpit | SMTP settings for verification/password-reset email. |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | unset | Enables "Sign in with Google" when both are present. |
+| `FLASK_RUN_PORT` | `5000` | Port for the non-Docker development server. |
 
 ### Local Email (Mailpit)
 For development, we use **Mailpit** to capture outgoing emails without needing a real SMTP server.
@@ -147,23 +195,37 @@ For development, we use **Mailpit** to capture outgoing emails without needing a
 2.  **View Emails:** Open `http://localhost:8025` in your browser.
     *   All system emails (verification, password reset) will appear here instantly.
     *   No username or password configuration is required.
+    *   The Mailpit UI is bound to `127.0.0.1` only (not reachable from the internet). On a remote server, open an SSH tunnel: `ssh -L 8025:localhost:8025 user@server`, then browse `http://localhost:8025` on your own machine.
 
-### Social Login (Google)
-To enable "Sign in with Google", you must provide credentials from the [Google Cloud Console](https://console.cloud.google.com/):
+*For production you would point `MAIL_SERVER`/`MAIL_PORT` (and credentials) at a real SMTP provider in `.env` instead.*
 
-1.  **Create Project:** Create a new project for "Soundboard".
+### Social Login (Google OAuth)
+
+To enable "Sign in with Google", create credentials in the [Google Cloud Console](https://console.cloud.google.com/):
+
+1.  **Create Project:** Create a new project (e.g. "Soundboard").
 2.  **OAuth Consent Screen:** Configure as "External". Add scopes `.../auth/userinfo.email` and `.../auth/userinfo.profile`.
-3.  **Credentials:** Create an "OAuth 2.0 Client ID" for a "Web application".
-    *   **Authorized JavaScript origins:** `https://localhost` (or your real `https://` domain)
-    *   **Authorized redirect URIs:** `https://localhost/auth/login/google/authorized`
-4.  **Environment Setup:** Add the following to your `.env`:
+    *   While the consent screen is in **Testing** mode, only email addresses added as *Test users* can sign in. **Publish** the app to allow anyone.
+3.  **Credentials:** Create an "OAuth 2.0 Client ID" of type "Web application". Register an origin/redirect pair for **each environment** you use (Google matches them exactly — scheme, host, and port):
+    | Environment | Authorized JavaScript origin | Authorized redirect URI |
+    |---|---|---|
+    | Production | `https://yourdomain.com` | `https://yourdomain.com/auth/login/google/authorized` |
+    | Docker local | `https://localhost` | `https://localhost/auth/login/google/authorized` |
+    | Dev server (`./dev.sh`) | `http://localhost:5000` | `http://localhost:5000/auth/login/google/authorized` |
+4.  **Environment Setup:** Add the credentials to `.env` (never commit them):
     ```env
     GOOGLE_OAUTH_CLIENT_ID=your-client-id
     GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret
     # Only needed when running the dev server directly over plain HTTP (./dev.sh):
     OAUTHLIB_INSECURE_TRANSPORT=1
     ```
-*Note: If these variables are missing, the Google login button will not be displayed. Documentation for additional providers will be added as they are implemented.*
+
+**Generic OAuth notes:**
+*   If the ID/secret variables are missing, the Google login button is simply not displayed — the rest of the site works normally.
+*   A `redirect_uri_mismatch` error means the URI Google received doesn't exactly match a registered one. Behind the Docker/Traefik stack the app generates `https://` URIs automatically (via `TRUST_PROXY`); if you see `http://` in the error, that's the cause.
+*   Changes in the Google Console can take a few minutes to propagate.
+*   The same `.env` pattern applies to any future provider: keep secrets out of git, register exact redirect URIs per environment.
+*   Documentation for additional providers will be added as they are implemented.
 
 ## Administration
 
@@ -184,9 +246,18 @@ We enforce strict code quality standards. Run the quality check script before co
 ```
 
 **Testing:**
-Run the full test suite (requires dependencies installed):
+Run the full test suite in Docker (recommended — includes Playwright browsers):
+```bash
+make test
+```
+Or locally (requires the venv dependencies installed):
 ```bash
 PYTHONPATH=. venv/bin/pytest
+```
+
+**Security Scans:**
+```bash
+make scan   # Bandit + pip-audit inside the test container
 ```
 
 ## Contributing

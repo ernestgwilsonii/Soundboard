@@ -9,9 +9,9 @@ help:
 	@echo "  make run      - Start the application (https://localhost)"
 	@echo "  make stop     - Stop the application"
 	@echo "  make test     - Run the full test suite in Docker"
-	@echo "  make scan     - Run security scans (Bandit + Safety)"
+	@echo "  make scan     - Run security scans (Bandit + pip-audit)"
 	@echo "  make debug    - Get a shell inside the test container (for troubleshooting)"
-	@echo "  make clean    - Remove containers and volumes (resets DB)"
+	@echo "  make clean    - Remove containers and volumes (resets DB, uploads, TLS certs)"
 	@echo "  make promote user=NAME - Promote a user to admin"
 
 .PHONY: build
