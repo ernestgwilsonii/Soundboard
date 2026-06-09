@@ -27,7 +27,7 @@ The easiest way to run the application is using Docker.
     ```bash
     make run
     ```
-    Access the site at `http://localhost` (port 80).
+    Access the site at `https://localhost` (port 80 redirects to HTTPS).
 
 2.  **Generate Demo Sounds (Optional but recommended):**
     ```bash
@@ -111,6 +111,26 @@ sudo install /tmp/ffmpeg-*-amd64-static/ffmpeg /tmp/ffmpeg-*-amd64-static/ffprob
     ./dev.sh
     ```
 
+## HTTPS (Traefik + Let's Encrypt)
+
+The Docker stack includes a **Traefik** reverse proxy that terminates TLS on port 443 and permanently redirects all port-80 traffic to HTTPS.
+
+*   **Local development:** with `DOMAIN=localhost` (the default), Traefik serves its built-in self-signed certificate. Browse to `https://localhost` and accept the warning, or use `curl -k`.
+*   **Production:** set `DOMAIN` and `LETSENCRYPT_EMAIL` in `.env` and Traefik automatically obtains and renews a real Let's Encrypt certificate via the HTTP-01 challenge.
+
+**Route 53 / AWS setup for Let's Encrypt:**
+
+1.  In Route 53, create an **A record** for your domain (e.g. `soundboard.example.com`) pointing to this server's **public IP**. No special/TXT records are needed for the HTTP-01 challenge.
+2.  Ensure the EC2/Lightsail firewall (security group) allows inbound **TCP 80 and 443** from `0.0.0.0/0`. Port 80 must stay open — Let's Encrypt uses it to validate the domain (Traefik answers the challenge before the HTTPS redirect applies).
+3.  In `.env`, set:
+    ```env
+    DOMAIN=soundboard.example.com
+    LETSENCRYPT_EMAIL=you@example.com
+    ```
+4.  Restart: `docker compose up -d`. The certificate is stored in the `traefik_letsencrypt` Docker volume (never in the repo) and renews automatically.
+
+*Tip: when testing repeatedly, uncomment the staging `caserver` line in `docker-compose.yml` to avoid Let's Encrypt rate limits, then comment it back out for the real certificate.*
+
 ## Configuration
 
 The application is configured via the `.env` file. Key settings include:
@@ -134,13 +154,13 @@ To enable "Sign in with Google", you must provide credentials from the [Google C
 1.  **Create Project:** Create a new project for "Soundboard".
 2.  **OAuth Consent Screen:** Configure as "External". Add scopes `.../auth/userinfo.email` and `.../auth/userinfo.profile`.
 3.  **Credentials:** Create an "OAuth 2.0 Client ID" for a "Web application".
-    *   **Authorized JavaScript origins:** `http://localhost`
-    *   **Authorized redirect URIs:** `http://localhost/auth/login/google/authorized`
+    *   **Authorized JavaScript origins:** `https://localhost` (or your real `https://` domain)
+    *   **Authorized redirect URIs:** `https://localhost/auth/login/google/authorized`
 4.  **Environment Setup:** Add the following to your `.env`:
     ```env
     GOOGLE_OAUTH_CLIENT_ID=your-client-id
     GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret
-    # Required for local development over HTTP:
+    # Only needed when running the dev server directly over plain HTTP (./dev.sh):
     OAUTHLIB_INSECURE_TRANSPORT=1
     ```
 *Note: If these variables are missing, the Google login button will not be displayed. Documentation for additional providers will be added as they are implemented.*

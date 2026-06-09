@@ -6,7 +6,7 @@
 help:
 	@echo "Soundboard Development Commands:"
 	@echo "  make build    - Build the Docker images"
-	@echo "  make run      - Start the application (http://localhost)"
+	@echo "  make run      - Start the application (https://localhost)"
 	@echo "  make stop     - Stop the application"
 	@echo "  make test     - Run the full test suite in Docker"
 	@echo "  make scan     - Run security scans (Bandit + Safety)"
@@ -21,8 +21,8 @@ build:
 .PHONY: run
 run:
 	@echo "Starting app..."
-	docker compose up -d app
-	@echo "App running at http://localhost"
+	docker compose up -d traefik app
+	@echo "App running at https://localhost (HTTP on :80 redirects)"
 	docker compose logs -f app
 
 .PHONY: stop

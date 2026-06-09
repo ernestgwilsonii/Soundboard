@@ -11,6 +11,10 @@ class Config:
     DEBUG = os.environ.get("DEBUG", "False").lower() in ["true", "1", "t"]
     TESTING = os.environ.get("TESTING", "False").lower() in ["true", "1", "t"]
 
+    # Trust X-Forwarded-* headers (enable only when behind a reverse proxy
+    # such as Traefik; required for correct https:// URLs and OAuth redirects)
+    TRUST_PROXY = os.environ.get("TRUST_PROXY", "False").lower() in ["true", "1", "t"]
+
     # Database paths
     ACCOUNTS_DB = os.environ.get("ACCOUNTS_DB") or os.path.join(
         basedir, "accounts.sqlite3"

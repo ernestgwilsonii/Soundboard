@@ -1,12 +1,46 @@
 services:
+  # Reverse Proxy: TLS termination + Let's Encrypt certificates
+  # - Port 80 redirects to 443 (ACME HTTP-01 challenges are still answered)
+  # - Real domain (set DOMAIN/LETSENCRYPT_EMAIL in .env) => Let's Encrypt cert
+  # - Local development (DOMAIN unset => localhost) => Traefik self-signed cert
+  traefik:
+    image: traefik:v3.3
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL:-admin@example.com}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      # Uncomment to test against the Let's Encrypt staging CA (avoids rate limits):
+      # - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --log.level=INFO
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # ACME account key + certificates (never committed to git)
+      - traefik_letsencrypt:/letsencrypt
+
   # The Main Application (Production-like)
   app:
     build:
       context: .
       target: production
     image: soundboard-app:latest
-    ports:
-      - "80:8000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.soundboard.rule=Host(`${DOMAIN:-localhost}`)
+      - traefik.http.routers.soundboard.entrypoints=websecure
+      - traefik.http.routers.soundboard.tls=true
+      - traefik.http.routers.soundboard.tls.certresolver=letsencrypt
+      - traefik.http.services.soundboard.loadbalancer.server.port=8000
     volumes:
       # Persist SQLite Databases
       - db_data:/app/data
@@ -19,9 +53,11 @@ services:
       - SOUNDBOARDS_DB=/app/data/soundboards.sqlite3
       - REDIS_URL=redis://redis:6379/0
       - USE_REDIS_QUEUE=true
-      - SECRET_KEY=dev-secret-key-change-in-prod
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-prod}
       - MAIL_SERVER=mailpit
       - MAIL_PORT=1025
+      # Trust X-Forwarded-* headers from Traefik (https URLs, OAuth redirects)
+      - TRUST_PROXY=true
     depends_on:
       - redis
       - mailpit
@@ -31,7 +67,8 @@ services:
     image: redis:7-alpine
     restart: always
     ports:
-      - "6379:6379"
+      # Bound to localhost only: never expose Redis on a public interface
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
 
@@ -39,8 +76,9 @@ services:
     image: axllent/mailpit:latest
     restart: always
     ports:
-      - "8025:8025" # Web UI
-      - "1025:1025" # SMTP Port
+      # Bound to localhost only (use an SSH tunnel to view the UI remotely)
+      - "127.0.0.1:8025:8025" # Web UI
+      - "127.0.0.1:1025:1025" # SMTP Port
     environment:
       - MP_MAX_MESSAGES=5000
       - MP_DATABASE=/data/mailpit.db
@@ -75,3 +113,4 @@ volumes:
   upload_data:
   redis_data:
   mailpit_data:
+  traefik_letsencrypt:

@@ -54,6 +54,14 @@ def create_app(config_class: Any = Config) -> Flask:
     flask_app = Flask(__name__, template_folder="../templates")
     flask_app.config.from_object(config_class)
 
+    # Honor X-Forwarded-* headers when running behind a reverse proxy
+    if flask_app.config.get("TRUST_PROXY"):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        flask_app.wsgi_app = ProxyFix(  # type: ignore[method-assign]
+            flask_app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1
+        )
+
     # Initialize Flask extensions
     login.init_app(flask_app)
     csrf.init_app(flask_app)

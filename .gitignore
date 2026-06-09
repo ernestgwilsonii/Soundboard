@@ -167,3 +167,9 @@ sounds/
 debug_links.py
 verify_normalization_automated.py
 *.sqlite3
+
+# TLS / ACME material (never commit private keys or certs)
+acme.json
+*.pem
+*.key
+*.crt
