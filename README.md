@@ -229,38 +229,103 @@ To enable "Sign in with Google", create credentials in the [Google Cloud Console
 
 ## Backups & Disaster Recovery
 
-All user data lives in named Docker volumes on the host (`docker volume ls`): account and soundboard SQLite databases (`db_data`) and uploaded media (`upload_data`). Host/instance snapshots (e.g. Lightsail automatic snapshots) include these volumes, but a snapshot taken mid-write is only *crash-consistent*. For guaranteed-consistent copies, use the backup script:
+### What needs backing up, and where it lives
+
+All user data lives in named Docker volumes on the host (`docker volume ls`):
+
+| Data | Volume | In backups? |
+|------|--------|-------------|
+| User accounts, passwords, profiles | `db_data` (`accounts.sqlite3`) | ✅ |
+| Soundboards, sounds metadata, customizations | `db_data` (`soundboards.sqlite3`) | ✅ |
+| Uploaded media (audio files, images) | `upload_data` | ✅ |
+| Runtime secrets (`.env`: domain, keys, OAuth) | repo root (not in git) | ✅ |
+| Redis (transient Socket.IO message queue) | `redis_data` | ❌ by design |
+| Mailpit (dev-only captured email) | `mailpit_data` | ❌ by design |
+| TLS certificates (auto re-issued by Traefik) | `traefik_letsencrypt` | ❌ by design |
+
+Host/instance snapshots (e.g. Lightsail automatic snapshots) image the whole disk, so they include these volumes — but a snapshot taken mid-write is only *crash-consistent*. The backup script below produces **guaranteed-consistent** copies as plain files on the host disk, so every snapshot also contains known-good backups. Belt and suspenders.
+
+### One-time installation of the nightly backup job
+
+The backup/restore scripts ship in the repo (`scripts/backup.sh`, `scripts/restore.sh`); only the cron schedule needs installing on each server:
+
+1.  **Install the cron daemon** (Amazon Linux 2023 ships without one):
+    ```bash
+    sudo dnf install -y cronie
+    sudo systemctl enable --now crond
+    ```
+
+2.  **Schedule the nightly backup** (run from the repo root; this preserves any existing crontab entries):
+    ```bash
+    ( crontab -l 2>/dev/null; \
+      echo "15 3 * * * cd $PWD && ./scripts/backup.sh >> $HOME/soundboard-backups/backup.log 2>&1" ) | crontab -
+    ```
+    *   `15 3 * * *` = daily at 03:15 **UTC** (cron uses the server clock — check with `date`). Pick a time shortly **before** your daily snapshot window so each snapshot includes a fresh backup.
+    *   Verify the entry with `crontab -l`.
+
+3.  **Verify it works end-to-end:** run the exact cron command once by hand and check the log:
+    ```bash
+    cd ~/Soundboard && ./scripts/backup.sh >> $HOME/soundboard-backups/backup.log 2>&1
+    tail ~/soundboard-backups/backup.log
+    ```
+
+### Making a backup (manual)
 
 ```bash
 make backup            # or: ./scripts/backup.sh [backup_root]
 ```
 
-It performs, while the site keeps running:
-1.  A **SQLite online backup** of both databases (safe under concurrent writes) with an automatic `PRAGMA integrity_check` on each copy.
-2.  A tarball of all **uploaded media**.
-3.  A copy of **`.env`** (your runtime secrets, which are not in git).
+The Docker stack must be running. While the site keeps serving traffic, the script:
+1.  Copies both databases via the **SQLite online backup API** (safe under concurrent writes) and runs `PRAGMA integrity_check` on each copy — the backup fails loudly if a copy is unhealthy.
+2.  Creates a tarball of all **uploaded media**.
+3.  Copies **`.env`** (your runtime secrets, which are not in git).
 
-Backups land in timestamped directories under `~/soundboard-backups/` (override with `BACKUP_ROOT`), with the most recent 14 kept (`KEEP_BACKUPS`). Because they're plain files on the host disk, every instance snapshot automatically contains consistent copies — no data is "trapped" inside Docker.
+Backups land in timestamped directories: `~/soundboard-backups/20260609-031500/` containing `accounts.sqlite3`, `soundboards.sqlite3`, `uploads.tar.gz`, and `env`. Defaults can be overridden with environment variables: `BACKUP_ROOT` (location) and `KEEP_BACKUPS` (rotation; the 14 most recent are kept).
 
-**Schedule it (cron):**
+### Restoring a backup
+
+List available backups, then restore one:
+
 ```bash
-sudo dnf install -y cronie && sudo systemctl enable --now crond   # AL2023 ships without cron
-( crontab -l 2>/dev/null; \
-  echo "15 3 * * * cd $PWD && ./scripts/backup.sh >> $HOME/soundboard-backups/backup.log 2>&1" ) | crontab -
-```
-Pick a time shortly **before** your daily snapshot window so each snapshot includes a fresh backup.
-
-**Restore:**
-```bash
+ls ~/soundboard-backups/
 make restore dir=~/soundboard-backups/20260609-031500
 ```
-This stops the app, replaces both databases and all uploads from the backup, and restarts. To rebuild a server from scratch: clone the repo, copy the backup's `env` file to `.env`, run `make build && make run`, then restore.
+
+The script asks for confirmation (`FORCE=1 ./scripts/restore.sh <dir>` skips the prompt for scripted use), then stops the app, **replaces** both databases and all uploaded media with the backup contents, and restarts the app. Allow ~10 seconds of downtime. `.env` is never touched by restore — copy it manually if needed.
+
+**Rebuilding a server from scratch** (new instance, same data):
+1.  Set up the server (Docker + Compose, clone the repo — see [Deploying to a Server](#deploying-to-a-server-any-domain)).
+2.  Copy your backup directory onto the new server (from a snapshot-restored disk, `scp`, or offsite storage).
+3.  Restore the runtime config: `cp <backup-dir>/env .env` (review `DOMAIN` if the IP/domain changed, and update DNS).
+4.  Start the stack: `make build && make run`.
+5.  Restore the data: `make restore dir=<backup-dir>`.
 
 **Test your restores.** A backup is only proven when it has been restored at least once — run a restore after first setup and after major changes.
 
-*Offsite copies (optional, recommended):* host snapshots and on-disk backups both die with the AWS account/region. For true offsite protection, sync the backup directory to object storage, e.g. `aws s3 sync ~/soundboard-backups s3://your-backup-bucket/` (requires an instance role or credentials with S3 write access) — easy to add to the same cron line.
+### TODO: Offsite copies to Amazon S3 (instructions only — not yet set up)
 
-*Not backed up (by design):* Redis (transient Socket.IO message queue), Mailpit (dev-only captured email), and TLS certificates (Traefik re-issues them automatically from Let's Encrypt).
+Snapshots and on-disk backups both live in the same AWS account/region; offsite object storage protects against account-level disasters and accidental deletion. When ready to enable this:
+
+1.  **Create a bucket** (one-time, from any machine with AWS admin credentials):
+    ```bash
+    aws s3 mb s3://YOUR-UNIQUE-BUCKET-NAME --region us-east-2
+    aws s3api put-bucket-versioning --bucket YOUR-UNIQUE-BUCKET-NAME \
+      --versioning-configuration Status=Enabled
+    aws s3api put-public-access-block --bucket YOUR-UNIQUE-BUCKET-NAME \
+      --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+    ```
+
+2.  **Grant the server write access.** Lightsail instances cannot have IAM roles attached (their built-in role has no S3 permissions), so either:
+    *   **Option A — IAM user:** create an IAM user whose policy allows only `s3:PutObject`/`s3:ListBucket` on this bucket, generate an access key, and run `aws configure` on the server; or
+    *   **Option B — Lightsail bucket:** create a Lightsail object-storage bucket instead and attach it to the instance (Lightsail console → bucket → Resource access), which needs no credentials.
+
+3.  **Add the sync to the existing cron line** so it runs right after each backup:
+    ```
+    15 3 * * * cd /home/ec2-user/Soundboard && ./scripts/backup.sh >> $HOME/soundboard-backups/backup.log 2>&1 && aws s3 sync $HOME/soundboard-backups s3://YOUR-UNIQUE-BUCKET-NAME/soundboard-backups/ --delete >> $HOME/soundboard-backups/backup.log 2>&1
+    ```
+    (Omit `--delete` if you want S3 to keep backups beyond the local 14-day rotation.)
+
+4.  **Verify:** `aws s3 ls s3://YOUR-UNIQUE-BUCKET-NAME/soundboard-backups/` after the next nightly run, and consider an S3 lifecycle rule to expire objects after e.g. 90 days to control cost.
 
 ## Administration
 
