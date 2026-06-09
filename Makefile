@@ -36,10 +36,6 @@ promote:
 
 .PHONY: test
 test:
-	docker compose down
-
-.PHONY: test
-test:
 	@echo "Running tests..."
 	docker compose run --rm test pytest
 

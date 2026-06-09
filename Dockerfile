@@ -41,6 +41,9 @@ USER appuser
 # Copy application code
 COPY --chown=appuser:appgroup . .
 
+# Ensure entrypoint is executable regardless of host checkout permissions
+RUN chmod +x /app/entrypoint.sh
+
 # Entrypoint script handles DB initialization
 ENTRYPOINT ["/app/entrypoint.sh"]
 
@@ -73,6 +76,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
+
+# Ensure entrypoint is executable regardless of host checkout permissions
+RUN chmod +x /app/entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 

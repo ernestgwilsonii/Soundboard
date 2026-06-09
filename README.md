@@ -52,11 +52,28 @@ The easiest way to run the application is using Docker.
 *   FFmpeg (required for audio processing)
 *   Redis (optional, for horizontal scaling)
 
+**Amazon Linux 2023 / RHEL-family notes:**
+The default `python3` is 3.9, FFmpeg is not packaged, and the Docker Compose plugin is not in the repos:
+```bash
+# Python 3.12 (use it explicitly when creating the venv below)
+sudo dnf install -y python3.12 python3.12-pip python3.12-devel
+
+# Docker Compose v2 plugin (needed for `make run` etc.)
+sudo curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+  -o /usr/libexec/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+# FFmpeg static build (for local non-Docker development)
+curl -fsSL -o /tmp/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+tar -xf /tmp/ffmpeg.tar.xz -C /tmp
+sudo install /tmp/ffmpeg-*-amd64-static/ffmpeg /tmp/ffmpeg-*-amd64-static/ffprobe /usr/local/bin/
+```
+
 **Setup:**
 
 1.  **Create Virtual Environment:**
     ```bash
-    python3 -m venv venv
+    python3.12 -m venv venv   # plain `python3 -m venv venv` is fine if python3 is 3.12+
     source venv/bin/activate
     ```
 
