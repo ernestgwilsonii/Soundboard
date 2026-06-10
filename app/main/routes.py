@@ -90,15 +90,15 @@ def index() -> Any:
             "hotkey": "2",
         },
         {
-            "name": "Sad Violin",
-            "file": "demo_sounds/sad_violin.mp3",
-            "icon": "fas fa-music",
+            "name": "Sad Trombone",
+            "file": "demo_sounds/sad_trombone.mp3",
+            "icon": "fas fa-sad-tear",
             "hotkey": "3",
         },
         {
-            "name": "Wow",
-            "file": "demo_sounds/wow.mp3",
-            "icon": "fas fa-star",
+            "name": "Honey Badger",
+            "file": "demo_sounds/honey_badger.mp3",
+            "icon": "fas fa-otter",
             "hotkey": "4",
         },
         {
@@ -108,10 +108,28 @@ def index() -> Any:
             "hotkey": "5",
         },
         {
+            "name": "Ba Dum Tss",
+            "file": "demo_sounds/badum_tss.mp3",
+            "icon": "fas fa-drum",
+            "hotkey": "6",
+        },
+        {
+            "name": "Record Scratch",
+            "file": "demo_sounds/record_scratch.mp3",
+            "icon": "fas fa-record-vinyl",
+            "hotkey": "7",
+        },
+        {
+            "name": "Dun Dun Duuun",
+            "file": "demo_sounds/dun_dun_dun.mp3",
+            "icon": "fas fa-theater-masks",
+            "hotkey": "8",
+        },
+        {
             "name": "Crickets",
             "file": "demo_sounds/crickets.mp3",
             "icon": "fas fa-bug",
-            "hotkey": "6",
+            "hotkey": "9",
         },
     ]
 

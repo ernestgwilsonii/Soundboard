@@ -18,7 +18,8 @@ def test_demo_soundboard_presence(page: Page, live_server_url):
     # 3. Check for specific demo sounds
     expect(page.get_by_text("Airhorn")).to_be_visible()
     expect(page.get_by_text("Vine Boom")).to_be_visible()
-    expect(page.get_by_text("Sad Violin")).to_be_visible()
+    expect(page.get_by_text("Sad Trombone")).to_be_visible()
+    expect(page.get_by_text("Honey Badger")).to_be_visible()
 
     # 4. Check for Hotkey labels
     expect(page.get_by_text("1", exact=True)).to_be_visible()

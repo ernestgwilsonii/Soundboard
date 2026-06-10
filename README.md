@@ -49,7 +49,7 @@ Databases (SQLite), uploads, and TLS certificates persist in named Docker volume
     ```
     Access the site at `https://localhost` — port 80 automatically redirects to HTTPS. Locally Traefik serves a self-signed certificate, so accept the browser warning (or use `curl -k`).
 
-3.  **Generate Demo Sounds (Optional but recommended):**
+3.  **Fetch Demo Sounds (optional — the CC0 demo sounds are already committed in `app/static/demo_sounds/`; run this only to refresh them):**
     ```bash
     docker compose exec app ./scripts/fetch_demo_sounds.sh
     ```
@@ -125,7 +125,7 @@ sudo install /tmp/ffmpeg-*-amd64-static/ffmpeg /tmp/ffmpeg-*-amd64-static/ffprob
     flask db upgrade
     ```
 
-5.  **Generate Demo Sounds:**
+5.  **Fetch Demo Sounds (optional):**
     ```bash
     ./scripts/fetch_demo_sounds.sh
     ```
